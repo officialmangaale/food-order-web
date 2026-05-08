@@ -1,92 +1,202 @@
 'use client';
 
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { ShoppingBag, Search, MapPin, User } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
+import { useLocationStore } from '@/store/locationStore';
+import { SearchHeaderInput } from '@/components/search/SearchHeaderInput';
+import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
+import { LocationModal } from '@/components/location/LocationModal';
+import { ProfileMenu } from '@/components/profile/ProfileMenu';
 
 export function AppHeader() {
-  const { lockedMode, lockedRestaurantName, homeLink, isLockedRoute } = useRestaurantMode();
+  const {
+    lockedMode,
+    lockedRestaurantId,
+    lockedRestaurantSlug,
+    lockedRestaurantName,
+    homeLink,
+    isLockedRoute,
+  } = useRestaurantMode();
   const totalItems = useCartStore((s) => s.totalItems());
-  const isAuth = useAuthStore((s) => s.isAuthenticated);
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
+  const savedLocationLabel = useLocationStore((s) => s.label);
+  const manualArea = useLocationStore((s) => s.manualArea);
+  const permissionStatus = useLocationStore((s) => s.permissionStatus);
+  const latitude = useLocationStore((s) => s.latitude);
+  const longitude = useLocationStore((s) => s.longitude);
+  const router = useRouter();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [locationOpen, setLocationOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+
+  const hasBrowserLocation =
+    permissionStatus === 'granted' && latitude != null && longitude != null;
+  const locationLabel =
+    savedLocationLabel || manualArea || (hasBrowserLocation ? 'Current location' : 'Select location');
+  const isLocationPlaceholder = !savedLocationLabel && !manualArea && !hasBrowserLocation;
+  const searchPlaceholder =
+    lockedMode && lockedRestaurantName
+      ? 'Search this menu'
+      : 'Search for restaurants, cuisine, or a dish';
+
+  const handleLocationClick = () => {
+    setLocationOpen(true);
+  };
+
+  const handleAccountClick = () => {
+    if (isAuthenticated) {
+      setProfileOpen((open) => !open);
+      return;
+    }
+
+    setLoginOpen(true);
+  };
+
+  const handleSearchSubmit = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+
+    const params = new URLSearchParams();
+    const trimmedQuery = searchQuery.trim();
+
+    if (lockedMode) {
+      params.set('locked', 'true');
+      if (lockedRestaurantId) params.set('restaurant_id', String(lockedRestaurantId));
+      if (lockedRestaurantSlug) params.set('restaurant', lockedRestaurantSlug);
+      if (lockedRestaurantName) params.set('restaurant_name', lockedRestaurantName);
+    }
+
+    if (trimmedQuery) {
+      params.set('q', trimmedQuery);
+    }
+
+    const queryString = params.toString();
+    router.push(`/search${queryString ? `?${queryString}` : ''}`);
+  };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-100 safe-top">
-      <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
-        {/* Logo / Brand */}
-        <Link href={homeLink} className="flex items-center gap-2 flex-shrink-0">
-          <div className="w-8 h-8 rounded-lg bg-cherry-600 flex items-center justify-center">
-            <span className="text-white font-bold text-sm">M</span>
+    <>
+      <header className="safe-top sticky top-0 z-50 border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl">
+        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-5 lg:px-8 lg:py-[18px]">
+          <div className="flex items-center justify-between gap-4 lg:shrink-0 lg:justify-start">
+            <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute} />
+            <HeaderActions totalItems={totalItems} onAccountClick={handleAccountClick} className="flex lg:hidden" />
           </div>
-          <div className="hidden sm:block">
-            {isLockedRoute && lockedRestaurantName ? (
-              <div>
-                <p className="text-xs text-gray-500 leading-none">Ordering from</p>
-                <p className="text-sm font-semibold text-gray-900 leading-tight truncate max-w-[180px]">
-                  {lockedRestaurantName}
-                </p>
-              </div>
-            ) : (
-              <span className="text-lg font-bold text-cherry-600">Mangaale</span>
-            )}
+
+          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-3 lg:flex-1 lg:gap-5">
+            <HeaderLocationPill
+              label={locationLabel}
+              isPlaceholder={isLocationPlaceholder}
+              onClick={handleLocationClick}
+            />
+            <SearchHeaderInput
+              value={searchQuery}
+              placeholder={searchPlaceholder}
+              onChange={setSearchQuery}
+              onSubmit={handleSearchSubmit}
+              onClear={() => setSearchQuery('')}
+            />
           </div>
-        </Link>
 
-        {/* Spacer */}
-        <div className="flex-1" />
-
-        {/* Actions */}
-        <div className="flex items-center gap-1">
-          {!lockedMode && (
-            <Link
-              href="/search"
-              className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
-              aria-label="Search"
-            >
-              <Search className="w-5 h-5" />
-            </Link>
-          )}
-
-          {lockedMode && (
-            <Link
-              href={`/search?restaurant=${lockedRestaurantName ?? ''}`}
-              className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
-              aria-label="Search menu"
-            >
-              <Search className="w-5 h-5" />
-            </Link>
-          )}
-
-          {!lockedMode && (
-            <button
-              className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
-              aria-label="Location"
-            >
-              <MapPin className="w-5 h-5" />
-            </button>
-          )}
-
-          <Link
-            href="/cart"
-            className="relative p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-gray-600"
-            aria-label="Cart"
-          >
-            <ShoppingBag className="w-5 h-5" />
-            {totalItems > 0 && (
-              <span className="absolute -top-0.5 -right-0.5 w-5 h-5 bg-cherry-600 text-white text-[10px] font-bold rounded-full flex items-center justify-center">
-                {totalItems > 9 ? '9+' : totalItems}
-              </span>
-            )}
-          </Link>
-
-          {isAuth && (
-            <button className="p-2.5 rounded-xl hover:bg-gray-100 transition-colors text-gray-600" aria-label="Account">
-              <User className="w-5 h-5" />
-            </button>
-          )}
+          <HeaderActions totalItems={totalItems} onAccountClick={handleAccountClick} className="hidden lg:flex" />
         </div>
-      </div>
-    </header>
+      </header>
+      <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
+      <OtpLoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onVerified={() => setProfileOpen(true)}
+      />
+      <ProfileMenu open={profileOpen} onClose={() => setProfileOpen(false)} />
+    </>
+  );
+}
+
+interface HeaderLogoProps {
+  href: string;
+  isLockedRoute: boolean;
+}
+
+function HeaderLogo({ href, isLockedRoute }: HeaderLogoProps) {
+  return (
+    <Link
+      href={href}
+      aria-label={isLockedRoute ? 'Back to restaurant home' : 'Mangaale home'}
+      className="flex shrink-0 items-center"
+    >
+      <span className="text-[28px] font-extrabold leading-none tracking-normal text-[#A80F15] sm:text-[32px] lg:text-[34px]">
+        Mangaale
+      </span>
+    </Link>
+  );
+}
+
+interface HeaderLocationPillProps {
+  label: string;
+  isPlaceholder: boolean;
+  onClick: () => void;
+}
+
+function HeaderLocationPill({ label, isPlaceholder, onClick }: HeaderLocationPillProps) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-[#E9CBCB] bg-[#FFFDFD] px-4 text-left shadow-[0_1px_0_rgba(179,19,23,0.03)] transition hover:border-[#D99A9A] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#B31317]/10 md:h-12 md:w-[230px] md:flex-none lg:w-[220px] xl:w-[240px]"
+      aria-label="Choose delivery location"
+    >
+      <MapPin className="h-4 w-4 shrink-0 text-[#A80F15]" aria-hidden="true" />
+      <span
+        className={`min-w-0 flex-1 truncate text-sm font-medium ${
+          isPlaceholder ? 'text-[#7B6B6B]' : 'text-[#302727]'
+        }`}
+      >
+        {label}
+      </span>
+      <ChevronDown
+        className="h-4 w-4 shrink-0 text-[#7B6B6B] transition group-hover:text-[#A80F15]"
+        aria-hidden="true"
+      />
+    </button>
+  );
+}
+
+interface HeaderActionsProps {
+  totalItems: number;
+  onAccountClick: () => void;
+  className?: string;
+}
+
+function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderActionsProps) {
+  return (
+    <div className={`shrink-0 items-center gap-2 ${className}`}>
+      <Link
+        href="/cart"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
+        aria-label="Cart"
+      >
+        <ShoppingCart className="h-[21px] w-[21px]" aria-hidden="true" />
+        {totalItems > 0 && (
+          <span className="absolute right-1.5 top-1.5 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#A80F15] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-[#FCF7F7]">
+            {totalItems > 9 ? '9+' : totalItems}
+          </span>
+        )}
+      </Link>
+
+      <button
+        type="button"
+        onClick={onAccountClick}
+        className="flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
+        aria-label="Account"
+        title="Account"
+      >
+        <UserCircle className="h-[22px] w-[22px]" aria-hidden="true" />
+      </button>
+    </div>
   );
 }

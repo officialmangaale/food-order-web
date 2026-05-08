@@ -6,6 +6,9 @@ export interface CartAddon {
 }
 
 export interface CartItem {
+  restaurant_id?: number;
+  restaurant_name?: string;
+  restaurant_slug?: string;
   item_id: number;
   name: string;
   image_url?: string;
@@ -14,6 +17,9 @@ export interface CartItem {
   variant_name?: string;
   variant_price?: number;
   base_price: number;
+  category_id?: number;
+  category_name?: string;
+  is_taxable?: boolean;
   addons: CartAddon[];
 }
 

@@ -38,7 +38,7 @@ export function OtpLoginCard({ onVerified }: Props) {
     setLoading(true); setError('');
     try {
       const res = await verifyOtp(phone, otp);
-      setAuth(res.token, res.user);
+      setAuth(res.authToken, res.user ?? phone);
       toast('Phone verified!', 'success');
       onVerified();
     } catch (err) { setError(getErrorMessage(err)); }

@@ -19,6 +19,7 @@ export interface MenuItem {
   is_available?: boolean;
   is_veg?: boolean;
   is_bestseller?: boolean;
+  is_taxable?: boolean;
   sort_order?: number;
   variants?: MenuVariant[];
   addons?: MenuAddon[];

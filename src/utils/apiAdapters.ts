@@ -10,7 +10,14 @@ export function unwrapApiResponse<T>(response: unknown): T {
     const r = response as Record<string, unknown>;
     // Standard wrapped response
     if ('data' in r && r.data !== undefined) {
-      return r.data as T;
+      const data = r.data;
+      if (data && typeof data === 'object') {
+        const nested = data as Record<string, unknown>;
+        if ('data' in nested && nested.data !== undefined) {
+          return nested.data as T;
+        }
+      }
+      return data as T;
     }
   }
   return response as T;

@@ -10,7 +10,7 @@ interface AuthState {
   phone: string | null;
   isAuthenticated: boolean;
 
-  setAuth: (token: string, user: CustomerUser) => void;
+  setAuth: (token: string, userOrPhone: CustomerUser | string) => void;
   setPhone: (phone: string) => void;
   logout: () => void;
 }
@@ -23,8 +23,10 @@ export const useAuthStore = create<AuthState>()(
       phone: null,
       isAuthenticated: false,
 
-      setAuth: (token, user) =>
-        set({ token, user, phone: user.phone, isAuthenticated: true }),
+      setAuth: (token, userOrPhone) => {
+        const user = typeof userOrPhone === 'string' ? { phone: userOrPhone } : userOrPhone;
+        set({ token, user, phone: user.phone, isAuthenticated: true });
+      },
 
       setPhone: (phone) => set({ phone }),
 

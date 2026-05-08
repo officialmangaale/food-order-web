@@ -70,7 +70,11 @@ export function useOrderTracking(orderId: number) {
 
   // Initial fetch
   useEffect(() => {
-    fetchTracking();
+    const timeoutId = setTimeout(() => {
+      void fetchTracking();
+    }, 0);
+
+    return () => clearTimeout(timeoutId);
   }, [fetchTracking]);
 
   // SSE updates

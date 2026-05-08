@@ -27,7 +27,7 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #F7F7F8;
+  background-color: #F8F7F7;
   color: #171717;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -62,4 +62,8 @@ body {
 
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
 }

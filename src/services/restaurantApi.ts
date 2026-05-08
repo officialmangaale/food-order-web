@@ -1,6 +1,6 @@
 import { restaurantGet } from './http';
 import { unwrapApiResponse, normalizeRestaurant, normalizeMenu } from '@/utils/apiAdapters';
-import type { Restaurant, HomeFeedResponse, Offer } from '@/types/restaurant';
+import type { Restaurant, HomeFeedResponse } from '@/types/restaurant';
 import type { MenuCategory } from '@/types/menu';
 
 /** GET /api/home?lat=&lng= */
@@ -11,13 +11,6 @@ export async function fetchHomeFeed(lat?: number, lng?: number): Promise<HomeFee
   const qs = params.toString();
   const raw = await restaurantGet<unknown>(`/api/home${qs ? `?${qs}` : ''}`);
   return unwrapApiResponse<HomeFeedResponse>(raw);
-}
-
-/** GET /offers */
-export async function fetchOffers(): Promise<Offer[]> {
-  const raw = await restaurantGet<unknown>('/offers');
-  const data = unwrapApiResponse<Offer[] | { offers: Offer[] }>(raw);
-  return Array.isArray(data) ? data : (data as { offers: Offer[] }).offers ?? [];
 }
 
 /** GET /api/restaurants?lat=&lng=&radius_km=7&page=1&limit=20 */
@@ -56,9 +49,18 @@ export async function fetchRestaurantMenu(restaurantId: number | string): Promis
 
 /**
  * Resolve a restaurant by slug or numeric ID.
- * TODO: Replace fallback with backend GET /restaurants/public/slug/:slug when available.
  */
 export async function resolveRestaurantIdentifier(identifier: string): Promise<Restaurant | null> {
+  try {
+    const raw = await restaurantGet<unknown>(
+      `/customer-web/restaurants/resolve/${encodeURIComponent(identifier)}`
+    );
+    const data = unwrapApiResponse<Record<string, unknown>>(raw);
+    return normalizeRestaurant(data);
+  } catch {
+    // Keep older fallbacks so existing personal links continue to work while APIs roll out.
+  }
+
   // If numeric, fetch directly by ID
   if (/^\d+$/.test(identifier)) {
     try {

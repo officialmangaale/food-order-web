@@ -28,7 +28,20 @@ export function MenuItemCard({ item, restaurantId, restaurantName, restaurantSlu
   const handleAdd = () => {
     if (hasCustom || isDiff) { onCustomize?.(item); return; }
     setRestaurant(restaurantId, restaurantName, restaurantSlug);
-    addItem({ item_id: item.id, name: item.name, image_url: item.image_url, quantity: 1, base_price: item.price, addons: [] });
+    addItem({
+      restaurant_id: restaurantId,
+      restaurant_name: restaurantName,
+      restaurant_slug: restaurantSlug,
+      item_id: item.id,
+      name: item.name,
+      image_url: item.image_url,
+      quantity: 1,
+      base_price: item.price,
+      category_id: item.category_id,
+      category_name: item.category_name,
+      is_taxable: item.is_taxable,
+      addons: [],
+    });
   };
 
   return (

@@ -20,6 +20,7 @@ export function ItemCustomizeModal({ item, restaurantId, restaurantName, restaur
   const [selectedVariant, setSelectedVariant] = useState(item?.variants?.[0]?.id ?? undefined);
   const [selectedAddons, setSelectedAddons] = useState<Record<number, number>>({});
   const [qty, setQty] = useState(1);
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
   const addItem = useCartStore((s) => s.addItem);
   const setRestaurant = useCartStore((s) => s.setRestaurant);
 
@@ -44,9 +45,15 @@ export function ItemCustomizeModal({ item, restaurantId, restaurantName, restaur
   const handleAdd = () => {
     setRestaurant(restaurantId, restaurantName, restaurantSlug);
     addItem({
+      restaurant_id: restaurantId,
+      restaurant_name: restaurantName,
+      restaurant_slug: restaurantSlug,
       item_id: item.id, name: item.name, image_url: item.image_url, quantity: qty,
       variant_id: selectedVariant, variant_name: variant?.name, variant_price: variant?.price,
       base_price: item.price,
+      category_id: item.category_id,
+      category_name: item.category_name,
+      is_taxable: item.is_taxable,
       addons: Object.entries(selectedAddons).map(([id, q]) => {
         const a = item.addons?.find((ad) => ad.id === Number(id));
         return { addon_id: Number(id), name: a?.name ?? '', price: a?.price ?? 0, quantity: q };
@@ -62,7 +69,7 @@ export function ItemCustomizeModal({ item, restaurantId, restaurantName, restaur
         className="fixed bottom-0 left-0 right-0 z-50 bg-white rounded-t-3xl max-h-[85vh] overflow-y-auto safe-bottom max-w-lg mx-auto">
         {/* Header image */}
         <div className="h-48 relative">
-          {item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" /> :
+          {item.image_url && failedImageUrl !== item.image_url ? <img src={item.image_url} alt={item.name} className="w-full h-full object-cover" onError={() => setFailedImageUrl(item.image_url ?? null)} /> :
             <div className="w-full h-full food-placeholder flex items-center justify-center"><Leaf className="w-10 h-10 text-white/50" /></div>}
           <button onClick={onClose} className="absolute top-3 right-3 bg-white/90 p-1.5 rounded-full shadow"><X className="w-5 h-5" /></button>
         </div>

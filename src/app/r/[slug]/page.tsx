@@ -1,13 +1,12 @@
 'use client';
 
-import { useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Search, Star, Clock, Store, WifiOff } from 'lucide-react';
+import { Search, Star, Clock, Store } from 'lucide-react';
 import { PageShell } from '@/components/layout/PageShell';
-import { MenuItemCard } from '@/components/restaurant/MenuItemCard';
-import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
+import { ExploreCategories } from '@/components/home/ExploreCategories';
 import { Badge } from '@/components/ui/Badge';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { MenuItemSkeleton, Skeleton } from '@/components/ui/Skeleton';
@@ -17,17 +16,14 @@ import { useCartStore } from '@/store/cartStore';
 import { useDebounce } from '@/hooks/useDebounce';
 import { resolveRestaurantIdentifier, fetchRestaurantMenu } from '@/services/restaurantApi';
 import { slugifyRestaurantName } from '@/utils/slug';
-import type { MenuItem, MenuCategory } from '@/types/menu';
-import type { Restaurant } from '@/types/restaurant';
+import type { MenuCategory } from '@/types/menu';
 
 export default function LockedRestaurantPage() {
   const { slug } = useParams<{ slug: string }>();
   const enterLocked = useRestaurantModeStore((s) => s.enterLockedMode);
   const isDiff = useCartStore((s) => s.isDifferentRestaurant);
-  const [customizeItem, setCustomizeItem] = useState<MenuItem | null>(null);
-  const [conflictOpen, setConflictOpen] = useState(false);
+  const [dismissedConflictRestaurantId, setDismissedConflictRestaurantId] = useState<number | null>(null);
   const [search, setSearch] = useState('');
-  const [activeCat, setActiveCat] = useState<number | null>(null);
   const debouncedSearch = useDebounce(search, 250);
 
   const { data: restaurant, isLoading: rLoading, error: rErr } = useQuery({
@@ -49,14 +45,9 @@ export default function LockedRestaurantPage() {
     }
   }, [restaurant, enterLocked]);
 
-  // Check if cart belongs to another restaurant
-  useEffect(() => {
-    if (restaurant && isDiff(restaurant.id)) setConflictOpen(true);
-  }, [restaurant, isDiff]);
-
   const filteredMenu = useMemo(() => {
     if (!menu) return [];
-    let cats: MenuCategory[] = activeCat ? menu.filter(c => c.id === activeCat) : menu;
+    let cats: MenuCategory[] = menu;
     if (debouncedSearch) {
       const q = debouncedSearch.toLowerCase();
       cats = cats.map(c => ({
@@ -65,11 +56,27 @@ export default function LockedRestaurantPage() {
       })).filter(c => (c.items?.length ?? 0) > 0);
     }
     return cats;
-  }, [menu, activeCat, debouncedSearch]);
+  }, [menu, debouncedSearch]);
 
-  const handleCustomize = (item: MenuItem) => {
-    if (restaurant && isDiff(restaurant.id)) { setConflictOpen(true); return; }
-    setCustomizeItem(item);
+  const lockedRestaurant = useMemo(() => {
+    if (!restaurant) return undefined;
+
+    return {
+      id: restaurant.id,
+      name: restaurant.name,
+      slug: restaurant.slug ?? slugifyRestaurantName(restaurant.name),
+      logoUrl: restaurant.logo_url,
+      deliveryTime: restaurant.estimated_delivery_time,
+      distanceKm: restaurant.distance_km,
+      isOpen: restaurant.is_open,
+    };
+  }, [restaurant]);
+
+  const conflictOpen = Boolean(
+    restaurant && isDiff(restaurant.id) && dismissedConflictRestaurantId !== restaurant.id
+  );
+  const closeConflict = () => {
+    if (restaurant) setDismissedConflictRestaurantId(restaurant.id);
   };
 
   // Error states
@@ -130,41 +137,43 @@ export default function LockedRestaurantPage() {
             className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm focus:outline-none focus:ring-2 focus:ring-cherry-500" />
         </div>
 
-        {/* Category tabs */}
-        {menu && menu.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto hide-scrollbar mb-4 -mx-4 px-4">
-            <button onClick={() => setActiveCat(null)}
-              className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium ${!activeCat ? 'bg-cherry-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}>All</button>
-            {menu.map(c => (
-              <button key={c.id} onClick={() => setActiveCat(c.id)}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm font-medium ${activeCat === c.id ? 'bg-cherry-600 text-white' : 'bg-white text-gray-700 border border-gray-200'}`}>{c.name}</button>
-            ))}
-          </div>
-        )}
-
-        {/* Menu */}
-        <div className="space-y-4 pb-8">
-          {mLoading ? [1,2,3].map(i => <MenuItemSkeleton key={i} />) :
-            filteredMenu.length === 0 ? (
-              <div className="text-center py-12"><p className="text-gray-500">{debouncedSearch ? 'No items match your search' : 'Menu is being updated'}</p></div>
-            ) : filteredMenu.map(cat => (
-              <div key={cat.id}>
-                <h2 className="text-lg font-bold text-gray-900 mb-3">{cat.name}</h2>
-                <div className="space-y-4">
-                  {(cat.items ?? []).filter(i => i.is_available !== false).map(item => (
-                    <MenuItemCard key={item.id} item={item} restaurantId={restaurant!.id}
-                      restaurantName={restaurant!.name} restaurantSlug={restaurant?.slug} onCustomize={handleCustomize} />
-                  ))}
-                </div>
-              </div>
-            ))}
+        {/* Restaurant-locked categories and items */}
+        <div className="pb-8">
+          {mLoading ? (
+            [1,2,3].map(i => <MenuItemSkeleton key={i} />)
+          ) : filteredMenu.length === 0 ? (
+            <div className="text-center py-12"><p className="text-gray-500">{debouncedSearch ? 'No items match your search' : 'Menu is being updated'}</p></div>
+          ) : lockedRestaurant ? (
+            <Suspense fallback={<LockedExploreFallback />}>
+              <ExploreCategories
+                mode="locked"
+                embedded
+                lockedCategories={filteredMenu}
+                lockedRestaurant={lockedRestaurant}
+              />
+            </Suspense>
+          ) : null}
         </div>
       </div>
 
-      <ItemCustomizeModal item={customizeItem} onClose={() => setCustomizeItem(null)}
-        restaurantId={restaurant?.id ?? 0} restaurantName={restaurant?.name ?? ''} restaurantSlug={restaurant?.slug} />
-      <CartConflictModal open={conflictOpen} onClose={() => setConflictOpen(false)} newRestaurantName={restaurant?.name ?? ''}
-        onCleared={() => setConflictOpen(false)} />
+      <CartConflictModal open={conflictOpen} onClose={closeConflict} newRestaurantName={restaurant?.name ?? ''}
+        onCleared={closeConflict} />
     </PageShell>
+  );
+}
+
+function LockedExploreFallback() {
+  return (
+    <div className="space-y-4">
+      <Skeleton className="h-8 w-56" />
+      <div className="flex gap-3 overflow-hidden pb-2">
+        {[1, 2, 3].map((item) => (
+          <Skeleton key={item} className="h-12 w-28 shrink-0 rounded-2xl" />
+        ))}
+      </div>
+      {[1, 2, 3].map((item) => (
+        <MenuItemSkeleton key={item} />
+      ))}
+    </div>
   );
 }

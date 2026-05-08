@@ -1,5 +1,6 @@
 export interface CustomerUser {
   id?: number;
+  user_id?: number;
   name?: string;
   phone: string;
   email?: string;
@@ -10,8 +11,9 @@ export interface SendOtpRequest {
 }
 
 export interface SendOtpResponse {
-  message: string;
-  success: boolean;
+  message?: string;
+  success?: boolean;
+  status?: string;
 }
 
 export interface VerifyOtpRequest {
@@ -20,7 +22,10 @@ export interface VerifyOtpRequest {
 }
 
 export interface VerifyOtpResponse {
-  token: string;
-  user: CustomerUser;
+  authToken: string;
+  token?: string;
+  user?: CustomerUser;
   message?: string;
+  success?: boolean;
+  status?: string;
 }

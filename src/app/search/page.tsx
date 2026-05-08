@@ -5,7 +5,13 @@ import { SearchContent } from './SearchContent';
 
 export default function SearchPage() {
   return (
-    <Suspense fallback={<div className="flex items-center justify-center py-20"><div className="animate-spin w-8 h-8 border-3 border-cherry-600 border-t-transparent rounded-full" /></div>}>
+    <Suspense
+      fallback={
+        <div className="flex min-h-[50vh] items-center justify-center bg-[#FFF7F5] py-20">
+          <div className="h-8 w-8 animate-spin rounded-full border-3 border-cherry-600 border-t-transparent" />
+        </div>
+      }
+    >
       <SearchContent />
     </Suspense>
   );
