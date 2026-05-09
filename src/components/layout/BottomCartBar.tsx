@@ -1,16 +1,26 @@
 'use client';
 
 import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingBag } from 'lucide-react';
+import { ArrowRight } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { formatMoney } from '@/utils/money';
+import { useHasMounted } from '@/hooks/useHasMounted';
 
 export function BottomCartBar() {
-  const items = useCartStore((s) => s.items);
-  const totalItems = useCartStore((s) => s.totalItems());
-  const estimatedSubtotal = useCartStore((s) => s.estimatedSubtotal());
-  const restaurantName = useCartStore((s) => s.restaurantName);
+  const pathname = usePathname();
+  const hasMounted = useHasMounted();
+  const items = useCartStore((state) => state.items);
+  const totalItems = useCartStore((state) => state.totalItems());
+  const estimatedSubtotal = useCartStore((state) => state.estimatedSubtotal());
+  const hidden =
+    pathname === '/checkout' ||
+    pathname === '/cart' ||
+    pathname.startsWith('/orders/') ||
+    pathname.startsWith('/profile');
+
+  if (!hasMounted || hidden) return null;
 
   return (
     <AnimatePresence>
@@ -20,25 +30,22 @@ export function BottomCartBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom"
+          className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom sm:p-4"
         >
-          <Link href="/cart" className="block max-w-3xl mx-auto">
-            <div className="bg-cherry-600 text-white rounded-2xl px-5 py-3.5 flex items-center justify-between shadow-elevated hover:bg-cherry-700 transition-colors">
-              <div className="flex items-center gap-3">
-                <div className="relative">
-                  <ShoppingBag className="w-5 h-5" />
-                  <span className="absolute -top-1.5 -right-1.5 w-4 h-4 bg-white text-cherry-600 text-[10px] font-bold rounded-full flex items-center justify-center">
-                    {totalItems}
-                  </span>
-                </div>
-                <div>
-                  <p className="text-sm font-semibold">{totalItems} item{totalItems !== 1 ? 's' : ''}</p>
-                  <p className="text-xs text-cherry-100 truncate max-w-[140px]">From {restaurantName}</p>
-                </div>
+          <Link href="/cart" className="mx-auto block w-full max-w-[520px]">
+            <div className="flex items-center justify-between rounded-2xl bg-[#B4080B] px-5 py-3.5 text-white shadow-[0_14px_38px_rgba(180,8,11,0.28)] transition hover:bg-[#A80F15] sm:px-6">
+              <div>
+                <p className="text-xs font-extrabold uppercase tracking-normal">
+                  {totalItems} item{totalItems === 1 ? '' : 's'}
+                </p>
+                <p className="text-base font-semibold">
+                  {formatMoney(estimatedSubtotal)}{' '}
+                  <span className="font-normal text-white/90">plus taxes</span>
+                </p>
               </div>
-              <div className="flex items-center gap-2">
-                <span className="text-base font-bold">{formatMoney(estimatedSubtotal)}</span>
-                <span className="text-sm">→</span>
+              <div className="flex items-center gap-2 text-sm font-extrabold sm:text-base">
+                <span>View Cart</span>
+                <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </div>
             </div>
           </Link>

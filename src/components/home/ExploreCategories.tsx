@@ -31,7 +31,8 @@ interface ExploreCategoriesProps {
 }
 
 const RADIUS_KM = 7;
-const ITEMS_LIMIT = 20;
+const HOME_ITEMS_LIMIT = 5;
+const CATEGORY_PREVIEW_COUNT = 6;
 const EMPTY_CATEGORIES: HomeCategory[] = [];
 
 export function ExploreCategories({
@@ -51,6 +52,7 @@ export function ExploreCategories({
   const [pendingItem, setPendingItem] = useState<CategoryFoodItem | null>(null);
   const [conflictOpen, setConflictOpen] = useState(false);
   const [locationOpen, setLocationOpen] = useState(false);
+  const [categoriesExpanded, setCategoriesExpanded] = useState(false);
   const itemsSectionRef = useRef<HTMLDivElement | null>(null);
 
   const lat = useLocationStore((state) => state.latitude);
@@ -94,6 +96,20 @@ export function ExploreCategories({
   }, [categories, categoryFromUrl, requestedCategoryKey]);
 
   const selectedCategory = categories.find((category) => category.key === selectedCategoryKey);
+  const hasExtraCategories = categories.length > CATEGORY_PREVIEW_COUNT;
+  const visibleCategories = useMemo(() => {
+    if (categoriesExpanded || !hasExtraCategories) return categories;
+
+    const preview = categories.slice(0, CATEGORY_PREVIEW_COUNT);
+    if (!selectedCategoryKey || preview.some((category) => category.key === selectedCategoryKey)) {
+      return preview;
+    }
+
+    const selected = categories.find((category) => category.key === selectedCategoryKey);
+    if (!selected) return preview;
+
+    return [...preview.slice(0, CATEGORY_PREVIEW_COUNT - 1), selected];
+  }, [categories, categoriesExpanded, hasExtraCategories, selectedCategoryKey]);
 
   const itemsQuery = useCategoryItems({
     categoryKey: selectedCategoryKey,
@@ -101,7 +117,7 @@ export function ExploreCategories({
     lng,
     radiusKm: RADIUS_KM,
     page: 1,
-    limit: ITEMS_LIMIT,
+    limit: HOME_ITEMS_LIMIT,
     sort: 'recommended',
     vegOnly: false,
     enabled: effectiveMode === 'global' && Boolean(selectedCategoryKey),
@@ -127,6 +143,17 @@ export function ExploreCategories({
   const categoriesError = effectiveMode === 'global' ? getErrorMessage(categoriesQuery.error) : '';
   const itemsError = effectiveMode === 'global' ? getErrorMessage(itemsQuery.error) : '';
   const hasLocation = lat != null && lng != null;
+  const viewAllHref = useMemo(() => {
+    if (effectiveMode !== 'global' || !selectedCategoryKey) return undefined;
+
+    const query = new URLSearchParams();
+    if (typeof lat === 'number' && Number.isFinite(lat)) query.set('lat', String(lat));
+    if (typeof lng === 'number' && Number.isFinite(lng)) query.set('lng', String(lng));
+    query.set('radius_km', String(RADIUS_KM));
+    if (selectedCategory?.name) query.set('name', selectedCategory.name);
+
+    return `/categories/${encodeURIComponent(selectedCategoryKey)}?${query.toString()}`;
+  }, [effectiveMode, lat, lng, selectedCategory?.name, selectedCategoryKey]);
 
   const updateCategoryInUrl = useCallback(
     (categoryKey: string) => {
@@ -206,9 +233,21 @@ export function ExploreCategories({
   return (
     <section className={sectionClassName} aria-labelledby="explore-categories-heading">
       <div className="space-y-4">
-        <h2 id="explore-categories-heading" className="text-2xl font-extrabold text-[#1F1A1A]">
-          Explore Categories
-        </h2>
+        <div className="flex items-center justify-between gap-4">
+          <h2 id="explore-categories-heading" className="text-2xl font-extrabold text-[#1F1A1A]">
+            Explore Categories
+          </h2>
+          {!categoriesLoading && !categoriesError && hasExtraCategories && (
+            <button
+              type="button"
+              onClick={() => setCategoriesExpanded((expanded) => !expanded)}
+              className="shrink-0 text-sm font-bold text-[#A80F15] transition hover:text-[#7C1118] hover:underline"
+              aria-expanded={categoriesExpanded}
+            >
+              {categoriesExpanded ? 'Show Less' : 'View All'}
+            </button>
+          )}
+        </div>
 
         {categoriesLoading ? (
           <CategoryPillsSkeleton />
@@ -222,7 +261,7 @@ export function ExploreCategories({
           />
         ) : (
           <div className="flex gap-3 overflow-x-auto hide-scrollbar pb-2 sm:flex-wrap sm:overflow-visible">
-            {categories.map((category) => (
+            {visibleCategories.map((category) => (
               <CategoryPill
                 key={category.key}
                 category={category}
@@ -240,10 +279,13 @@ export function ExploreCategories({
             <CategoryItemsSection
               selectedCategory={selectedCategory}
               items={items}
+              pagination={itemsResult?.pagination}
+              totalCount={itemsResult?.totalCount}
               loading={itemsLoading}
               errorMessage={itemsError}
               hasLocation={hasLocation}
               mode={effectiveMode}
+              viewAllHref={viewAllHref}
               onRetry={() => itemsQuery.refetch()}
               onAddItem={handleAddItem}
               onSetLocation={() => setLocationOpen(true)}
@@ -361,9 +403,11 @@ function createEmptyCategoryItemsResult(): CategoryItemsResult {
     items: [],
     pagination: {
       page: 1,
-      limit: ITEMS_LIMIT,
+      limit: HOME_ITEMS_LIMIT,
       hasMore: false,
+      totalCount: 0,
     },
+    totalCount: 0,
     warnings: [],
   };
 }

@@ -30,6 +30,7 @@ export function useCategoryItems(params: {
       params.lng ?? null,
       radiusKm,
       page,
+      limit,
       params.sort ?? 'recommended',
       params.vegOnly ?? false,
     ],

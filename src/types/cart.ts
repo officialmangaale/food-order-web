@@ -39,19 +39,26 @@ export interface CartValidateRequestItem {
 
 export interface CartValidateRequest {
   restaurant_id: number;
-  customer_location: {
+  customer_location?: {
     latitude: number;
     longitude: number;
   };
   items: CartValidateRequestItem[];
+  payment_method?: 'cash';
 }
 
 export interface CartValidateResponse {
   valid: boolean;
   subtotal?: number;
+  cgst?: number;
+  sgst?: number;
+  tax_amount?: number;
   taxes?: number;
+  delivery_charge?: number;
   delivery_fee?: number;
+  discount_amount?: number;
   discount?: number;
+  grand_total?: number;
   total?: number;
   message?: string;
   item_errors?: { item_id: number; message: string }[];

@@ -1,0 +1,450 @@
+'use client';
+
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { AlertCircle, ShoppingBag } from 'lucide-react';
+import { AddressFormModal } from '@/components/checkout/AddressFormModal';
+import { CheckoutLoginPrompt } from '@/components/checkout/CheckoutLoginPrompt';
+import { DeliveryAddressSection } from '@/components/checkout/DeliveryAddressSection';
+import { DeliveryInstructionsSection } from '@/components/checkout/DeliveryInstructionsSection';
+import { OrderSummaryCard } from '@/components/checkout/OrderSummaryCard';
+import { PaymentMethodSection } from '@/components/checkout/PaymentMethodSection';
+import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
+import { Button } from '@/components/ui/Button';
+import { useToast } from '@/components/ui/Toast';
+import { useCheckoutCartValidation } from '@/hooks/useCheckoutCartValidation';
+import { useHasMounted } from '@/hooks/useHasMounted';
+import { useCheckoutInstructions } from '@/hooks/useCheckoutInstructions';
+import { useCustomerAddresses } from '@/hooks/useCustomerAddresses';
+import { getErrorMessage, isAuthError } from '@/services/http';
+import { placeOrder } from '@/services/customerWebApi';
+import { useActiveOrderStore } from '@/store/activeOrderStore';
+import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/cartStore';
+import { useLocationStore } from '@/store/locationStore';
+import { buildCartItemsPayload, type CheckoutAddress, type CheckoutAddressPayload } from '@/components/checkout/checkoutTypes';
+import { generateIdempotencyKey } from '@/utils/idempotency';
+import type { PlaceOrderRequest } from '@/types/order';
+import type { CartItem, ValidatedTotals } from '@/types/cart';
+
+const EMPTY_TOTALS: ValidatedTotals = {
+  subtotal: 0,
+  taxes: 0,
+  delivery_fee: 0,
+  discount: 0,
+  total: 0,
+};
+
+export function CheckoutPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const addressSectionRef = useRef<HTMLDivElement>(null);
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+  const [addressModalOpen, setAddressModalOpen] = useState(false);
+  const [loginOpen, setLoginOpen] = useState(false);
+  const [placing, setPlacing] = useState(false);
+  const [orderError, setOrderError] = useState('');
+  const [addressError, setAddressError] = useState('');
+  const [idempotencyKey, setIdempotencyKey] = useState('');
+  const { instructions, setInstructions, clearInstructions } = useCheckoutInstructions();
+  const hasMounted = useHasMounted();
+
+  const items = useCartStore((state) => state.items);
+  const restaurantId = useCartStore((state) => state.restaurantId);
+  const restaurantName = useCartStore((state) => state.restaurantName);
+  const estimatedSubtotal = useCartStore((state) => state.estimatedSubtotal());
+  const clearCart = useCartStore((state) => state.clearCart);
+  const setValidatedTotals = useCartStore((state) => state.setValidatedTotals);
+  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
+  const token = useAuthStore((state) => state.token);
+  const user = useAuthStore((state) => state.user);
+  const authPhone = useAuthStore((state) => state.phone);
+  const logout = useAuthStore((state) => state.logout);
+  const latitude = useLocationStore((state) => state.latitude);
+  const longitude = useLocationStore((state) => state.longitude);
+  const setActiveOrder = useActiveOrderStore((state) => state.setActiveOrder);
+
+  const {
+    addresses,
+    isLoading: addressesLoading,
+    notice: addressNotice,
+    saveAddress,
+  } = useCustomerAddresses(token, isAuthenticated);
+
+  const selectedAddress = useMemo(
+    () => resolveSelectedAddress(addresses, selectedAddressId),
+    [addresses, selectedAddressId]
+  );
+  const fallbackLocation = useMemo(
+    () => ({ latitude, longitude }),
+    [latitude, longitude]
+  );
+  const validation = useCheckoutCartValidation({
+    restaurantId,
+    items,
+    address: selectedAddress,
+    fallbackLocation,
+  });
+  const validationResult = validation.data;
+  const estimatedTotals = useMemo(
+    () => ({
+      ...EMPTY_TOTALS,
+      subtotal: estimatedSubtotal,
+      total: estimatedSubtotal,
+    }),
+    [estimatedSubtotal]
+  );
+  const totals = validationResult?.totals ?? estimatedTotals;
+  const validationError =
+    validation.error
+      ? getErrorMessage(validation.error)
+      : validationResult?.valid === false
+        ? validationResult.message || 'Cart validation failed.'
+        : '';
+  const totalInvalid = Boolean(
+    items.length > 0 && validationResult && validationResult.totals.subtotal > 0 && validationResult.totals.total <= 0
+  );
+  const addressProblems = getAddressProblems(selectedAddress, user?.name, user?.phone ?? authPhone);
+  const placeDisabledReason = getPlaceDisabledReason({
+    isAuthenticated,
+    selectedAddress,
+    addressProblems,
+    validationLoading: validation.isLoading || validation.isFetching,
+    validationError,
+    totalInvalid,
+    placing,
+  });
+  const placeDisabled = Boolean(placeDisabledReason);
+
+  useEffect(() => {
+    if (!validationResult?.valid || totalInvalid) return;
+    setValidatedTotals(validationResult.totals);
+  }, [setValidatedTotals, totalInvalid, validationResult]);
+
+  if (!hasMounted) return <CheckoutPageSkeleton />;
+
+  if (items.length === 0) {
+    return (
+      <main className="min-h-screen bg-[#FFF7F5]">
+        <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8">
+          <CheckoutHeading />
+          <div className="mt-8 rounded-2xl border border-[#F0DADA] bg-white p-8 text-center shadow-[0_16px_40px_rgba(123,35,35,0.06)]">
+            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FFF0F0] text-[#A80F15]">
+              <ShoppingBag className="h-7 w-7" aria-hidden="true" />
+            </div>
+            <h2 className="mt-5 text-2xl font-extrabold text-[#1F1717]">Your cart is empty</h2>
+            <p className="mt-2 text-[#6B4B4B]">Add items from nearby restaurants to continue.</p>
+            <Button className="mt-6 bg-[#A80F15] hover:bg-[#8F0D12]" onClick={() => router.push('/')}>
+              Browse Restaurants
+            </Button>
+          </div>
+        </div>
+        <CheckoutFooter />
+      </main>
+    );
+  }
+
+  const handleSaveAddress = async (payload: CheckoutAddressPayload) => {
+    try {
+      const saved = await saveAddress(payload);
+      setSelectedAddressId(String(saved.id));
+      setAddressError('');
+      toast('Address saved', 'success');
+    } catch (error) {
+      if (isAuthError(error)) {
+        logout();
+        setLoginOpen(true);
+        toast('Please log in again to save this address.', 'error');
+        return;
+      }
+      toast(getErrorMessage(error), 'error');
+    }
+  };
+
+  const handlePlaceOrder = async () => {
+    setOrderError('');
+    setAddressError('');
+
+    if (!isAuthenticated || !token) {
+      setLoginOpen(true);
+      return;
+    }
+
+    const problems = getAddressProblems(selectedAddress, user?.name, user?.phone ?? authPhone);
+    if (problems.length > 0) {
+      setAddressError(problems[0]);
+      addressSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      return;
+    }
+
+    if (!restaurantId || !selectedAddress) {
+      setOrderError('Unable to prepare checkout. Please try again.');
+      return;
+    }
+
+    setPlacing(true);
+    try {
+      const finalValidation = await validation.validateNow();
+      setValidatedTotals(finalValidation.totals);
+
+      if (!finalValidation.valid) {
+        throw new Error(finalValidation.message || 'Cart validation failed.');
+      }
+
+      if (finalValidation.totals.subtotal > 0 && finalValidation.totals.total <= 0) {
+        throw new Error('Unable to calculate order total. Please retry.');
+      }
+
+      const orderKey = idempotencyKey || generateIdempotencyKey(restaurantId);
+      if (!idempotencyKey) setIdempotencyKey(orderKey);
+
+      const response = await placeOrder(
+        buildPlaceOrderPayload({
+          restaurantId,
+          address: selectedAddress,
+          customerName: selectedAddress.name || user?.name || '',
+          customerPhone: user?.phone || authPhone || selectedAddress.phone || '',
+          items,
+          instructions,
+        }),
+        token,
+        orderKey
+      );
+
+      if (!response.order_id) {
+        throw new Error('Order was placed but no order ID was returned.');
+      }
+
+      setActiveOrder({
+        order_id: response.order_id,
+        restaurant_id: restaurantId,
+        restaurant_name: restaurantName,
+        status: response.status ?? 'placed',
+        total: response.total ?? finalValidation.totals.total,
+        created_at: new Date().toISOString(),
+      });
+      clearCart();
+      clearInstructions();
+      toast('Order placed successfully!', 'success');
+      router.push(`/orders/${response.order_id}/track`);
+    } catch (error) {
+      if (isAuthError(error)) {
+        logout();
+        setLoginOpen(true);
+        toast('Your session expired. Please log in again.', 'error');
+      } else {
+        const message = getErrorMessage(error);
+        setOrderError(message);
+        toast(message, 'error');
+      }
+    } finally {
+      setPlacing(false);
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-[#FFF7F5]">
+      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <CheckoutHeading />
+
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+          <div className="space-y-6" ref={addressSectionRef}>
+            {!isAuthenticated && <CheckoutLoginPrompt onLogin={() => setLoginOpen(true)} />}
+
+            {orderError && (
+              <div className="flex gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+                <p>{orderError}</p>
+              </div>
+            )}
+
+            <DeliveryAddressSection
+              addresses={addresses}
+              selectedAddress={selectedAddress}
+              loading={addressesLoading}
+              notice={addressNotice}
+              error={addressError}
+              onSelect={(address) => {
+                setSelectedAddressId(String(address.id));
+                setAddressError('');
+              }}
+              onAddNew={() => setAddressModalOpen(true)}
+            />
+
+            <DeliveryInstructionsSection value={instructions} onChange={setInstructions} />
+            <PaymentMethodSection />
+          </div>
+
+          <OrderSummaryCard
+            items={items}
+            restaurantName={restaurantName}
+            totals={totals}
+            estimated={!validationResult}
+            validating={validation.isLoading || validation.isFetching}
+            validationError={validationError}
+            totalInvalid={totalInvalid}
+            placing={placing}
+            placeDisabled={placeDisabled}
+            placeDisabledReason={placeDisabledReason}
+            onPlaceOrder={handlePlaceOrder}
+          />
+        </div>
+      </div>
+
+      {addressModalOpen && (
+        <AddressFormModal
+          open={addressModalOpen}
+          initialName={user?.name}
+          initialPhone={user?.phone ?? authPhone ?? undefined}
+          onClose={() => setAddressModalOpen(false)}
+          onSave={handleSaveAddress}
+        />
+      )}
+      <OtpLoginModal
+        open={loginOpen}
+        onClose={() => setLoginOpen(false)}
+        onVerified={() => setLoginOpen(false)}
+      />
+      <CheckoutFooter />
+    </main>
+  );
+}
+
+function CheckoutPageSkeleton() {
+  return (
+    <main className="min-h-screen bg-[#FFF7F5]">
+      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
+        <CheckoutHeading />
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+          <div className="space-y-6">
+            <div className="h-72 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
+            <div className="h-52 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
+            <div className="h-64 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
+          </div>
+          <div className="h-[420px] animate-pulse rounded-2xl border border-[#F0DADA] bg-white shadow-[0_18px_42px_rgba(123,35,35,0.08)]" />
+        </div>
+      </div>
+    </main>
+  );
+}
+
+function CheckoutHeading() {
+  return (
+    <header>
+      <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-5xl">
+        Checkout
+      </h1>
+      <p className="mt-3 text-lg text-[#4F3030]">Confirm your details and place your order</p>
+    </header>
+  );
+}
+
+function CheckoutFooter() {
+  return (
+    <footer className="mt-14 border-t border-[#E9CFCF] bg-[#FFF0ED]">
+      <div className="mx-auto flex max-w-[1200px] flex-col gap-5 px-4 py-9 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+        <p className="text-2xl font-extrabold tracking-normal text-[#1F1717]">Mangaale</p>
+        <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#5F4444]">
+          <Link href="/privacy">Privacy Policy</Link>
+          <Link href="/terms">Terms of Service</Link>
+          <Link href="/help">Help Center</Link>
+          <Link href="/restaurants">Partner with Us</Link>
+        </nav>
+        <p className="text-sm text-[#6B5555]">{'\u00A9'} 2026 Mangaale. All rights reserved.</p>
+      </div>
+    </footer>
+  );
+}
+
+function resolveSelectedAddress(addresses: CheckoutAddress[], selectedId: string | null) {
+  return (
+    addresses.find((address) => String(address.id) === selectedId) ??
+    addresses.find((address) => address.is_default) ??
+    addresses[0] ??
+    null
+  );
+}
+
+function getAddressProblems(
+  address: CheckoutAddress | null | undefined,
+  userName?: string,
+  authPhone?: string | null
+) {
+  if (!address) return ['Add a delivery address to continue.'];
+
+  const problems: string[] = [];
+  const customerName = address.name || userName;
+  const customerPhone = authPhone || address.phone;
+
+  if (!customerName?.trim()) problems.push('Customer name is required.');
+  if (!customerPhone || customerPhone.replace(/\D/g, '').length < 10) problems.push('Valid phone number is required.');
+  if (!address.address_line1?.trim()) problems.push('Address line is required.');
+  if (!address.area?.trim()) problems.push('Area is required.');
+  if (!address.city?.trim()) problems.push('City is required.');
+  return problems;
+}
+
+function getPlaceDisabledReason({
+  isAuthenticated,
+  selectedAddress,
+  addressProblems,
+  validationLoading,
+  validationError,
+  totalInvalid,
+  placing,
+}: {
+  isAuthenticated: boolean;
+  selectedAddress: CheckoutAddress | null;
+  addressProblems: string[];
+  validationLoading: boolean;
+  validationError: string;
+  totalInvalid: boolean;
+  placing: boolean;
+}) {
+  if (placing) return '';
+  if (!isAuthenticated) return 'Login to place your order.';
+  if (!selectedAddress) return 'Add a delivery address.';
+  if (addressProblems.length > 0) return 'Complete your delivery address.';
+  if (validationLoading) return 'Checking order total...';
+  if (validationError) return validationError;
+  if (totalInvalid) return 'Unable to calculate order total. Please retry.';
+  return '';
+}
+
+function buildPlaceOrderPayload({
+  restaurantId,
+  address,
+  customerName,
+  customerPhone,
+  items,
+  instructions,
+}: {
+  restaurantId: number;
+  address: CheckoutAddress;
+  customerName: string;
+  customerPhone: string;
+  items: CartItem[];
+  instructions: string;
+}): PlaceOrderRequest {
+  return {
+    restaurant_id: restaurantId,
+    payment_method: 'cash',
+    customer: {
+      name: customerName,
+      phone: customerPhone,
+    },
+    delivery_address: {
+      address_line1: address.address_line1,
+      area: address.area ?? '',
+      city: address.city ?? '',
+      state: address.state,
+      pincode: address.pincode ?? '',
+      landmark: address.landmark,
+      latitude: address.latitude,
+      longitude: address.longitude,
+    },
+    items: buildCartItemsPayload(items),
+    special_instructions: instructions.trim() || undefined,
+  };
+}

@@ -22,8 +22,8 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
   );
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#F0DADA] bg-white shadow-[0_14px_34px_rgba(31,41,55,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(168,15,21,0.10)]">
-      <div className="relative h-[168px] overflow-hidden bg-[#FFF0F0] sm:h-[178px]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-xl border border-[#F0DADA] bg-white shadow-[0_14px_34px_rgba(31,41,55,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(168,15,21,0.10)]">
+      <div className="relative h-[160px] overflow-hidden bg-[#FFF0F0] sm:h-[172px] lg:h-[180px]">
         {canShowImage ? (
           <img
             src={item.imageUrl}
@@ -56,7 +56,7 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
 
       <div className="flex flex-1 flex-col p-4">
         <div className="flex items-start justify-between gap-4">
-          <h3 className="line-clamp-2 min-h-11 text-base font-extrabold leading-snug text-[#1F1A1A]">
+          <h3 className="line-clamp-2 min-h-10 text-base font-extrabold leading-snug text-[#1F1A1A]">
             {item.name}
           </h3>
           {canCustomize && (

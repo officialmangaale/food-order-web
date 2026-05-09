@@ -51,6 +51,7 @@ export interface CategoryItemsPagination {
   page: number;
   limit: number;
   hasMore: boolean;
+  totalCount?: number;
 }
 
 export interface CategoryItemsFilters {
@@ -63,6 +64,7 @@ export interface CategoryItemsResult {
   category?: CategoryItemsCategory;
   items: CategoryFoodItem[];
   pagination: CategoryItemsPagination;
+  totalCount?: number;
   filters?: CategoryItemsFilters;
   warnings?: string[];
 }

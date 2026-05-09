@@ -1,17 +1,23 @@
 'use client';
 
+import Link from 'next/link';
 import { AlertTriangle, MapPin } from 'lucide-react';
 import { CategoryItemCard } from '@/components/home/CategoryItemCard';
 import { Skeleton } from '@/components/ui/Skeleton';
-import type { CategoryFoodItem, HomeCategory } from '@/types/category';
+import type { CategoryFoodItem, CategoryItemsPagination, HomeCategory } from '@/types/category';
+
+const HOME_PREVIEW_COUNT = 4;
 
 interface CategoryItemsSectionProps {
   selectedCategory?: HomeCategory;
   items: CategoryFoodItem[];
+  pagination?: CategoryItemsPagination;
+  totalCount?: number;
   loading?: boolean;
   errorMessage?: string;
   hasLocation?: boolean;
   mode?: 'global' | 'locked';
+  viewAllHref?: string;
   onRetry?: () => void;
   onAddItem: (item: CategoryFoodItem) => void;
   onSetLocation?: () => void;
@@ -20,20 +26,38 @@ interface CategoryItemsSectionProps {
 export function CategoryItemsSection({
   selectedCategory,
   items,
+  pagination,
+  totalCount,
   loading,
   errorMessage,
   hasLocation,
   mode = 'global',
+  viewAllHref,
   onRetry,
   onAddItem,
   onSetLocation,
 }: CategoryItemsSectionProps) {
   const heading = getHeading(selectedCategory, mode);
+  const visibleItems = items.slice(0, HOME_PREVIEW_COUNT);
+  const knownTotalCount = totalCount ?? pagination?.totalCount;
+  const hasMoreItems = Boolean(
+    mode === 'global' &&
+      viewAllHref &&
+      (items.length > HOME_PREVIEW_COUNT || pagination?.hasMore || (knownTotalCount ?? 0) > HOME_PREVIEW_COUNT)
+  );
 
   return (
     <section className="mt-8" aria-live="polite">
       <div className="mb-4 flex items-center justify-between gap-4">
         <h3 className="text-xl font-extrabold text-[#1F1A1A] sm:text-2xl">{heading}</h3>
+        {hasMoreItems && viewAllHref && (
+          <Link
+            href={viewAllHref}
+            className="shrink-0 text-sm font-bold text-[#A80F15] transition hover:text-[#7C1118] hover:underline"
+          >
+            View All
+          </Link>
+        )}
       </div>
 
       {loading ? (
@@ -48,13 +72,14 @@ export function CategoryItemsSection({
           onSetLocation={onSetLocation}
         />
       ) : (
-        <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
-          {items.map((item) => (
-            <CategoryItemCard
-              key={`${item.restaurantId}-${item.itemId}`}
-              item={item}
-              onAdd={onAddItem}
-            />
+        <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4 lg:gap-6">
+          {visibleItems.map((item) => (
+            <div key={`${item.restaurantId}-${item.itemId}`} className="w-[260px] shrink-0 sm:w-auto">
+              <CategoryItemCard
+                item={item}
+                onAdd={onAddItem}
+              />
+            </div>
           ))}
         </div>
       )}
@@ -64,10 +89,10 @@ export function CategoryItemsSection({
 
 export function CategoryItemsSkeleton() {
   return (
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-4">
+    <div className="-mx-4 flex gap-4 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-4 lg:gap-6">
       {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="overflow-hidden rounded-2xl border border-[#F0DADA] bg-white">
-          <Skeleton className="h-[168px] w-full rounded-none sm:h-[178px]" />
+        <div key={item} className="w-[260px] shrink-0 overflow-hidden rounded-xl border border-[#F0DADA] bg-white sm:w-auto">
+          <Skeleton className="h-[160px] w-full rounded-none sm:h-[172px] lg:h-[180px]" />
           <div className="space-y-3 p-4">
             <Skeleton className="h-5 w-4/5" />
             <Skeleton className="h-4 w-2/3" />
@@ -124,15 +149,15 @@ function CategoryItemsEmpty({
   const needsLocation = mode === 'global' && !hasLocation;
 
   return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-6 py-10 text-center shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
+    <div className="rounded-2xl border border-[#F0DADA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
       <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15]">
         <MapPin className="h-6 w-6" aria-hidden="true" />
       </div>
       <h4 className="mt-4 text-base font-extrabold text-[#1F1A1A]">
-        {needsLocation ? 'Set your location to see nearby dishes.' : `No ${categoryName} items available near you`}
+        {needsLocation ? 'Set your location to see nearby dishes.' : 'No items available in this category.'}
       </h4>
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7B6B6B]">
-        {needsLocation ? 'Choose where to deliver and we will refresh nearby dishes.' : 'Try another category.'}
+        {needsLocation ? 'Choose where to deliver and we will refresh nearby dishes.' : `${categoryName} may be available again soon.`}
       </p>
       {needsLocation && onSetLocation && (
         <button

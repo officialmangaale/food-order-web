@@ -158,11 +158,13 @@ export function normalizeCategoryItemsResult(raw: unknown): CategoryItemsResult 
     : obj
       ? obj.items ?? obj.menu_items ?? obj.results
       : [];
+  const pagination = normalizePagination(obj?.pagination, obj);
 
   return {
     category: normalizeCategoryInfo(obj?.category),
     items: normalizeCategoryItems(itemsRaw),
-    pagination: normalizePagination(obj?.pagination),
+    pagination,
+    totalCount: pagination.totalCount,
     filters: normalizeFilters(obj?.filters),
     warnings: normalizeWarnings(obj?.warnings),
   };
@@ -257,7 +259,9 @@ export function buildLockedCategoryItemsResult({
       page: 1,
       limit: items.length,
       hasMore: false,
+      totalCount: items.length,
     },
+    totalCount: items.length,
     filters: {
       radiusKm: undefined,
       vegOnly: false,
@@ -336,13 +340,22 @@ function normalizeCategoryInfo(raw: unknown): CategoryItemsCategory | undefined 
   };
 }
 
-function normalizePagination(raw: unknown): CategoryItemsPagination {
+function normalizePagination(raw: unknown, root?: unknown): CategoryItemsPagination {
   const obj = asRecord(raw);
+  const rootObj = asRecord(root);
 
   return {
     page: readNumber(obj?.page) ?? 1,
     limit: readNumber(obj?.limit) ?? 20,
     hasMore: readBoolean(obj?.has_more ?? obj?.hasMore) ?? false,
+    totalCount: readNumber(
+      obj?.total_count ??
+        obj?.totalCount ??
+        obj?.total ??
+        rootObj?.total_count ??
+        rootObj?.totalCount ??
+        rootObj?.total
+    ),
   };
 }
 

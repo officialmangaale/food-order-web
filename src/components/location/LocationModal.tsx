@@ -57,6 +57,7 @@ export function LocationModal({ open, onClose }: LocationModalProps) {
   const refreshLocationQueries = () => {
     void queryClient.invalidateQueries({ queryKey: ['homeFeed'] });
     void queryClient.invalidateQueries({ queryKey: ['nearby'] });
+    void queryClient.invalidateQueries({ queryKey: ['nearby-restaurants'] });
     void queryClient.invalidateQueries({ queryKey: ['search-restaurants'] });
     void queryClient.invalidateQueries({ queryKey: ['customer-web-categories'] });
     void queryClient.invalidateQueries({ queryKey: ['customer-web-category-items'] });

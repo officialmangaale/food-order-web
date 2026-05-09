@@ -2,9 +2,10 @@
 
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
+import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCartStore } from '@/store/cartStore';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
@@ -23,6 +24,7 @@ export function AppHeader() {
     isLockedRoute,
   } = useRestaurantMode();
   const totalItems = useCartStore((s) => s.totalItems());
+  const hasMounted = useHasMounted();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const savedLocationLabel = useLocationStore((s) => s.label);
   const manualArea = useLocationStore((s) => s.manualArea);
@@ -30,20 +32,31 @@ export function AppHeader() {
   const latitude = useLocationStore((s) => s.latitude);
   const longitude = useLocationStore((s) => s.longitude);
   const router = useRouter();
+  const pathname = usePathname();
   const [searchQuery, setSearchQuery] = useState('');
   const [locationOpen, setLocationOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
   const hasBrowserLocation =
-    permissionStatus === 'granted' && latitude != null && longitude != null;
+    hasMounted && permissionStatus === 'granted' && latitude != null && longitude != null;
   const locationLabel =
-    savedLocationLabel || manualArea || (hasBrowserLocation ? 'Current location' : 'Select location');
-  const isLocationPlaceholder = !savedLocationLabel && !manualArea && !hasBrowserLocation;
+    hasMounted
+      ? savedLocationLabel || manualArea || (hasBrowserLocation ? 'Current location' : 'Select location')
+      : 'Select location';
+  const isLocationPlaceholder = !hasMounted || (!savedLocationLabel && !manualArea && !hasBrowserLocation);
+  const displayTotalItems = hasMounted ? totalItems : 0;
+  const isRestaurantDetailHeader =
+    /^\/restaurants\/[^/]+/.test(pathname) || pathname.startsWith('/r/');
   const searchPlaceholder =
-    lockedMode && lockedRestaurantName
+    isRestaurantDetailHeader
+      ? isLockedRoute
+        ? 'Search this menu'
+        : 'Search in Mangaale...'
+      : lockedMode && lockedRestaurantName
       ? 'Search this menu'
       : 'Search for restaurants, cuisine, or a dish';
+  const logoHref = isRestaurantDetailHeader && isLockedRoute ? pathname : homeLink;
 
   const handleLocationClick = () => {
     setLocationOpen(true);
@@ -64,6 +77,19 @@ export function AppHeader() {
     const params = new URLSearchParams();
     const trimmedQuery = searchQuery.trim();
 
+    if (isRestaurantDetailHeader) {
+      window.dispatchEvent(
+        new CustomEvent('mangaale:menu-search', {
+          detail: { query: trimmedQuery },
+        })
+      );
+      document.getElementById('restaurant-menu')?.scrollIntoView({
+        behavior: 'smooth',
+        block: 'start',
+      });
+      return;
+    }
+
     if (lockedMode) {
       params.set('locked', 'true');
       if (lockedRestaurantId) params.set('restaurant_id', String(lockedRestaurantId));
@@ -82,29 +108,55 @@ export function AppHeader() {
   return (
     <>
       <header className="safe-top sticky top-0 z-50 border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-5 lg:px-8 lg:py-[18px]">
-          <div className="flex items-center justify-between gap-4 lg:shrink-0 lg:justify-start">
-            <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute} />
-            <HeaderActions totalItems={totalItems} onAccountClick={handleAccountClick} className="flex lg:hidden" />
-          </div>
+        {isRestaurantDetailHeader ? (
+          <>
+            <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-7">
+              <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute} />
+              <SearchHeaderInput
+                value={searchQuery}
+                placeholder={searchPlaceholder}
+                onChange={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+                onClear={() => setSearchQuery('')}
+                className="mx-auto hidden max-w-[520px] sm:block"
+              />
+              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="ml-auto flex" />
+            </div>
+            <div className="px-4 pb-3 sm:hidden">
+              <SearchHeaderInput
+                value={searchQuery}
+                placeholder={searchPlaceholder}
+                onChange={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+                onClear={() => setSearchQuery('')}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-5 lg:px-8 lg:py-[18px]">
+            <div className="flex items-center justify-between gap-4 lg:shrink-0 lg:justify-start">
+              <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute} />
+              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="flex lg:hidden" />
+            </div>
 
-          <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-3 lg:flex-1 lg:gap-5">
-            <HeaderLocationPill
-              label={locationLabel}
-              isPlaceholder={isLocationPlaceholder}
-              onClick={handleLocationClick}
-            />
-            <SearchHeaderInput
-              value={searchQuery}
-              placeholder={searchPlaceholder}
-              onChange={setSearchQuery}
-              onSubmit={handleSearchSubmit}
-              onClear={() => setSearchQuery('')}
-            />
-          </div>
+            <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-3 lg:flex-1 lg:gap-5">
+              <HeaderLocationPill
+                label={locationLabel}
+                isPlaceholder={isLocationPlaceholder}
+                onClick={handleLocationClick}
+              />
+              <SearchHeaderInput
+                value={searchQuery}
+                placeholder={searchPlaceholder}
+                onChange={setSearchQuery}
+                onSubmit={handleSearchSubmit}
+                onClear={() => setSearchQuery('')}
+              />
+            </div>
 
-          <HeaderActions totalItems={totalItems} onAccountClick={handleAccountClick} className="hidden lg:flex" />
-        </div>
+            <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="hidden lg:flex" />
+          </div>
+        )}
       </header>
       <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
       <OtpLoginModal
