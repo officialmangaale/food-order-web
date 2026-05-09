@@ -22,6 +22,7 @@
 
 html {
   -webkit-tap-highlight-color: transparent;
+  overflow-x: hidden;
   scroll-behavior: smooth;
 }
 
@@ -31,6 +32,19 @@ body {
   color: #171717;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+* {
+  min-width: 0;
+}
+
+button,
+a,
+input,
+select,
+textarea {
+  touch-action: manipulation;
 }
 
 ::-webkit-scrollbar {

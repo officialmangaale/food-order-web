@@ -6,10 +6,10 @@ import { BottomCartBar } from '@/components/layout/BottomCartBar';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata: Metadata = {
-  title: 'Mangaale — Food Delivery',
+  title: 'Mangaale Food Delivery',
   description: 'Order food from your favourite local restaurants. Fast delivery within 7 km.',
   openGraph: {
-    title: 'Mangaale — Food Delivery',
+    title: 'Mangaale Food Delivery',
     description: 'Order food from your favourite local restaurants.',
     siteName: 'Mangaale',
     type: 'website',

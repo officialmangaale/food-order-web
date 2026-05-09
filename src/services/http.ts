@@ -21,11 +21,13 @@ export interface HttpError {
 
 /** Build a fully qualified URL for restaurant-service */
 export function restaurantUrl(path: string): string {
+  assertConfiguredBase(RESTAURANT_BASE, 'Restaurant service URL');
   return `${RESTAURANT_BASE}${path}`;
 }
 
 /** Build a fully qualified URL for user-service */
 export function userServiceUrl(path: string): string {
+  assertConfiguredBase(USER_BASE, 'User service URL');
   return `${USER_BASE}${path}`;
 }
 
@@ -134,4 +136,16 @@ export function isAuthError(err: unknown): boolean {
     return (err as HttpError).status === 401;
   }
   return false;
+}
+
+function assertConfiguredBase(value: string, label: string) {
+  if (value.trim()) return;
+
+  throw {
+    status: 0,
+    message:
+      process.env.NODE_ENV === 'development'
+        ? `${label} is not configured. Set the matching NEXT_PUBLIC_*_BASE_URL environment variable.`
+        : 'Service is temporarily unavailable. Please try again later.',
+  } as HttpError;
 }

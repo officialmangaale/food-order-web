@@ -111,7 +111,7 @@ export function AppHeader() {
         {isRestaurantDetailHeader ? (
           <>
             <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-7">
-              <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute} />
+              <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute || lockedMode} />
               <SearchHeaderInput
                 value={searchQuery}
                 placeholder={searchPlaceholder}
@@ -135,7 +135,7 @@ export function AppHeader() {
         ) : (
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-5 lg:px-8 lg:py-[18px]">
             <div className="flex items-center justify-between gap-4 lg:shrink-0 lg:justify-start">
-              <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute} />
+              <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute || lockedMode} />
               <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="flex lg:hidden" />
             </div>
 

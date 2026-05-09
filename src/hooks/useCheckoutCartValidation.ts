@@ -10,6 +10,7 @@ import { buildCartItemsPayload, getAddressLocation } from '@/components/checkout
 interface UseCheckoutCartValidationParams {
   restaurantId: number | null;
   items: CartItem[];
+  couponCode?: string;
   address?: CheckoutAddress | null;
   fallbackLocation?: { latitude: number | null; longitude: number | null };
 }
@@ -17,12 +18,13 @@ interface UseCheckoutCartValidationParams {
 export function useCheckoutCartValidation({
   restaurantId,
   items,
+  couponCode,
   address,
   fallbackLocation,
 }: UseCheckoutCartValidationParams) {
   const payload = useMemo(
-    () => buildCartValidatePayload({ restaurantId, items, address, fallbackLocation }),
-    [address, fallbackLocation, items, restaurantId]
+    () => buildCartValidatePayload({ restaurantId, items, couponCode, address, fallbackLocation }),
+    [address, couponCode, fallbackLocation, items, restaurantId]
   );
   const queryKey = useMemo(() => JSON.stringify(payload), [payload]);
 
@@ -43,6 +45,7 @@ export function useCheckoutCartValidation({
 export function buildCartValidatePayload({
   restaurantId,
   items,
+  couponCode,
   address,
   fallbackLocation,
 }: UseCheckoutCartValidationParams): Partial<CartValidateRequest> {
@@ -55,6 +58,7 @@ export function buildCartValidatePayload({
 
   return {
     restaurant_id: restaurantId ?? 0,
+    ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(customerLocation ? { customer_location: customerLocation } : {}),
     items: buildCartItemsPayload(items),
     payment_method: 'cash',
@@ -74,6 +78,7 @@ export function toValidationResult(response: CartValidateResponse): CheckoutVali
     valid: response.valid !== false,
     totals,
     message: response.message,
+    couponValidation: response.coupon_validation,
     itemErrors: response.item_errors,
   };
 }

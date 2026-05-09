@@ -45,17 +45,24 @@ export function RestaurantsPageClient({
   });
 
   useEffect(() => {
-    setPage(1);
-    setRestaurants([]);
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      setRestaurants([]);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [requestKey]);
 
   useEffect(() => {
     if (!nearbyQuery.data) return;
 
-    setRestaurants((currentRestaurants) => {
-      if (page === 1) return nearbyQuery.data.restaurants;
-      return mergeUniqueRestaurants(currentRestaurants, nearbyQuery.data.restaurants);
-    });
+    const nextRestaurants = nearbyQuery.data.restaurants;
+    const timer = window.setTimeout(() => {
+      setRestaurants((currentRestaurants) => {
+        if (page === 1) return nextRestaurants;
+        return mergeUniqueRestaurants(currentRestaurants, nextRestaurants);
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [nearbyQuery.data, page]);
 
   const resultCountLabel = useMemo(() => {

@@ -23,11 +23,29 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
 
   useEffect(() => {
     if (!orderId || !enabled) {
-      setConnected(false);
-      return;
+      const timer = window.setTimeout(() => setConnected(false), 0);
+      return () => window.clearTimeout(timer);
     }
 
+    const seenEvents = new Set<string>();
+    const markSeen = (event: OrderSSEEvent) => {
+      const record = asRecord(event) ?? {};
+      const data = asRecord(event.data) ?? {};
+      const eventKey =
+        readEventPart(record.event_id ?? record.id ?? data.event_id ?? data.id) ??
+        [
+          readEventPart(data.order_id ?? record.order_id ?? orderId),
+          readEventPart(data.status ?? data.order_status ?? record.status ?? record.order_status),
+          readEventPart(data.timestamp ?? data.updated_at ?? record.timestamp ?? record.updated_at),
+        ].join(':');
+
+      if (seenEvents.has(eventKey)) return false;
+      seenEvents.add(eventKey);
+      return true;
+    };
+
     const handleEvent = (event: OrderSSEEvent) => {
+      if (!markSeen(event)) return;
       setLastEvent(event);
       onEvent?.(event);
       const status = extractStatus(event);
@@ -46,7 +64,7 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
     return () => {
       cleanupRef.current?.();
       cleanupRef.current = null;
-      setConnected(false);
+      window.setTimeout(() => setConnected(false), 0);
     };
   }, [enabled, onEvent, orderId, onStatusChange]);
 
@@ -95,7 +113,10 @@ export function useOrderTracking(orderId: number) {
 
   // Initial fetch
   useEffect(() => {
-    void fetchTracking(true);
+    const timer = window.setTimeout(() => {
+      void fetchTracking(true);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [fetchTracking]);
 
   // SSE updates
@@ -156,6 +177,12 @@ function extractStatus(event: OrderSSEEvent): OrderStatus | null {
     eventRecord.status;
   if (value == null) return null;
   return normalizeOrderStatus(value);
+}
+
+function readEventPart(value: unknown) {
+  if (typeof value === 'string') return value.trim() || undefined;
+  if (typeof value === 'number' && Number.isFinite(value)) return String(value);
+  return undefined;
 }
 
 function readErrorStatus(error: unknown): number | null {

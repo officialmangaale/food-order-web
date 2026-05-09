@@ -65,17 +65,24 @@ export function CategoryListingClient({
   });
 
   useEffect(() => {
-    setPage(1);
-    setItems([]);
+    const timer = window.setTimeout(() => {
+      setPage(1);
+      setItems([]);
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [requestKey]);
 
   useEffect(() => {
     if (!itemsQuery.data) return;
 
-    setItems((currentItems) => {
-      if (page === 1) return itemsQuery.data.items;
-      return mergeUniqueItems(currentItems, itemsQuery.data.items);
-    });
+    const nextItems = itemsQuery.data.items;
+    const timer = window.setTimeout(() => {
+      setItems((currentItems) => {
+        if (page === 1) return nextItems;
+        return mergeUniqueItems(currentItems, nextItems);
+      });
+    }, 0);
+    return () => window.clearTimeout(timer);
   }, [itemsQuery.data, page]);
 
   const categoryMenuItem = customizeItem ? categoryItemToMenuItem(customizeItem) : null;

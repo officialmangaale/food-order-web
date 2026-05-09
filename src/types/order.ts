@@ -39,6 +39,10 @@ export interface PlaceOrderDeliveryAddress {
 export interface PlaceOrderRequest {
   restaurant_id: number;
   payment_method: 'cash';
+  coupon_code?: string;
+  campaign_id?: number;
+  utm_source?: string;
+  utm_campaign?: string;
   customer: {
     name: string;
     phone: string;

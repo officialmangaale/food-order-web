@@ -1,46 +1,105 @@
 'use client';
 
-import { useState } from 'react';
-import { Tag } from 'lucide-react';
-import { Button } from '@/components/ui/Button';
+import { useEffect, useState } from 'react';
+import { CouponInputCard } from '@/components/coupon/CouponInputCard';
 import { useToast } from '@/components/ui/Toast';
+import { validateCoupon } from '@/services/couponApi';
+import { getErrorMessage } from '@/services/http';
+import { normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
+import { useAuthStore } from '@/store/authStore';
+import { useCartStore } from '@/store/cartStore';
+import { buildCouponCartPayload } from '@/utils/couponCartPayload';
 
 export function CartPromoCard() {
-  const [promoCode, setPromoCode] = useState('');
+  const restaurantId = useCartStore((state) => state.restaurantId);
+  const items = useCartStore((state) => state.items);
+  const couponState = useCampaignStore((state) =>
+    restaurantId ? state.checkoutCoupons[String(restaurantId)] : undefined
+  );
+  const syncCampaignCoupon = useCampaignStore((state) => state.syncCampaignCoupon);
+  const setCheckoutCoupon = useCampaignStore((state) => state.setCheckoutCoupon);
+  const removeCheckoutCoupon = useCampaignStore((state) => state.removeCheckoutCoupon);
+  const setCouponValidation = useCampaignStore((state) => state.setCouponValidation);
+  const clearCouponValidation = useCampaignStore((state) => state.clearCouponValidation);
+  const purgeExpired = useCampaignStore((state) => state.purgeExpired);
+  const user = useAuthStore((state) => state.user);
+  const authPhone = useAuthStore((state) => state.phone);
+  const [promoDraft, setPromoDraft] = useState<string | null>(null);
+  const [checking, setChecking] = useState(false);
+  const [error, setError] = useState('');
   const { toast } = useToast();
+  const promoCode = promoDraft ?? couponState?.couponCode ?? '';
+  const displayedValidation =
+    couponState && couponState.couponCode === normalizeCouponCode(promoCode)
+      ? couponState.validation
+      : undefined;
 
-  const handleApply = () => {
-    toast('Promo codes coming soon', 'info');
+  useEffect(() => {
+    purgeExpired();
+    if (restaurantId) syncCampaignCoupon(restaurantId);
+  }, [purgeExpired, restaurantId, syncCampaignCoupon]);
+
+  const handleChange = (value: string) => {
+    setPromoDraft(value);
+    setError('');
+    if (restaurantId) clearCouponValidation(restaurantId);
+  };
+
+  const handleApply = async () => {
+    const code = normalizeCouponCode(promoCode);
+    if (!restaurantId || !code) return;
+
+    setCheckoutCoupon(restaurantId, code, 'manual');
+    setPromoDraft(code);
+    setChecking(true);
+    setError('');
+
+    try {
+      const validation = await validateCoupon({
+        restaurant_id: restaurantId,
+        coupon_code: code,
+        cart: buildCouponCartPayload(items),
+        customer: getCustomerPhone(user?.phone ?? authPhone),
+      });
+      setCouponValidation(restaurantId, validation);
+      toast(validation.valid ? 'Coupon applied' : 'Coupon is not applicable', validation.valid ? 'success' : 'error');
+    } catch (applyError) {
+      setError(getErrorMessage(applyError));
+    } finally {
+      setChecking(false);
+    }
+  };
+
+  const handleRemove = () => {
+    if (!restaurantId) return;
+    removeCheckoutCoupon(restaurantId);
+    setPromoDraft('');
+    setError('');
   };
 
   return (
-    <section className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_16px_40px_rgba(123,35,35,0.05)] sm:p-6">
-      <div className="mb-4 flex items-center gap-3">
-        <Tag className="h-5 w-5 text-[#A80F15]" aria-hidden="true" />
-        <h2 className="text-xl font-extrabold tracking-normal text-[#1F1717]">Apply Promo Code</h2>
-      </div>
-      <div className="grid gap-3 sm:grid-cols-[minmax(0,1fr)_112px]">
-        <label htmlFor="cart-promo-code" className="sr-only">
-          Promo code
-        </label>
-        <input
-          id="cart-promo-code"
-          value={promoCode}
-          onChange={(event) => setPromoCode(event.target.value.toUpperCase())}
-          placeholder="Enter code"
-          className="h-[52px] min-w-0 rounded-full border border-[#E7B8B3] bg-white px-5 text-base text-[#2B2020] outline-none transition placeholder:text-[#B29B9B] focus:border-[#B31317] focus:ring-4 focus:ring-[#B31317]/10"
-        />
-        <Button
-          type="button"
-          onClick={handleApply}
-          className="h-[52px] w-full rounded-full bg-[#A80F15] px-6 hover:bg-[#8F0D12]"
-        >
-          Apply
-        </Button>
-      </div>
-      <p className="mt-3 text-xs font-semibold text-[#8A6B6B]">
-        Discounts will appear only after backend coupon validation is available.
-      </p>
-    </section>
+    <CouponInputCard
+      id="cart-promo-code"
+      title="Apply Promo Code"
+      description={
+        couponState?.source === 'campaign' && couponState.couponCode
+          ? `Coupon ${couponState.couponCode} will be checked at checkout.`
+          : undefined
+      }
+      value={promoCode}
+      onChange={handleChange}
+      onApply={handleApply}
+      onRemove={promoCode ? handleRemove : undefined}
+      validation={displayedValidation}
+      loading={checking}
+      error={error}
+      disabled={!restaurantId || items.length === 0}
+      idleText="Backend validation decides the final discount."
+    />
   );
+}
+
+function getCustomerPhone(phone?: string | null) {
+  const cleaned = phone?.replace(/\D/g, '');
+  return cleaned ? { phone: cleaned } : undefined;
 }

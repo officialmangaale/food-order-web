@@ -17,8 +17,10 @@ export function BottomCartBar() {
   const hidden =
     pathname === '/checkout' ||
     pathname === '/cart' ||
+    pathname === '/search' ||
     pathname.startsWith('/orders/') ||
-    pathname.startsWith('/profile');
+    pathname.startsWith('/profile') ||
+    pathname.startsWith('/search');
 
   if (!hasMounted || hidden) return null;
 
@@ -33,17 +35,17 @@ export function BottomCartBar() {
           className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom sm:p-4"
         >
           <Link href="/cart" className="mx-auto block w-full max-w-[520px]">
-            <div className="flex items-center justify-between rounded-2xl bg-[#B4080B] px-5 py-3.5 text-white shadow-[0_14px_38px_rgba(180,8,11,0.28)] transition hover:bg-[#A80F15] sm:px-6">
-              <div>
+            <div className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-[#B4080B] px-4 py-3 text-white shadow-[0_14px_38px_rgba(180,8,11,0.28)] transition hover:bg-[#A80F15] sm:px-6">
+              <div className="min-w-0">
                 <p className="text-xs font-extrabold uppercase tracking-normal">
                   {totalItems} item{totalItems === 1 ? '' : 's'}
                 </p>
-                <p className="text-base font-semibold">
+                <p className="truncate text-sm font-semibold sm:text-base">
                   {formatMoney(estimatedSubtotal)}{' '}
                   <span className="font-normal text-white/90">plus taxes</span>
                 </p>
               </div>
-              <div className="flex items-center gap-2 text-sm font-extrabold sm:text-base">
+              <div className="flex shrink-0 items-center gap-2 text-sm font-extrabold sm:text-base">
                 <span>View Cart</span>
                 <ArrowRight className="h-5 w-5" aria-hidden="true" />
               </div>

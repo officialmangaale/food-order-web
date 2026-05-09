@@ -143,6 +143,7 @@ export function ExploreCategories({
   const categoriesError = effectiveMode === 'global' ? getErrorMessage(categoriesQuery.error) : '';
   const itemsError = effectiveMode === 'global' ? getErrorMessage(itemsQuery.error) : '';
   const hasLocation = lat != null && lng != null;
+  const selectedCategoryName = selectedCategory?.name;
   const viewAllHref = useMemo(() => {
     if (effectiveMode !== 'global' || !selectedCategoryKey) return undefined;
 
@@ -150,10 +151,10 @@ export function ExploreCategories({
     if (typeof lat === 'number' && Number.isFinite(lat)) query.set('lat', String(lat));
     if (typeof lng === 'number' && Number.isFinite(lng)) query.set('lng', String(lng));
     query.set('radius_km', String(RADIUS_KM));
-    if (selectedCategory?.name) query.set('name', selectedCategory.name);
+    if (selectedCategoryName) query.set('name', selectedCategoryName);
 
     return `/categories/${encodeURIComponent(selectedCategoryKey)}?${query.toString()}`;
-  }, [effectiveMode, lat, lng, selectedCategory?.name, selectedCategoryKey]);
+  }, [effectiveMode, lat, lng, selectedCategoryKey, selectedCategoryName]);
 
   const updateCategoryInUrl = useCallback(
     (categoryKey: string) => {

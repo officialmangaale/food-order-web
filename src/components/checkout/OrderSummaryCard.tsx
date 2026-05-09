@@ -1,6 +1,7 @@
 'use client';
 
 import { AlertCircle, Loader2 } from 'lucide-react';
+import { AppliedCouponRow } from '@/components/coupon/AppliedCouponRow';
 import { Button } from '@/components/ui/Button';
 import { formatMoney } from '@/utils/money';
 import type { CartItem, ValidatedTotals } from '@/types/cart';
@@ -9,6 +10,7 @@ interface OrderSummaryCardProps {
   items: CartItem[];
   restaurantName?: string;
   totals: ValidatedTotals;
+  couponCode?: string;
   estimated: boolean;
   validating?: boolean;
   validationError?: string;
@@ -23,6 +25,7 @@ export function OrderSummaryCard({
   items,
   restaurantName,
   totals,
+  couponCode,
   estimated,
   validating,
   validationError,
@@ -77,7 +80,11 @@ export function OrderSummaryCard({
         <BillRow label={estimated ? 'Subtotal (Estimated)' : 'Subtotal'} value={totals.subtotal} />
         {totals.delivery_fee > 0 && <BillRow label="Delivery Fee" value={totals.delivery_fee} />}
         {totals.taxes > 0 && <BillRow label="Taxes" value={totals.taxes} />}
-        {totals.discount > 0 && <BillRow label="Discount" value={-totals.discount} highlight />}
+        {couponCode ? (
+          <AppliedCouponRow code={couponCode} discountAmount={totals.discount} />
+        ) : (
+          totals.discount > 0 && <BillRow label="Discount" value={-totals.discount} highlight />
+        )}
       </div>
 
       <div className="my-6 h-px bg-[#F1DEDE]" />

@@ -7,11 +7,15 @@ export function useRestaurantMode() {
   const pathname = usePathname();
   const store = useRestaurantModeStore();
 
-  // Route-driven: /r/* is locked, everything else is global
   const isLockedRoute = pathname.startsWith('/r/');
+  const isLockedFlowRoute =
+    pathname === '/cart' ||
+    pathname === '/checkout' ||
+    pathname.startsWith('/orders/');
+  const lockedMode = store.lockedMode && (isLockedRoute || isLockedFlowRoute);
 
   return {
-    lockedMode: isLockedRoute && store.lockedMode,
+    lockedMode,
     lockedRestaurantId: store.lockedRestaurantId,
     lockedRestaurantSlug: store.lockedRestaurantSlug,
     lockedRestaurantName: store.lockedRestaurantName,
@@ -19,8 +23,7 @@ export function useRestaurantMode() {
     enterLockedMode: store.enterLockedMode,
     exitLockedMode: store.exitLockedMode,
 
-    /** Get the home link — respects locked mode */
-    homeLink: isLockedRoute && store.lockedRestaurantSlug
+    homeLink: lockedMode && store.lockedRestaurantSlug
       ? `/r/${store.lockedRestaurantSlug}`
       : '/',
   };

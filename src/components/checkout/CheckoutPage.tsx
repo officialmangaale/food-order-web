@@ -11,20 +11,33 @@ import { DeliveryInstructionsSection } from '@/components/checkout/DeliveryInstr
 import { OrderSummaryCard } from '@/components/checkout/OrderSummaryCard';
 import { PaymentMethodSection } from '@/components/checkout/PaymentMethodSection';
 import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
+import { CouponInputCard } from '@/components/coupon/CouponInputCard';
 import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
-import { useCheckoutCartValidation } from '@/hooks/useCheckoutCartValidation';
+import {
+  buildCartValidatePayload,
+  toValidationResult,
+  useCheckoutCartValidation,
+} from '@/hooks/useCheckoutCartValidation';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCheckoutInstructions } from '@/hooks/useCheckoutInstructions';
 import { useCustomerAddresses } from '@/hooks/useCustomerAddresses';
 import { getErrorMessage, isAuthError } from '@/services/http';
-import { placeOrder } from '@/services/customerWebApi';
+import { validateCoupon } from '@/services/couponApi';
+import { placeOrder, validateCart } from '@/services/customerWebApi';
 import { useActiveOrderStore } from '@/store/activeOrderStore';
 import { useAuthStore } from '@/store/authStore';
+import {
+  isCampaignContextExpired,
+  normalizeCouponCode,
+  useCampaignStore,
+} from '@/store/campaignStore';
 import { useCartStore } from '@/store/cartStore';
 import { useLocationStore } from '@/store/locationStore';
 import { buildCartItemsPayload, type CheckoutAddress, type CheckoutAddressPayload } from '@/components/checkout/checkoutTypes';
 import { generateIdempotencyKey } from '@/utils/idempotency';
+import { buildCouponCartPayload } from '@/utils/couponCartPayload';
+import type { CampaignContext } from '@/types/marketing';
 import type { PlaceOrderRequest } from '@/types/order';
 import type { CartItem, ValidatedTotals } from '@/types/cart';
 
@@ -47,6 +60,10 @@ export function CheckoutPage() {
   const [orderError, setOrderError] = useState('');
   const [addressError, setAddressError] = useState('');
   const [idempotencyKey, setIdempotencyKey] = useState('');
+  const [couponDraft, setCouponDraft] = useState<string | null>(null);
+  const [couponChecking, setCouponChecking] = useState(false);
+  const [couponError, setCouponError] = useState('');
+  const [invalidCouponNotice, setInvalidCouponNotice] = useState('');
   const { instructions, setInstructions, clearInstructions } = useCheckoutInstructions();
   const hasMounted = useHasMounted();
 
@@ -64,6 +81,15 @@ export function CheckoutPage() {
   const latitude = useLocationStore((state) => state.latitude);
   const longitude = useLocationStore((state) => state.longitude);
   const setActiveOrder = useActiveOrderStore((state) => state.setActiveOrder);
+  const campaignContexts = useCampaignStore((state) => state.campaignContexts);
+  const checkoutCoupons = useCampaignStore((state) => state.checkoutCoupons);
+  const syncCampaignCoupon = useCampaignStore((state) => state.syncCampaignCoupon);
+  const setCheckoutCoupon = useCampaignStore((state) => state.setCheckoutCoupon);
+  const removeCheckoutCoupon = useCampaignStore((state) => state.removeCheckoutCoupon);
+  const setCouponValidation = useCampaignStore((state) => state.setCouponValidation);
+  const clearCouponValidation = useCampaignStore((state) => state.clearCouponValidation);
+  const clearCampaignForRestaurant = useCampaignStore((state) => state.clearForRestaurant);
+  const purgeExpiredCampaigns = useCampaignStore((state) => state.purgeExpired);
 
   const {
     addresses,
@@ -80,9 +106,19 @@ export function CheckoutPage() {
     () => ({ latitude, longitude }),
     [latitude, longitude]
   );
+  const checkoutCouponState =
+    restaurantId ? checkoutCoupons[String(restaurantId)] : undefined;
+  const activeCouponCode = checkoutCouponState?.couponCode;
+  const couponInput = couponDraft ?? activeCouponCode ?? '';
+  const validCampaignContext = useMemo(() => {
+    if (!restaurantId) return undefined;
+    const context = campaignContexts[String(restaurantId)];
+    return context && !isCampaignContextExpired(context) ? context : undefined;
+  }, [campaignContexts, restaurantId]);
   const validation = useCheckoutCartValidation({
     restaurantId,
     items,
+    couponCode: activeCouponCode,
     address: selectedAddress,
     fallbackLocation,
   });
@@ -105,6 +141,10 @@ export function CheckoutPage() {
   const totalInvalid = Boolean(
     items.length > 0 && validationResult && validationResult.totals.subtotal > 0 && validationResult.totals.total <= 0
   );
+  const displayedCouponValidation =
+    checkoutCouponState && checkoutCouponState.couponCode === normalizeCouponCode(couponInput)
+      ? checkoutCouponState.validation
+      : undefined;
   const addressProblems = getAddressProblems(selectedAddress, user?.name, user?.phone ?? authPhone);
   const placeDisabledReason = getPlaceDisabledReason({
     isAuthenticated,
@@ -121,6 +161,45 @@ export function CheckoutPage() {
     if (!validationResult?.valid || totalInvalid) return;
     setValidatedTotals(validationResult.totals);
   }, [setValidatedTotals, totalInvalid, validationResult]);
+
+  useEffect(() => {
+    purgeExpiredCampaigns();
+    if (restaurantId) syncCampaignCoupon(restaurantId);
+  }, [purgeExpiredCampaigns, restaurantId, syncCampaignCoupon]);
+
+  useEffect(() => {
+    if (!restaurantId || !activeCouponCode || !validationResult || validation.isFetching) return;
+
+    const backendCouponValidation =
+      validationResult.couponValidation ??
+      (validationResult.totals.discount > 0
+        ? {
+            valid: true,
+            coupon: { couponId: 0, code: activeCouponCode },
+            discountAmount: validationResult.totals.discount,
+          }
+        : undefined);
+
+    if (!backendCouponValidation) return;
+
+    setCouponValidation(restaurantId, backendCouponValidation);
+
+    if (backendCouponValidation.valid === false) {
+      const message = backendCouponValidation.reason || 'This coupon is not applicable.';
+      removeCheckoutCoupon(restaurantId);
+      window.setTimeout(() => {
+        setInvalidCouponNotice(`${activeCouponCode} is not applicable: ${message}`);
+        setCouponDraft('');
+      }, 0);
+    }
+  }, [
+    activeCouponCode,
+    removeCheckoutCoupon,
+    restaurantId,
+    setCouponValidation,
+    validation.isFetching,
+    validationResult,
+  ]);
 
   if (!hasMounted) return <CheckoutPageSkeleton />;
 
@@ -162,6 +241,46 @@ export function CheckoutPage() {
     }
   };
 
+  const handleCouponChange = (value: string) => {
+    setCouponDraft(value);
+    setCouponError('');
+    setInvalidCouponNotice('');
+    if (restaurantId) clearCouponValidation(restaurantId);
+  };
+
+  const handleCouponApply = async () => {
+    const code = normalizeCouponCode(couponInput);
+    if (!restaurantId || !code) return;
+
+    setCheckoutCoupon(restaurantId, code, 'manual');
+    setCouponDraft(code);
+    setCouponChecking(true);
+    setCouponError('');
+    setInvalidCouponNotice('');
+
+    try {
+      const validationResult = await validateCoupon({
+        restaurant_id: restaurantId,
+        coupon_code: code,
+        cart: buildCouponCartPayload(items),
+        customer: getCustomerPhone(user?.phone ?? authPhone),
+      });
+      setCouponValidation(restaurantId, validationResult);
+    } catch (error) {
+      setCouponError(getErrorMessage(error));
+    } finally {
+      setCouponChecking(false);
+    }
+  };
+
+  const handleCouponRemove = () => {
+    if (!restaurantId) return;
+    removeCheckoutCoupon(restaurantId);
+    setCouponDraft('');
+    setCouponError('');
+    setInvalidCouponNotice('');
+  };
+
   const handlePlaceOrder = async () => {
     setOrderError('');
     setAddressError('');
@@ -185,8 +304,29 @@ export function CheckoutPage() {
 
     setPlacing(true);
     try {
-      const finalValidation = await validation.validateNow();
+      let finalValidation = await validation.validateNow();
       setValidatedTotals(finalValidation.totals);
+      let couponCodeForOrder = getValidatedCouponCode(
+        useCampaignStore.getState().getCheckoutCouponForRestaurant(restaurantId)?.couponCode,
+        finalValidation
+      );
+
+      if (activeCouponCode && finalValidation.couponValidation?.valid === false) {
+        const message = finalValidation.couponValidation.reason || 'This coupon is not applicable.';
+        removeCheckoutCoupon(restaurantId);
+        setInvalidCouponNotice(`${activeCouponCode} is not applicable: ${message}`);
+        const withoutCouponPayload = buildCartValidatePayload({
+          restaurantId,
+          items,
+          address: selectedAddress,
+          fallbackLocation,
+        });
+        finalValidation = toValidationResult(
+          await validateCart(withoutCouponPayload as Parameters<typeof validateCart>[0])
+        );
+        setValidatedTotals(finalValidation.totals);
+        couponCodeForOrder = undefined;
+      }
 
       if (!finalValidation.valid) {
         throw new Error(finalValidation.message || 'Cart validation failed.');
@@ -198,6 +338,9 @@ export function CheckoutPage() {
 
       const orderKey = idempotencyKey || generateIdempotencyKey(restaurantId);
       if (!idempotencyKey) setIdempotencyKey(orderKey);
+      const campaignContextForOrder =
+        useCampaignStore.getState().getCampaignContextForRestaurant(restaurantId) ??
+        validCampaignContext;
 
       const response = await placeOrder(
         buildPlaceOrderPayload({
@@ -207,6 +350,8 @@ export function CheckoutPage() {
           customerPhone: user?.phone || authPhone || selectedAddress.phone || '',
           items,
           instructions,
+          couponCode: couponCodeForOrder,
+          campaignContext: campaignContextForOrder,
         }),
         token,
         orderKey
@@ -224,6 +369,7 @@ export function CheckoutPage() {
         total: response.total ?? finalValidation.totals.total,
         created_at: new Date().toISOString(),
       });
+      clearCampaignForRestaurant(restaurantId);
       clearCart();
       clearInstructions();
       toast('Order placed successfully!', 'success');
@@ -274,12 +420,38 @@ export function CheckoutPage() {
 
             <DeliveryInstructionsSection value={instructions} onChange={setInstructions} />
             <PaymentMethodSection />
+            <CouponInputCard
+              id="checkout-coupon-code"
+              title="Coupon"
+              description={
+                validCampaignContext?.couponCode
+                  ? `Campaign coupon ${validCampaignContext.couponCode} is ready for backend validation.`
+                  : 'Apply a coupon and we will validate it with the restaurant.'
+              }
+              value={couponInput}
+              onChange={handleCouponChange}
+              onApply={handleCouponApply}
+              onRemove={couponInput ? handleCouponRemove : undefined}
+              validation={displayedCouponValidation}
+              loading={
+                couponChecking ||
+                Boolean(activeCouponCode && (validation.isLoading || validation.isFetching))
+              }
+              error={couponError || invalidCouponNotice}
+              disabled={!restaurantId || items.length === 0}
+              idleText={
+                activeCouponCode
+                  ? `Coupon ${activeCouponCode} will be checked before order placement.`
+                  : 'Discounts are applied only from backend validation.'
+              }
+            />
           </div>
 
           <OrderSummaryCard
             items={items}
             restaurantName={restaurantName}
             totals={totals}
+            couponCode={getValidatedCouponCode(activeCouponCode, validationResult)}
             estimated={!validationResult}
             validating={validation.isLoading || validation.isFetching}
             validationError={validationError}
@@ -412,6 +584,23 @@ function getPlaceDisabledReason({
   return '';
 }
 
+function getValidatedCouponCode(
+  couponCode: string | undefined,
+  validationResult?: { couponValidation?: { valid: boolean }; totals: ValidatedTotals }
+) {
+  if (!couponCode || !validationResult) return undefined;
+
+  if (validationResult.couponValidation?.valid) return couponCode;
+  if (validationResult.couponValidation?.valid === false) return undefined;
+  if (validationResult.totals.discount > 0) return couponCode;
+  return undefined;
+}
+
+function getCustomerPhone(phone?: string | null) {
+  const cleaned = phone?.replace(/\D/g, '');
+  return cleaned ? { phone: cleaned } : undefined;
+}
+
 function buildPlaceOrderPayload({
   restaurantId,
   address,
@@ -419,6 +608,8 @@ function buildPlaceOrderPayload({
   customerPhone,
   items,
   instructions,
+  couponCode,
+  campaignContext,
 }: {
   restaurantId: number;
   address: CheckoutAddress;
@@ -426,10 +617,16 @@ function buildPlaceOrderPayload({
   customerPhone: string;
   items: CartItem[];
   instructions: string;
+  couponCode?: string;
+  campaignContext?: CampaignContext | null;
 }): PlaceOrderRequest {
   return {
     restaurant_id: restaurantId,
     payment_method: 'cash',
+    ...(couponCode ? { coupon_code: couponCode } : {}),
+    ...(campaignContext?.campaignId ? { campaign_id: campaignContext.campaignId } : {}),
+    ...(campaignContext?.utmSource ? { utm_source: campaignContext.utmSource } : {}),
+    ...(campaignContext?.utmCampaign ? { utm_campaign: campaignContext.utmCampaign } : {}),
     customer: {
       name: customerName,
       phone: customerPhone,

@@ -1,3 +1,5 @@
+import type { CouponValidationResult } from '@/types/coupon';
+
 export interface CartAddon {
   addon_id: number;
   name: string;
@@ -39,6 +41,7 @@ export interface CartValidateRequestItem {
 
 export interface CartValidateRequest {
   restaurant_id: number;
+  coupon_code?: string;
   customer_location?: {
     latitude: number;
     longitude: number;
@@ -58,6 +61,7 @@ export interface CartValidateResponse {
   delivery_fee?: number;
   discount_amount?: number;
   discount?: number;
+  coupon_validation?: CouponValidationResult;
   grand_total?: number;
   total?: number;
   message?: string;

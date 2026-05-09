@@ -35,7 +35,8 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
   useEffect(() => {
     if (errorStatus !== 401) return;
     logout();
-    setLoginOpen(true);
+    const timer = window.setTimeout(() => setLoginOpen(true), 0);
+    return () => window.clearTimeout(timer);
   }, [errorStatus, logout]);
 
   useEffect(() => {

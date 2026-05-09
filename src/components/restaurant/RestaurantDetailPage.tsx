@@ -6,13 +6,16 @@ import { useQuery } from '@tanstack/react-query';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
+import { CouponBanner } from '@/components/coupon/CouponBanner';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { RestaurantHero } from '@/components/restaurant/RestaurantHero';
 import { RestaurantMenuLayout } from '@/components/restaurant/RestaurantMenuLayout';
 import { RestaurantUnavailableBanner } from '@/components/restaurant/RestaurantUnavailableBanner';
 import { useToast } from '@/components/ui/Toast';
 import { useDebounce } from '@/hooks/useDebounce';
+import { trackCampaignClick } from '@/services/marketingApi';
 import { fetchRestaurantDetail, fetchRestaurantMenu, resolveRestaurantIdentifier } from '@/services/restaurantApi';
+import { isCampaignContextExpired, normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
 import { useCartStore } from '@/store/cartStore';
 import { useRestaurantModeStore } from '@/store/restaurantModeStore';
 import { slugifyRestaurantName } from '@/utils/slug';
@@ -24,6 +27,7 @@ interface RestaurantDetailPageProps {
   restaurantId?: string;
   slug?: string;
   locked?: boolean;
+  campaignQuery?: Record<string, string | string[] | undefined>;
 }
 
 const DEFAULT_FILTERS: RestaurantMenuFilters = {
@@ -37,6 +41,7 @@ export function RestaurantDetailPage({
   restaurantId,
   slug,
   locked = false,
+  campaignQuery,
 }: RestaurantDetailPageProps) {
   const [search, setSearch] = useState('');
   const debouncedSearch = useDebounce(search, 250);
@@ -49,9 +54,16 @@ export function RestaurantDetailPage({
 
   const enterLockedMode = useRestaurantModeStore((state) => state.enterLockedMode);
   const exitLockedMode = useRestaurantModeStore((state) => state.exitLockedMode);
+  const campaignContexts = useCampaignStore((state) => state.campaignContexts);
+  const checkoutCoupons = useCampaignStore((state) => state.checkoutCoupons);
+  const captureCampaignContext = useCampaignStore((state) => state.captureCampaignContext);
   const addItem = useCartStore((state) => state.addItem);
   const setCartRestaurant = useCartStore((state) => state.setRestaurant);
   const { toast } = useToast();
+  const campaignParams = useMemo(
+    () => parseCampaignQuery(campaignQuery),
+    [campaignQuery]
+  );
 
   const restaurantQuery = useQuery({
     queryKey: locked ? ['resolveRestaurant', slug] : ['restaurant', restaurantId],
@@ -76,6 +88,25 @@ export function RestaurantDetailPage({
   const currentRestaurantId = Number(restaurant?.id ?? restaurantId);
   const currentRestaurantSlug = restaurant?.slug ?? slug ?? slugifyRestaurantName(restaurant?.name ?? '');
   const orderingState = useMemo(() => getOrderingState(restaurant), [restaurant]);
+  const activeCampaignContext =
+    Number.isFinite(currentRestaurantId)
+      ? campaignContexts[String(currentRestaurantId)]
+      : undefined;
+  const validCampaignContext =
+    activeCampaignContext && !isCampaignContextExpired(activeCampaignContext)
+      ? activeCampaignContext
+      : undefined;
+  const checkoutCoupon =
+    Number.isFinite(currentRestaurantId)
+      ? checkoutCoupons[String(currentRestaurantId)]
+      : undefined;
+  const bannerCouponCode =
+    validCampaignContext?.couponCode ??
+    (locked && campaignParams.couponCode ? campaignParams.couponCode : undefined);
+  const bannerValidation =
+    checkoutCoupon && checkoutCoupon.couponCode === bannerCouponCode
+      ? checkoutCoupon.validation
+      : undefined;
 
   useEffect(() => {
     if (locked && restaurant?.id) {
@@ -89,6 +120,35 @@ export function RestaurantDetailPage({
 
     if (!locked) exitLockedMode();
   }, [currentRestaurantSlug, enterLockedMode, exitLockedMode, locked, restaurant]);
+
+  useEffect(() => {
+    if (!locked || !restaurant?.id || !campaignParams.hasContext) return;
+
+    const context = {
+      restaurantId: restaurant.id,
+      restaurantSlug: currentRestaurantSlug || slug,
+      couponCode: campaignParams.couponCode,
+      campaignId: campaignParams.campaignId,
+      utmSource: campaignParams.utmSource,
+      utmCampaign: campaignParams.utmCampaign,
+      sourceUrl: getCurrentSourceUrl(),
+      capturedAt: Date.now(),
+    };
+
+    captureCampaignContext(context);
+    void trackCampaignOpenOnce(context);
+  }, [
+    campaignParams.campaignId,
+    campaignParams.couponCode,
+    campaignParams.hasContext,
+    campaignParams.utmCampaign,
+    campaignParams.utmSource,
+    captureCampaignContext,
+    currentRestaurantSlug,
+    locked,
+    restaurant?.id,
+    slug,
+  ]);
 
   useEffect(() => {
     const handleHeaderSearch = (event: Event) => {
@@ -247,6 +307,9 @@ export function RestaurantDetailPage({
         onShare={handleShare}
       />
       <RestaurantUnavailableBanner messages={orderingState.messages} />
+      {locked && bannerCouponCode && (
+        <CouponBanner couponCode={bannerCouponCode} validation={bannerValidation} />
+      )}
 
       {menuQuery.error ? (
         <div className="mx-auto max-w-3xl px-4 py-14">
@@ -297,6 +360,70 @@ export function RestaurantDetailPage({
       />
     </main>
   );
+}
+
+function parseCampaignQuery(query?: Record<string, string | string[] | undefined>) {
+  const couponCode = normalizeCouponCode(readQueryValue(query?.coupon));
+  const utmCampaign = readQueryValue(query?.utm_campaign);
+  const campaignId =
+    readNumericCampaignId(utmCampaign) ??
+    readNumericCampaignId(readQueryValue(query?.campaign_id));
+  const hasContext = Boolean(couponCode || campaignId || utmCampaign);
+
+  return {
+    couponCode,
+    campaignId,
+    utmSource: hasContext ? readQueryValue(query?.utm_source) || 'whatsapp' : undefined,
+    utmCampaign,
+    hasContext,
+  };
+}
+
+function readQueryValue(value: string | string[] | undefined) {
+  const raw = Array.isArray(value) ? value[0] : value;
+  const trimmed = raw?.trim();
+  return trimmed || undefined;
+}
+
+function readNumericCampaignId(value: string | undefined) {
+  if (!value || !/^\d+$/.test(value.trim())) return undefined;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : undefined;
+}
+
+function getCurrentSourceUrl() {
+  if (typeof window === 'undefined') return undefined;
+  return `${window.location.pathname}${window.location.search}`;
+}
+
+async function trackCampaignOpenOnce(context: {
+  restaurantId: number;
+  campaignId?: number;
+  couponCode?: string;
+  utmSource?: string;
+  sourceUrl?: string;
+}) {
+  if (typeof window === 'undefined') return;
+  if (!context.campaignId && !context.couponCode) return;
+
+  const key = `mangaale_campaign_click_tracked_${context.restaurantId}_${context.campaignId ?? 'none'}_${context.couponCode ?? 'none'}`;
+
+  try {
+    if (window.localStorage.getItem(key)) return;
+
+    await trackCampaignClick({
+      restaurant_id: context.restaurantId,
+      campaign_id: context.campaignId,
+      coupon_code: context.couponCode,
+      source: context.utmSource,
+      url: context.sourceUrl,
+    });
+    window.localStorage.setItem(key, '1');
+  } catch (error) {
+    if (process.env.NODE_ENV === 'development') {
+      console.info('Campaign click tracking skipped', error);
+    }
+  }
 }
 
 function RestaurantDetailSkeleton() {

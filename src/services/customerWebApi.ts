@@ -1,4 +1,5 @@
 import { restaurantPost, restaurantGet } from './http';
+import { normalizeCoupon } from './couponApi';
 import { unwrapApiResponse } from '@/utils/apiAdapters';
 import type { CartValidateRequest, CartValidateResponse } from '@/types/cart';
 import type { PlaceOrderRequest, PlaceOrderResponse, TrackingOrder } from '@/types/order';
@@ -43,6 +44,7 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
   const discount = readNumber(
     data.discount ?? data.discount_amount ?? data.discountAmount
   );
+  const couponValidation = normalizeCartCouponValidation(data, discount);
   const subtotal = readNumber(data.subtotal) ?? 0;
   const explicitTotal = readNumber(
     data.total ?? data.grand_total ?? data.grandTotal ?? data.payable_total ?? data.payableTotal
@@ -61,6 +63,7 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     delivery_fee: deliveryFee ?? 0,
     discount_amount: discount,
     discount: discount ?? 0,
+    coupon_validation: couponValidation,
     grand_total: total,
     total,
     message: readString(data.message ?? data.error),
@@ -69,6 +72,49 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
       : Array.isArray(data.itemErrors)
         ? (data.itemErrors as CartValidateResponse['item_errors'])
         : undefined,
+  };
+}
+
+function normalizeCartCouponValidation(
+  data: Record<string, unknown>,
+  discount: number | undefined
+): CartValidateResponse['coupon_validation'] {
+  const couponRaw =
+    asRecord(data.coupon) ??
+    asRecord(data.applied_coupon) ??
+    asRecord(data.appliedCoupon);
+  const coupon = normalizeCoupon(couponRaw);
+  const couponCode = readString(
+    data.coupon_code ?? data.couponCode ?? couponRaw?.code ?? couponRaw?.coupon_code
+  );
+  const couponValid = readBoolean(
+    data.coupon_valid ??
+      data.couponValid ??
+      data.is_coupon_valid ??
+      data.isCouponValid ??
+      couponRaw?.valid ??
+      couponRaw?.is_valid
+  );
+  const reason = readString(
+    data.coupon_reason ??
+      data.couponReason ??
+      data.coupon_error ??
+      data.couponError ??
+      couponRaw?.reason ??
+      couponRaw?.message
+  );
+  const payableSubtotal = readNumber(data.payable_subtotal ?? data.payableSubtotal);
+  const hasCouponSignal =
+    Boolean(coupon || couponCode || reason || payableSubtotal != null || couponValid != null);
+
+  if (!hasCouponSignal) return undefined;
+
+  return {
+    valid: couponValid ?? Boolean((discount ?? 0) > 0 || coupon),
+    reason,
+    coupon,
+    discountAmount: discount ?? 0,
+    payableSubtotal,
   };
 }
 
