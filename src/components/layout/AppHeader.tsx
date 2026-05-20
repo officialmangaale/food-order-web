@@ -7,6 +7,7 @@ import { ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCartStore } from '@/store/cartStore';
+import { useGroceryCartStore } from '@/store/groceryCartStore';
 import { useAuthStore } from '@/store/authStore';
 import { useLocationStore } from '@/store/locationStore';
 import { SearchHeaderInput } from '@/components/search/SearchHeaderInput';
@@ -24,6 +25,7 @@ export function AppHeader() {
     isLockedRoute,
   } = useRestaurantMode();
   const totalItems = useCartStore((s) => s.totalItems());
+  const groceryTotalItems = useGroceryCartStore((s) => s.totalItems());
   const hasMounted = useHasMounted();
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const savedLocationLabel = useLocationStore((s) => s.label);
@@ -33,6 +35,7 @@ export function AppHeader() {
   const longitude = useLocationStore((s) => s.longitude);
   const router = useRouter();
   const pathname = usePathname();
+  const isRasanRoute = pathname.startsWith('/rasan');
   const [searchQuery, setSearchQuery] = useState('');
   const [locationOpen, setLocationOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -45,18 +48,24 @@ export function AppHeader() {
       ? savedLocationLabel || manualArea || (hasBrowserLocation ? 'Current location' : 'Select location')
       : 'Select location';
   const isLocationPlaceholder = !hasMounted || (!savedLocationLabel && !manualArea && !hasBrowserLocation);
-  const displayTotalItems = hasMounted ? totalItems : 0;
+  const displayTotalItems = hasMounted ? (isRasanRoute ? groceryTotalItems : totalItems) : 0;
+  const cartHref = isRasanRoute ? '/rasan/cart' : '/cart';
   const isRestaurantDetailHeader =
     /^\/restaurants\/[^/]+/.test(pathname) || pathname.startsWith('/r/');
+  const isRasanMerchantHeader = /^\/rasan\/merchants\/[^/]+/.test(pathname);
   const searchPlaceholder =
-    isRestaurantDetailHeader
+    isRasanRoute
+      ? isRasanMerchantHeader
+        ? 'Search this Rasan store'
+        : 'Search groceries'
+      : isRestaurantDetailHeader
       ? isLockedRoute
         ? 'Search this menu'
         : 'Search in Mangaale...'
       : lockedMode && lockedRestaurantName
       ? 'Search this menu'
       : 'Search for restaurants, cuisine, or a dish';
-  const logoHref = isRestaurantDetailHeader && isLockedRoute ? pathname : homeLink;
+  const logoHref = isRasanRoute ? '/rasan' : isRestaurantDetailHeader && isLockedRoute ? pathname : homeLink;
 
   const handleLocationClick = () => {
     setLocationOpen(true);
@@ -90,6 +99,24 @@ export function AppHeader() {
       return;
     }
 
+    if (isRasanRoute) {
+      if (isRasanMerchantHeader) {
+        window.dispatchEvent(
+          new CustomEvent('mangaale:grocery-search', {
+            detail: { query: trimmedQuery },
+          })
+        );
+        document.getElementById('rasan-products')?.scrollIntoView({
+          behavior: 'smooth',
+          block: 'start',
+        });
+        return;
+      }
+
+      router.push('/rasan');
+      return;
+    }
+
     if (lockedMode) {
       params.set('locked', 'true');
       if (lockedRestaurantId) params.set('restaurant_id', String(lockedRestaurantId));
@@ -111,7 +138,10 @@ export function AppHeader() {
         {isRestaurantDetailHeader ? (
           <>
             <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-7">
-              <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute || lockedMode} />
+              <div className="flex shrink-0 items-center gap-3">
+                <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute || lockedMode} />
+                <VerticalSwitch active={isRasanRoute ? 'rasan' : 'food'} />
+              </div>
               <SearchHeaderInput
                 value={searchQuery}
                 placeholder={searchPlaceholder}
@@ -120,7 +150,7 @@ export function AppHeader() {
                 onClear={() => setSearchQuery('')}
                 className="mx-auto hidden max-w-[520px] sm:block"
               />
-              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="ml-auto flex" />
+              <HeaderActions totalItems={displayTotalItems} cartHref={cartHref} onAccountClick={handleAccountClick} className="ml-auto flex" />
             </div>
             <div className="px-4 pb-3 sm:hidden">
               <SearchHeaderInput
@@ -135,8 +165,11 @@ export function AppHeader() {
         ) : (
           <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-3 sm:px-6 lg:flex-row lg:items-center lg:gap-5 lg:px-8 lg:py-[18px]">
             <div className="flex items-center justify-between gap-4 lg:shrink-0 lg:justify-start">
-              <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute || lockedMode} />
-              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="flex lg:hidden" />
+              <div className="flex items-center gap-3">
+                <HeaderLogo href={isRasanRoute ? '/rasan' : homeLink} isLockedRoute={isLockedRoute || lockedMode} />
+                <VerticalSwitch active={isRasanRoute ? 'rasan' : 'food'} />
+              </div>
+              <HeaderActions totalItems={displayTotalItems} cartHref={cartHref} onAccountClick={handleAccountClick} className="flex lg:hidden" />
             </div>
 
             <div className="flex min-w-0 flex-col gap-3 md:flex-row md:items-center md:gap-3 lg:flex-1 lg:gap-5">
@@ -154,7 +187,7 @@ export function AppHeader() {
               />
             </div>
 
-            <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="hidden lg:flex" />
+            <HeaderActions totalItems={displayTotalItems} cartHref={cartHref} onAccountClick={handleAccountClick} className="hidden lg:flex" />
           </div>
         )}
       </header>
@@ -166,6 +199,36 @@ export function AppHeader() {
       />
       <ProfileMenu open={profileOpen} onClose={() => setProfileOpen(false)} />
     </>
+  );
+}
+
+function VerticalSwitch({ active }: { active: 'food' | 'rasan' }) {
+  return (
+    <nav
+      aria-label="Switch ordering vertical"
+      className="flex h-9 shrink-0 items-center rounded-full border border-[#E6CFCF] bg-white p-1 shadow-[0_1px_0_rgba(179,19,23,0.03)]"
+    >
+      <Link
+        href="/"
+        className={`flex h-7 items-center rounded-full px-3 text-xs font-extrabold transition ${
+          active === 'food'
+            ? 'bg-[#A80F15] text-white'
+            : 'text-[#6B4B4B] hover:bg-[#FFF0F0] hover:text-[#A80F15]'
+        }`}
+      >
+        Food
+      </Link>
+      <Link
+        href="/rasan"
+        className={`flex h-7 items-center rounded-full px-3 text-xs font-extrabold transition ${
+          active === 'rasan'
+            ? 'bg-[#2F6B1F] text-white'
+            : 'text-[#526147] hover:bg-[#EEF7E8] hover:text-[#2F6B1F]'
+        }`}
+      >
+        Rasan
+      </Link>
+    </nav>
   );
 }
 
@@ -220,15 +283,16 @@ function HeaderLocationPill({ label, isPlaceholder, onClick }: HeaderLocationPil
 
 interface HeaderActionsProps {
   totalItems: number;
+  cartHref: string;
   onAccountClick: () => void;
   className?: string;
 }
 
-function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderActionsProps) {
+function HeaderActions({ totalItems, cartHref, onAccountClick, className = '' }: HeaderActionsProps) {
   return (
     <div className={`shrink-0 items-center gap-2 ${className}`}>
       <Link
-        href="/cart"
+        href={cartHref}
         className="relative flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
         aria-label="Cart"
       >
