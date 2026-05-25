@@ -43,9 +43,20 @@ import type { CartItem, ValidatedTotals } from '@/types/cart';
 
 const EMPTY_TOTALS: ValidatedTotals = {
   subtotal: 0,
+  cgst: 0,
+  sgst: 0,
+  tax_amount: 0,
   taxes: 0,
+  platform_fee: 0,
+  platform_fee_amount: 0,
   delivery_fee: 0,
+  extra_charges: 0,
   discount: 0,
+  discount_amount: 0,
+  offer_discount_amount: 0,
+  round_off_amount: 0,
+  exact_total_amount: 0,
+  grand_total: 0,
   total: 0,
 };
 
@@ -70,7 +81,6 @@ export function CheckoutPage() {
   const items = useCartStore((state) => state.items);
   const restaurantId = useCartStore((state) => state.restaurantId);
   const restaurantName = useCartStore((state) => state.restaurantName);
-  const estimatedSubtotal = useCartStore((state) => state.estimatedSubtotal());
   const clearCart = useCartStore((state) => state.clearCart);
   const setValidatedTotals = useCartStore((state) => state.setValidatedTotals);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -123,15 +133,7 @@ export function CheckoutPage() {
     fallbackLocation,
   });
   const validationResult = validation.data;
-  const estimatedTotals = useMemo(
-    () => ({
-      ...EMPTY_TOTALS,
-      subtotal: estimatedSubtotal,
-      total: estimatedSubtotal,
-    }),
-    [estimatedSubtotal]
-  );
-  const totals = validationResult?.totals ?? estimatedTotals;
+  const totals = validationResult?.totals ?? EMPTY_TOTALS;
   const validationError =
     validation.error
       ? getErrorMessage(validation.error)
@@ -282,6 +284,8 @@ export function CheckoutPage() {
   };
 
   const handlePlaceOrder = async () => {
+    if (placing) return;
+
     setOrderError('');
     setAddressError('');
 
@@ -366,7 +370,7 @@ export function CheckoutPage() {
         restaurant_id: restaurantId,
         restaurant_name: restaurantName,
         status: response.status ?? 'placed',
-        total: response.total ?? finalValidation.totals.total,
+        total: response.grand_total ?? response.exact_total_amount ?? response.total ?? finalValidation.totals.total,
         created_at: new Date().toISOString(),
       });
       clearCampaignForRestaurant(restaurantId);
@@ -394,7 +398,7 @@ export function CheckoutPage() {
       <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <CheckoutHeading />
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
           <div className="space-y-6" ref={addressSectionRef}>
             {!isAuthenticated && <CheckoutLoginPrompt onLogin={() => setLoginOpen(true)} />}
 
@@ -459,6 +463,7 @@ export function CheckoutPage() {
             placing={placing}
             placeDisabled={placeDisabled}
             placeDisabledReason={placeDisabledReason}
+            onRetrySummary={() => void validation.refetch()}
             onPlaceOrder={handlePlaceOrder}
           />
         </div>
@@ -488,7 +493,7 @@ function CheckoutPageSkeleton() {
     <main className="min-h-screen bg-[#FFF7F5]">
       <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <CheckoutHeading />
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
           <div className="space-y-6">
             <div className="h-72 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
             <div className="h-52 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
@@ -504,7 +509,7 @@ function CheckoutPageSkeleton() {
 function CheckoutHeading() {
   return (
     <header>
-      <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-5xl">
+      <h1 className="text-3xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-4xl lg:text-5xl">
         Checkout
       </h1>
       <p className="mt-3 text-lg text-[#4F3030]">Confirm your details and place your order</p>

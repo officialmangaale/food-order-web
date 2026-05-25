@@ -16,6 +16,7 @@ export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
   const { toast } = useToast();
   const progress = getOrderProgress(order.orderStatus, order.deliveryStatus);
   const addressLine = formatAddress(order);
+  const hasTaxBreakdown = typeof order.cgst === 'number' || typeof order.sgst === 'number';
 
   return (
     <section className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_18px_46px_rgba(123,35,35,0.08)] sm:p-6">
@@ -58,14 +59,34 @@ export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
         {typeof order.deliveryCharge === 'number' && order.deliveryCharge > 0 && (
           <SummaryRow label="Delivery" value={formatMoney(order.deliveryCharge)} />
         )}
-        {typeof order.taxAmount === 'number' && order.taxAmount > 0 && (
+        {typeof order.extraCharges === 'number' && order.extraCharges > 0 && (
+          <SummaryRow label="Extra Charges" value={formatMoney(order.extraCharges)} />
+        )}
+        {hasTaxBreakdown ? (
+          <>
+            {typeof order.cgst === 'number' && order.cgst > 0 && <SummaryRow label="CGST" value={formatMoney(order.cgst)} />}
+            {typeof order.sgst === 'number' && order.sgst > 0 && <SummaryRow label="SGST" value={formatMoney(order.sgst)} />}
+          </>
+        ) : typeof order.taxAmount === 'number' && order.taxAmount > 0 ? (
           <SummaryRow label="Taxes" value={formatMoney(order.taxAmount)} />
+        ) : null}
+        {typeof order.platformFeeAmount === 'number' && order.platformFeeAmount > 0 && (
+          <SummaryRow label="Platform Fee" value={formatMoney(order.platformFeeAmount)} />
         )}
         {typeof order.discountAmount === 'number' && order.discountAmount > 0 && (
           <SummaryRow label="Discount" value={`-${formatMoney(order.discountAmount)}`} accent />
         )}
+        {typeof order.offerDiscountAmount === 'number' && order.offerDiscountAmount > 0 && (
+          <SummaryRow label="Offer Discount" value={`-${formatMoney(order.offerDiscountAmount)}`} accent />
+        )}
+        {typeof order.roundOffAmount === 'number' && order.roundOffAmount !== 0 && (
+          <SummaryRow label="Round Off" value={formatMoney(order.roundOffAmount)} />
+        )}
+        {typeof order.exactTotalAmount === 'number' && order.exactTotalAmount > 0 && (
+          <SummaryRow label="Exact Total" value={formatMoney(order.exactTotalAmount)} strong />
+        )}
         <div className="flex items-end justify-between gap-4 pt-3 text-[#1F1717]">
-          <span className="text-lg font-extrabold">Total</span>
+          <span className="text-lg font-extrabold">Grand Total</span>
           <span className="text-3xl font-extrabold text-[#A80F15]">{formatMoney(order.grandTotal)}</span>
         </div>
         <p className="text-xs font-bold uppercase tracking-[0.12em] text-[#8D6E6E]">
@@ -85,9 +106,19 @@ export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
   );
 }
 
-function SummaryRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
+function SummaryRow({
+  label,
+  value,
+  accent,
+  strong,
+}: {
+  label: string;
+  value: string;
+  accent?: boolean;
+  strong?: boolean;
+}) {
   return (
-    <div className="flex items-center justify-between gap-4">
+    <div className={`flex items-center justify-between gap-4 ${strong ? 'font-extrabold text-[#1F1717]' : ''}`}>
       <span>{label}</span>
       <span className={accent ? 'text-[#A80F15]' : 'text-[#1F1717]'}>{value}</span>
     </div>

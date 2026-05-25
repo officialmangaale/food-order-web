@@ -27,7 +27,7 @@ export function RestaurantCategorySidebar({
       </aside>
 
       <div className="lg:hidden">
-        <div className="-mx-4 overflow-x-auto px-4 pb-3 sm:-mx-6 sm:px-6">
+        <div className="-mx-4 overflow-x-auto px-4 pb-3 hide-scrollbar sm:-mx-6 sm:px-6">
           <div className="flex min-w-max gap-2">
             {categories.map((category) => {
               const active = category.key === activeKey;
@@ -36,7 +36,7 @@ export function RestaurantCategorySidebar({
                   key={category.key}
                   type="button"
                   onClick={() => onSelect(category.key)}
-                  className={`h-10 rounded-full border px-4 text-sm font-semibold transition ${
+                  className={`h-10 shrink-0 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition ${
                     active
                       ? 'border-[#B31317] bg-[#B31317] text-white'
                       : 'border-[#E8C7C7] bg-white text-[#4A3030]'

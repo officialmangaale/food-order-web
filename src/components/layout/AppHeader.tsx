@@ -107,7 +107,7 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="safe-top sticky top-0 z-50 border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl">
+      <header className="safe-top sticky top-0 z-50 border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl transition-shadow">
         {isRestaurantDetailHeader ? (
           <>
             <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-7">
@@ -199,7 +199,7 @@ function HeaderLocationPill({ label, isPlaceholder, onClick }: HeaderLocationPil
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-[#E9CBCB] bg-[#FFFDFD] px-4 text-left shadow-[0_1px_0_rgba(179,19,23,0.03)] transition hover:border-[#D99A9A] hover:bg-white focus:outline-none focus:ring-4 focus:ring-[#B31317]/10 md:h-12 md:w-[230px] md:flex-none lg:w-[220px] xl:w-[240px]"
+      className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-[#E9CBCB] bg-[#FFFDFD] px-4 text-left shadow-[0_1px_0_rgba(179,19,23,0.03)] transition hover:border-[#D99A9A] hover:bg-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B31317]/10 md:h-12 md:w-[230px] md:flex-none lg:w-[220px] xl:w-[240px]"
       aria-label="Choose delivery location"
     >
       <MapPin className="h-4 w-4 shrink-0 text-[#A80F15]" aria-hidden="true" />
@@ -229,7 +229,7 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
     <div className={`shrink-0 items-center gap-2 ${className}`}>
       <Link
         href="/cart"
-        className="relative flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B31317]/10"
         aria-label="Cart"
       >
         <ShoppingCart className="h-[21px] w-[21px]" aria-hidden="true" />
@@ -243,7 +243,7 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
       <button
         type="button"
         onClick={onAccountClick}
-        className="flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
+        className="flex h-11 w-11 items-center justify-center rounded-full text-[#2B2020] transition hover:bg-white hover:text-[#A80F15] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B31317]/10"
         aria-label="Account"
         title="Account"
       >

@@ -57,11 +57,17 @@ export interface CartValidateResponse {
   sgst?: number;
   tax_amount?: number;
   taxes?: number;
+  platform_fee?: number;
+  platform_fee_amount?: number;
   delivery_charge?: number;
   delivery_fee?: number;
+  extra_charges?: number;
   discount_amount?: number;
+  offer_discount_amount?: number;
   discount?: number;
   coupon_validation?: CouponValidationResult;
+  exact_total_amount?: number;
+  round_off_amount?: number;
   grand_total?: number;
   total?: number;
   message?: string;
@@ -71,8 +77,19 @@ export interface CartValidateResponse {
 /** Shape of validated totals stored in the cart store */
 export interface ValidatedTotals {
   subtotal: number;
+  cgst: number;
+  sgst: number;
+  tax_amount: number;
   taxes: number;
+  platform_fee: number;
+  platform_fee_amount: number;
   delivery_fee: number;
+  extra_charges: number;
   discount: number;
+  discount_amount: number;
+  offer_discount_amount: number;
+  round_off_amount: number;
+  exact_total_amount: number;
+  grand_total: number;
   total: number;
 }

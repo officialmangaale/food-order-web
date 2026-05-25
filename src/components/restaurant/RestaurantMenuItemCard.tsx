@@ -121,7 +121,7 @@ export function RestaurantMenuItemCard({
           )}
         </div>
 
-        <h3 className="text-xl font-extrabold leading-snug tracking-normal text-[#130F0F] sm:text-[25px]">
+        <h3 className="text-lg font-extrabold leading-snug tracking-normal text-[#130F0F] sm:text-xl">
           {item.name}
         </h3>
         <p className="mt-1 text-sm font-extrabold text-[#241818]">
@@ -153,7 +153,9 @@ export function RestaurantMenuItemCard({
             <img
               src={imageUrl}
               alt={item.name}
-              className="h-full w-full object-cover"
+              loading="lazy"
+              className={`h-full w-full object-cover img-fade-in ${imageFailed ? '' : 'loaded'}`}
+              onLoad={(e) => e.currentTarget.classList.add('loaded')}
               onError={() => setImageFailed(true)}
             />
           ) : (

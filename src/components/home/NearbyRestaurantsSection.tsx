@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AlertTriangle, LocateFixed, MapPin } from 'lucide-react';
@@ -49,44 +50,79 @@ export function NearbyRestaurantsSection() {
 
   if (!hasLocation) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="nearby-restaurants-heading">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-labelledby="nearby-restaurants-heading"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <LocationPrompt onSetLocation={() => setLocationOpen(true)} />
         <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
-      </section>
+      </motion.section>
     );
   }
 
   if (nearbyQuery.isLoading) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Loading nearby restaurants">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-label="Loading nearby restaurants"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <NearbyRestaurantsSkeleton />
-      </section>
+      </motion.section>
     );
   }
 
   if (nearbyQuery.error && restaurants.length === 0) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="nearby-restaurants-heading">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-labelledby="nearby-restaurants-heading"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <NearbyRestaurantsError onRetry={() => nearbyQuery.refetch()} />
-      </section>
+      </motion.section>
     );
   }
 
   if (visibleRestaurants.length === 0) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="nearby-restaurants-heading">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-labelledby="nearby-restaurants-heading"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <NearbyRestaurantsEmpty onChangeLocation={() => setLocationOpen(true)} />
         <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
-      </section>
+      </motion.section>
     );
   }
 
   return (
-    <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="nearby-restaurants-heading">
+    <motion.section 
+      className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      aria-labelledby="nearby-restaurants-heading"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <SectionHeading showViewAll={hasMoreRestaurants} viewAllHref={viewAllHref} />
 
       <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
@@ -96,7 +132,7 @@ export function NearbyRestaurantsSection() {
           </div>
         ))}
       </div>
-    </section>
+    </motion.section>
   );
 }
 

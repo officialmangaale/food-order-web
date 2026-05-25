@@ -92,7 +92,7 @@ export function CartPage() {
           </div>
         )}
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
           <div className="space-y-8">
             <RestaurantCartCard
               restaurantName={restaurantName}
@@ -128,7 +128,7 @@ function CartPageSkeleton() {
       <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
         <CartHeading />
         <div className="mt-7 h-px bg-[#EEDADA]" />
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
+        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
           <div className="space-y-8">
             <div className="h-[340px] animate-pulse rounded-2xl border border-[#F0DADA] bg-white shadow-[0_16px_40px_rgba(123,35,35,0.06)]" />
             <div className="grid gap-6 xl:grid-cols-2">
@@ -146,7 +146,7 @@ function CartPageSkeleton() {
 function CartHeading() {
   return (
     <header>
-      <h1 className="text-4xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-5xl">
+      <h1 className="text-3xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-4xl lg:text-5xl">
         Your Cart
       </h1>
       <p className="mt-3 text-lg text-[#6B4B4B]">

@@ -32,7 +32,7 @@ export function BottomCartBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom sm:p-4"
+          className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom backdrop-blur-xl sm:p-4"
         >
           <Link href="/cart" className="mx-auto block w-full max-w-[520px]">
             <div className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-[#B4080B] px-4 py-3 text-white shadow-[0_14px_38px_rgba(180,8,11,0.28)] transition hover:bg-[#A80F15] sm:px-6">

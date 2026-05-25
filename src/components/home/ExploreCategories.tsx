@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
+import { motion } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { AlertTriangle, MapPin } from 'lucide-react';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
@@ -232,7 +233,14 @@ export function ExploreCategories({
     : `mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8 ${className}`;
 
   return (
-    <section className={sectionClassName} aria-labelledby="explore-categories-heading">
+    <motion.section 
+      className={sectionClassName} 
+      aria-labelledby="explore-categories-heading"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <div className="space-y-4">
         <div className="flex items-center justify-between gap-4">
           <h2 id="explore-categories-heading" className="text-2xl font-extrabold text-[#1F1A1A]">
@@ -311,7 +319,7 @@ export function ExploreCategories({
       {effectiveMode === 'global' && (
         <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
       )}
-    </section>
+    </motion.section>
   );
 }
 

@@ -26,6 +26,7 @@ export function CartItemRow({ item, onIncrease, onDecrease, onRemove }: CartItem
             <img
               src={imageUrl}
               alt={item.name}
+              loading="lazy"
               className="h-full w-full object-cover"
               onError={() => setImageFailed(true)}
             />

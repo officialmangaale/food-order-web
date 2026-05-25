@@ -143,7 +143,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
           )}
         </div>
 
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(380px,1fr)]">
+        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,1fr)]">
           <div className="space-y-6">
             <OrderSuccessCard order={tracking} />
             <EstimatedArrivalCard order={tracking} />

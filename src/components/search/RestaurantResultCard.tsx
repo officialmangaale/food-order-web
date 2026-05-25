@@ -22,6 +22,7 @@ export function RestaurantResultCard({ restaurant }: RestaurantResultCardProps) 
             <img
               src={imageUrl}
               alt={restaurant.name}
+              loading="lazy"
               onError={() => setImageFailed(true)}
               className="h-full w-full object-cover"
             />

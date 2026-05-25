@@ -48,7 +48,7 @@ export function ProfileSidebar() {
           );
         })}
 
-        <div className="hidden border-t border-[#E8CACA] pt-3 lg:mt-3 lg:block" />
+        <div className="hidden lg:mt-3 lg:block lg:border-t lg:border-[#E8CACA] lg:pt-3" />
         <button
           type="button"
           onClick={handleLogout}

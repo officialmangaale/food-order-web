@@ -22,7 +22,9 @@ export function TrendingItemCard({ item, onAdd }: TrendingItemCardProps) {
           <img
             src={item.imageUrl}
             alt={item.name}
-            className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+            loading="lazy"
+            className={`h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] img-fade-in ${imageFailed ? '' : 'loaded'}`}
+            onLoad={(e) => e.currentTarget.classList.add('loaded')}
             onError={() => setImageFailed(true)}
           />
         ) : (
@@ -75,7 +77,7 @@ export function TrendingItemCard({ item, onAdd }: TrendingItemCardProps) {
               onAdd(item);
             }}
             disabled={disabled}
-            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15] shadow-[0_10px_24px_rgba(168,15,21,0.10)] transition hover:bg-[#A80F15] hover:text-white focus:outline-none focus:ring-4 focus:ring-[#B31317]/10 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15] shadow-[0_10px_24px_rgba(168,15,21,0.10)] transition hover:bg-[#A80F15] hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B31317]/10 disabled:cursor-not-allowed disabled:opacity-50"
           >
             <Plus className="h-5 w-5" aria-hidden="true" />
           </button>

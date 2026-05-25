@@ -47,6 +47,7 @@ textarea {
   touch-action: manipulation;
 }
 
+/* ——— Scrollbar ——— */
 ::-webkit-scrollbar {
   width: 4px;
   height: 4px;
@@ -70,14 +71,155 @@ textarea {
   display: none;
 }
 
+/* ——— Placeholders ——— */
 .food-placeholder {
   background: linear-gradient(135deg, #D71920 0%, #A80F15 100%);
 }
 
+/* ——— Safe area insets ——— */
 .safe-bottom {
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .safe-top {
   padding-top: env(safe-area-inset-top, 0px);
+}
+
+/* ——— Skeleton shimmer animation ——— */
+@keyframes shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0e8e8 25%, #f8f0f0 37%, #f0e8e8 63%);
+  background-size: 200% 100%;
+  animation: shimmer 1.8s ease-in-out infinite;
+}
+
+/* ——— Smooth image load ——— */
+.img-fade-in {
+  opacity: 0;
+  transition: opacity 0.4s ease;
+}
+
+.img-fade-in.loaded {
+  opacity: 1;
+}
+
+/* ——— Reduced motion ——— */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .skeleton-shimmer {
+    animation: none;
+  }
+}
+
+/* ——— Better active press state for buttons ——— */
+button:active:not(:disabled),
+a:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  button:active:not(:disabled),
+  a:active:not(:disabled) {
+    transform: none;
+  }
+}
+
+/* ——— Card transition utility ——— */
+.card-hover {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card-hover:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 18px 42px rgba(168, 15, 21, 0.10);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card-hover:hover {
+    transform: none;
+  }
+}
+
+/* ——— Responsive page container ——— */
+.page-container {
+  max-width: 80rem; /* 1280px */
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: 1rem;
+  padding-right: 1rem;
+}
+
+@media (min-width: 640px) {
+  .page-container {
+    padding-left: 1.5rem;
+    padding-right: 1.5rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  .page-container {
+    padding-left: 2rem;
+    padding-right: 2rem;
+  }
+}
+
+/* ——— Entrance animation ——— */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.5s ease-out both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .fade-in-up {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ——— Focus-visible ring ——— */
+:focus-visible {
+  outline: 2px solid #D71920;
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(168, 15, 21, 0.12);
+  border-color: #D71920;
+}
+
+/* ——— Bottom cart bar clearance ——— */
+.pb-cart-safe {
+  padding-bottom: 5.5rem;
+}
+
+@media (min-width: 640px) {
+  .pb-cart-safe {
+    padding-bottom: 6rem;
+  }
 }

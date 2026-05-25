@@ -24,23 +24,23 @@ export function ActiveOrderCard() {
       <Link href={`/orders/${activeOrder.order_id}/track`}>
         <div className={`rounded-2xl p-4 flex items-center gap-3 shadow-card border ${
           isTerminal
-            ? 'bg-gray-50 border-gray-200'
+            ? 'bg-[#F8F5F5] border-[#E8DFDF]'
             : 'bg-cherry-50 border-cherry-200'
         }`}>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            isTerminal ? 'bg-gray-200' : 'bg-cherry-100'
+            isTerminal ? 'bg-[#EDEBEB]' : 'bg-cherry-100'
           }`}>
-            <Truck className={`w-5 h-5 ${isTerminal ? 'text-gray-500' : 'text-cherry-600'}`} />
+            <Truck className={`w-5 h-5 ${isTerminal ? 'text-[#7B6B6B]' : 'text-cherry-600'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">
+            <p className="text-sm font-semibold text-[#1F1A1A] truncate">
               {activeOrder.restaurant_name}
             </p>
-            <p className={`text-xs font-medium ${isTerminal ? 'text-gray-500' : 'text-cherry-600'}`}>
+            <p className={`text-xs font-medium ${isTerminal ? 'text-[#7B6B6B]' : 'text-cherry-600'}`}>
               {label}
             </p>
           </div>
-          <div className="flex items-center gap-1 text-gray-400 flex-shrink-0">
+          <div className="flex items-center gap-1 text-[#9B8A8A] flex-shrink-0">
             <span className="text-xs font-medium">Track</span>
             <ChevronRight className="w-4 h-4" />
           </div>
@@ -49,7 +49,7 @@ export function ActiveOrderCard() {
       {isTerminal && (
         <button
           onClick={(e) => { e.stopPropagation(); clearActiveOrder(); }}
-          className="text-xs text-gray-400 hover:text-gray-600 mt-1 ml-2"
+          className="text-xs text-[#9B8A8A] hover:text-[#6B4B4B] mt-1 ml-2"
         >
           Dismiss
         </button>

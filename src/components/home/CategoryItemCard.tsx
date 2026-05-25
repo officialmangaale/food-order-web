@@ -28,6 +28,7 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
           <img
             src={item.imageUrl}
             alt={item.name}
+            loading="lazy"
             className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
             onError={() => setImageFailed(true)}
           />

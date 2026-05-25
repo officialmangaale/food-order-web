@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useMemo } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { AppliedCouponRow } from '@/components/coupon/AppliedCouponRow';
 import { Button } from '@/components/ui/Button';
@@ -18,6 +19,7 @@ interface OrderSummaryCardProps {
   placing?: boolean;
   placeDisabled?: boolean;
   placeDisabledReason?: string;
+  onRetrySummary?: () => void;
   onPlaceOrder: () => void;
 }
 
@@ -33,8 +35,75 @@ export function OrderSummaryCard({
   placing,
   placeDisabled,
   placeDisabledReason,
+  onRetrySummary,
   onPlaceOrder,
 }: OrderSummaryCardProps) {
+  const awaitingBackendSummary = estimated && validating;
+
+  // 1. Item Subtotal: sum of item price x quantity from cart
+  const localSubtotal = items.reduce((sum, item) => {
+    const base = item.variant_price ?? item.base_price;
+    const addons = item.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
+    return sum + (base + addons) * item.quantity;
+  }, 0);
+  const displaySubtotal = totals.subtotal || localSubtotal;
+
+  // 2. Coupon Discount & 3. Offer Discount
+  const displayCouponDiscount = totals.discount_amount || totals.discount || 0;
+  const displayOfferDiscount = totals.offer_discount_amount || 0;
+  const totalDiscounts = displayCouponDiscount + displayOfferDiscount;
+
+  // 4. Delivery Fee & 5. Extra Charges
+  const displayDeliveryFee = totals.delivery_fee || 0;
+  const displayExtraCharges = totals.extra_charges || 0;
+
+  // 8. Platform Fee (fixed 2 if not provided by backend)
+  const displayPlatformFee = totals.platform_fee_amount || totals.platform_fee || 2;
+
+  // 6. CGST & 7. SGST (2.5% of post-discount subtotal)
+  const baseForTax = Math.max(0, displaySubtotal - totalDiscounts);
+  const localCgst = Number((baseForTax * 0.025).toFixed(2));
+  const localSgst = Number((baseForTax * 0.025).toFixed(2));
+  
+  const displayCgst = totals.cgst || localCgst;
+  const displaySgst = totals.sgst || localSgst;
+
+  // 10. Exact Total
+  const localExactTotal = displaySubtotal - totalDiscounts + displayDeliveryFee + displayExtraCharges + displayCgst + displaySgst + displayPlatformFee;
+  const displayExactTotal = totals.exact_total_amount || localExactTotal;
+
+  // 9. Round Off & 11. Grand Total
+  const localGrandTotal = Math.round(displayExactTotal);
+  const localRoundOff = Number((localGrandTotal - displayExactTotal).toFixed(2));
+
+  const displayGrandTotal = totals.grand_total || totals.total || localGrandTotal;
+  const displayRoundOff = totals.round_off_amount || localRoundOff;
+
+  const showBillBreakdown = !estimated || Boolean(displayGrandTotal || displaySubtotal);
+  const displaySource = estimated ? (validating ? 'validate-pending' : 'fallback-local') : 'backend-validate';
+
+  useEffect(() => {
+    if (process.env.NODE_ENV === 'production') return;
+    console.debug('[checkout-billing]', {
+      source: displaySource,
+      isPlatformFeeFallback: !totals.platform_fee_amount && !totals.platform_fee,
+      isTaxFallback: !totals.cgst && !totals.sgst,
+      values: {
+        subtotal: displaySubtotal,
+        coupon_discount: displayCouponDiscount,
+        offer_discount: displayOfferDiscount,
+        delivery_fee: displayDeliveryFee,
+        extra_charges: displayExtraCharges,
+        cgst: displayCgst,
+        sgst: displaySgst,
+        platform_fee: displayPlatformFee,
+        round_off: displayRoundOff,
+        exact_total: displayExactTotal,
+        grand_total: displayGrandTotal,
+      }
+    });
+  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, totals.platform_fee_amount, totals.platform_fee, totals.cgst, totals.sgst]);
+
   return (
     <aside className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_18px_42px_rgba(123,35,35,0.08)] lg:sticky lg:top-32">
       <div className="mb-5 flex items-start justify-between gap-4">
@@ -70,29 +139,58 @@ export function OrderSummaryCard({
       <div className="my-6 h-px bg-[#F1DEDE]" />
 
       {(validationError || totalInvalid) && (
-        <div className="mb-5 flex gap-2 rounded-xl bg-red-50 px-3 py-3 text-sm font-semibold text-red-700">
-          <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-          <p>{totalInvalid ? 'Unable to calculate order total. Please retry.' : validationError}</p>
+        <div className="mb-5 rounded-xl bg-red-50 px-3 py-3 text-sm font-semibold text-red-700">
+          <div className="flex gap-2">
+            <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+            <p>{totalInvalid ? 'Unable to calculate order total. Please retry.' : validationError}</p>
+          </div>
+          {onRetrySummary && (
+            <button
+              type="button"
+              onClick={onRetrySummary}
+              className="mt-3 rounded-lg border border-red-200 bg-white px-3 py-1.5 text-xs font-extrabold text-red-700 transition hover:bg-red-100"
+            >
+              Retry summary
+            </button>
+          )}
         </div>
       )}
 
       <div className="space-y-3 text-[#3A2727]">
-        <BillRow label={estimated ? 'Subtotal (Estimated)' : 'Subtotal'} value={totals.subtotal} />
-        {totals.delivery_fee > 0 && <BillRow label="Delivery Fee" value={totals.delivery_fee} />}
-        {totals.taxes > 0 && <BillRow label="Taxes" value={totals.taxes} />}
-        {couponCode ? (
-          <AppliedCouponRow code={couponCode} discountAmount={totals.discount} />
-        ) : (
-          totals.discount > 0 && <BillRow label="Discount" value={-totals.discount} highlight />
+        {awaitingBackendSummary && (
+          <SummarySkeleton />
+        )}
+        {estimated && !validating && !validationError && !totalInvalid && (
+          <p className="rounded-xl bg-[#FFF7F5] px-3 py-2 text-sm font-semibold text-[#8A5555]">
+            Backend summary is not available yet.
+          </p>
+        )}
+        {showBillBreakdown && (
+          <>
+            <BillRow label="Item Subtotal" value={displaySubtotal} />
+            {couponCode && displayCouponDiscount > 0 ? (
+              <AppliedCouponRow code={couponCode} discountAmount={displayCouponDiscount} />
+            ) : (
+              <BillRow label="Coupon Discount" value={-displayCouponDiscount} highlight />
+            )}
+            <BillRow label="Offer Discount" value={-displayOfferDiscount} highlight />
+            <BillRow label="Delivery Fee" value={displayDeliveryFee} />
+            <BillRow label="Extra Charges" value={displayExtraCharges} />
+            <BillRow label="CGST" value={displayCgst} />
+            <BillRow label="SGST" value={displaySgst} />
+            <BillRow label="Platform Fee" value={displayPlatformFee} />
+            <BillRow label="Round Off" value={displayRoundOff} />
+            <BillRow label="Exact Total" value={displayExactTotal} strong />
+          </>
         )}
       </div>
 
       <div className="my-6 h-px bg-[#F1DEDE]" />
 
       <div className="mb-6 flex items-end justify-between gap-3">
-        <span className="text-2xl font-extrabold text-[#1F1717]">Total</span>
+        <span className="text-2xl font-extrabold text-[#1F1717]">Grand Total</span>
         <span className="text-4xl font-extrabold tracking-normal text-[#A80F15]">
-          {formatMoney(totals.total)}
+          {formatMoney(displayGrandTotal)}
         </span>
       </div>
 
@@ -110,17 +208,44 @@ export function OrderSummaryCard({
         onClick={onPlaceOrder}
         className="bg-[#A80F15] shadow-[0_10px_20px_rgba(168,15,21,0.18)] hover:bg-[#8F0D12]"
       >
-        {placing ? 'Placing order...' : `Place Order - ${formatMoney(totals.total)}`}
+        {placing ? 'Placing order...' : `Place Order - ${formatMoney(displayGrandTotal)}`}
       </Button>
     </aside>
   );
 }
 
-function BillRow({ label, value, highlight }: { label: string; value: number; highlight?: boolean }) {
+function BillRow({
+  label,
+  value,
+  highlight,
+  strong,
+}: {
+  label: string;
+  value: number;
+  highlight?: boolean;
+  strong?: boolean;
+}) {
   return (
-    <div className={`flex justify-between gap-4 text-base ${highlight ? 'font-bold text-green-700' : ''}`}>
+    <div
+      className={`flex items-center justify-between gap-4 text-base ${
+        highlight ? 'font-bold text-green-700' : strong ? 'font-extrabold text-[#1F1717]' : ''
+      }`}
+    >
       <span>{label}</span>
-      <span>{value < 0 ? `-${formatMoney(Math.abs(value))}` : formatMoney(value)}</span>
+      <span className="shrink-0 text-right">{value < 0 ? `-${formatMoney(Math.abs(value))}` : formatMoney(value)}</span>
+    </div>
+  );
+}
+
+function SummarySkeleton() {
+  return (
+    <div className="space-y-3 rounded-xl bg-[#FFF7F5] px-3 py-3" aria-label="Fetching backend order summary">
+      {[0, 1, 2, 3].map((index) => (
+        <div key={index} className="flex items-center justify-between gap-4">
+          <span className="h-3 w-28 animate-pulse rounded bg-[#F0DADA]" />
+          <span className="h-3 w-16 animate-pulse rounded bg-[#F0DADA]" />
+        </div>
+      ))}
     </div>
   );
 }

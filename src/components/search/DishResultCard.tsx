@@ -21,6 +21,7 @@ export function DishResultCard({ dish, onAdd }: DishResultCardProps) {
           <img
             src={dish.image_url}
             alt={dish.name}
+            loading="lazy"
             onError={() => setImageFailed(true)}
             className="h-full w-full object-cover"
           />

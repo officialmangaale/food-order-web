@@ -47,7 +47,7 @@ export function RestaurantHero({
 
       <div className="absolute inset-x-0 bottom-0 mx-auto flex max-w-[1280px] items-end justify-between gap-4 px-4 pb-7 sm:px-6 sm:pb-8 lg:px-8 lg:pb-10">
         <div className="min-w-0 text-white">
-          <h1 className="max-w-[850px] text-4xl font-extrabold leading-tight tracking-normal drop-shadow-sm sm:text-5xl lg:text-[52px]">
+          <h1 className="max-w-[850px] text-3xl font-extrabold leading-tight tracking-normal drop-shadow-sm sm:text-5xl lg:text-[52px]">
             {name}
           </h1>
           <div className="mt-3 flex flex-wrap items-center gap-3 text-sm font-medium text-white sm:text-base">

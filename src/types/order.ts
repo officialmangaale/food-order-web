@@ -61,7 +61,21 @@ export interface PlaceOrderResponse {
   order_id: number;
   order_number?: string;
   status: OrderStatus;
+  payment_status?: string;
+  subtotal?: number;
+  cgst?: number;
+  sgst?: number;
+  tax_amount?: number;
+  discount_amount?: number;
+  offer_discount_amount?: number;
+  delivery_fee?: number;
+  platform_fee_amount?: number;
+  extra_charges?: number;
+  round_off_amount?: number;
+  exact_total_amount?: number;
+  grand_total?: number;
   total?: number;
+  tracking_url?: string;
   message?: string;
 }
 
@@ -164,9 +178,16 @@ export interface TrackingOrder {
   items: TrackingOrderItem[];
   itemCount: number;
   subtotal?: number;
+  cgst?: number;
+  sgst?: number;
   taxAmount?: number;
   deliveryCharge?: number;
   discountAmount?: number;
+  offerDiscountAmount?: number;
+  platformFeeAmount?: number;
+  extraCharges?: number;
+  roundOffAmount?: number;
+  exactTotalAmount?: number;
   grandTotal: number;
   paymentMethod: string;
   paymentStatus: string;

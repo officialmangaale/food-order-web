@@ -22,7 +22,7 @@ export function NearbyRestaurantCard({ restaurant }: NearbyRestaurantCardProps) 
   return (
     <Link
       href={`/restaurants/${restaurant.id}`}
-      className="group block h-full overflow-hidden rounded-2xl border border-[#F0DADA] bg-white shadow-[0_14px_34px_rgba(31,41,55,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(168,15,21,0.10)] focus:outline-none focus:ring-4 focus:ring-[#B31317]/10"
+      className="group block h-full overflow-hidden rounded-2xl border border-[#F0DADA] bg-white shadow-[0_14px_34px_rgba(31,41,55,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(168,15,21,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#B31317]/10"
     >
       <article className="flex h-full flex-col overflow-hidden">
         <div className="relative h-[168px] overflow-hidden bg-[#FFF4F0] sm:h-[176px]">
@@ -30,7 +30,9 @@ export function NearbyRestaurantCard({ restaurant }: NearbyRestaurantCardProps) 
             <img
               src={restaurant.imageUrl}
               alt={restaurant.name}
-              className="h-full w-full object-cover transition duration-500 group-hover:scale-[1.03]"
+              loading="lazy"
+              className={`h-full w-full object-cover transition duration-500 group-hover:scale-[1.03] img-fade-in ${imageFailed ? '' : 'loaded'}`}
+              onLoad={(e) => e.currentTarget.classList.add('loaded')}
               onError={() => setImageFailed(true)}
             />
           ) : (

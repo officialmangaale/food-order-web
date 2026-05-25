@@ -33,29 +33,66 @@ export function normalizeTrackingOrder(raw: unknown): TrackingOrder {
   const restaurant = normalizeRestaurant(order, data);
   const customer = asRecord(order.customer) ?? asRecord(data.customer) ?? {};
   const items = normalizeItems(readArray(order.items ?? order.order_items ?? data.items ?? data.order_items));
-  const subtotal = readNumber(order.subtotal ?? data.subtotal);
-  const taxAmount =
-    readNumber(order.tax_amount ?? order.taxAmount ?? order.taxes ?? data.tax_amount ?? data.taxes) ??
-    sumDefined(readNumber(order.cgst ?? data.cgst), readNumber(order.sgst ?? data.sgst));
-  const deliveryCharge = readNumber(
-    order.delivery_charge ?? order.deliveryCharge ?? order.delivery_fee ?? order.deliveryFee ?? data.delivery_charge
-  );
-  const discountAmount = readNumber(
-    order.discount_amount ?? order.discountAmount ?? order.discount ?? data.discount_amount ?? data.discount
-  );
-  const itemTotal = items.reduce((sum, item) => sum + item.lineTotal, 0);
-  const grandTotal =
-    readNumber(
-      order.grand_total ??
-        order.grandTotal ??
-        order.total ??
-        order.amount ??
-        order.payable_total ??
-        data.grand_total ??
-        data.total
-    ) ??
-    sumDefined(subtotal, taxAmount, deliveryCharge, discountAmount != null ? -discountAmount : undefined) ??
-    itemTotal;
+  const summary = getBillingSummary(order, data);
+  const subtotal = readBillingNumber(summary.record, order, data, ['subtotal', 'item_subtotal', 'itemSubtotal']);
+  const cgst = readBillingNumber(summary.record, order, data, ['cgst']);
+  const sgst = readBillingNumber(summary.record, order, data, ['sgst']);
+  const taxAmount = readBillingNumber(summary.record, order, data, ['tax_amount', 'taxAmount', 'taxes']);
+  const deliveryCharge = readBillingNumber(summary.record, order, data, [
+    'delivery_charge',
+    'deliveryCharge',
+    'delivery_fee',
+    'deliveryFee',
+  ]);
+  const discountAmount = readBillingNumber(summary.record, order, data, [
+    'discount_amount',
+    'discountAmount',
+    'discount',
+  ]);
+  const offerDiscountAmount = readBillingNumber(summary.record, order, data, [
+    'offer_discount_amount',
+    'offerDiscountAmount',
+  ]);
+  const platformFeeAmount = readBillingNumber(summary.record, order, data, [
+    'platform_fee_amount',
+    'platformFeeAmount',
+    'platform_fee',
+    'platformFee',
+  ]);
+  const extraCharges = readBillingNumber(summary.record, order, data, ['extra_charges', 'extraCharges']);
+  const roundOffAmount = readBillingNumber(summary.record, order, data, [
+    'round_off_amount',
+    'roundOffAmount',
+    'round_off',
+  ]);
+  const exactTotalAmount = readBillingNumber(summary.record, order, data, ['exact_total_amount', 'exactTotalAmount']);
+  const grandTotal = readBillingNumber(summary.record, order, data, [
+    'grand_total',
+    'grandTotal',
+    'total_amount',
+    'totalAmount',
+    'exact_total_amount',
+    'exactTotalAmount',
+    'total',
+    'amount',
+    'payable_total',
+    'payableTotal',
+  ]);
+
+  debugBillingSummary('tracking', order, data, summary, {
+    subtotal,
+    discount_amount: discountAmount,
+    offer_discount_amount: offerDiscountAmount,
+    delivery_fee: deliveryCharge,
+    extra_charges: extraCharges,
+    cgst,
+    sgst,
+    tax_amount: taxAmount,
+    platform_fee_amount: platformFeeAmount,
+    round_off_amount: roundOffAmount,
+    exact_total_amount: exactTotalAmount,
+    grand_total: grandTotal,
+  });
   const orderId =
     readNumber(order.order_id ?? order.orderId ?? order.id ?? data.order_id ?? data.id) ??
     readString(order.order_id ?? order.orderId ?? order.id ?? data.order_id ?? data.id) ??
@@ -86,9 +123,16 @@ export function normalizeTrackingOrder(raw: unknown): TrackingOrder {
       readNumber(order.item_count ?? order.itemCount ?? data.item_count) ??
       items.reduce((sum, item) => sum + item.quantity, 0),
     subtotal,
+    cgst,
+    sgst,
     taxAmount,
     deliveryCharge,
     discountAmount,
+    offerDiscountAmount,
+    platformFeeAmount,
+    extraCharges,
+    roundOffAmount,
+    exactTotalAmount,
     grandTotal: grandTotal ?? 0,
     paymentMethod:
       readString(order.payment_method ?? order.paymentMethod ?? data.payment_method) ?? 'cash',
@@ -252,10 +296,104 @@ function parseMinutes(value: string | undefined): number | undefined {
   return minutes;
 }
 
-function sumDefined(...values: (number | undefined)[]) {
-  const present = values.filter((value): value is number => value != null);
-  if (present.length === 0) return undefined;
-  return present.reduce((sum, value) => sum + value, 0);
+function getBillingSummary(order: Record<string, unknown>, data: Record<string, unknown>) {
+  const billBreakdown =
+    asRecord(order.bill_breakdown) ??
+    asRecord(order.billBreakdown) ??
+    asRecord(order.billing_breakdown) ??
+    asRecord(order.billingBreakdown) ??
+    asRecord(data.bill_breakdown) ??
+    asRecord(data.billBreakdown) ??
+    asRecord(data.billing_breakdown) ??
+    asRecord(data.billingBreakdown);
+  if (billBreakdown) return { source: 'bill_breakdown', record: billBreakdown };
+
+  const billBreakdownRows =
+    asBillingRows(order.bill_breakdown) ??
+    asBillingRows(order.billBreakdown) ??
+    asBillingRows(order.billing_breakdown) ??
+    asBillingRows(order.billingBreakdown) ??
+    asBillingRows(data.bill_breakdown) ??
+    asBillingRows(data.billBreakdown) ??
+    asBillingRows(data.billing_breakdown) ??
+    asBillingRows(data.billingBreakdown);
+  if (billBreakdownRows) return { source: 'bill_breakdown', record: billBreakdownRows };
+
+  const summary = asRecord(order.summary) ?? asRecord(data.summary);
+  if (summary) return { source: 'summary', record: summary };
+
+  const pricing = asRecord(order.pricing) ?? asRecord(data.pricing);
+  if (pricing) return { source: 'pricing', record: pricing };
+
+  return { source: 'root', record: order };
+}
+
+function asBillingRows(value: unknown): Record<string, unknown> | null {
+  if (!Array.isArray(value)) return null;
+
+  const result: Record<string, unknown> = {};
+  for (const rowValue of value) {
+    const row = asRecord(rowValue);
+    if (!row) continue;
+
+    const key = readString(row.key ?? row.code ?? row.type ?? row.name ?? row.label ?? row.title);
+    if (!key) continue;
+
+    result[normalizeBillingKey(key)] =
+      row.amount ?? row.value ?? row.price ?? row.total ?? row.fee ?? row.charge ?? row.discount_amount;
+  }
+
+  return Object.keys(result).length > 0 ? result : null;
+}
+
+function normalizeBillingKey(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/&/g, 'and')
+    .replace(/[^a-z0-9]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function readBillingNumber(
+  summary: Record<string, unknown>,
+  order: Record<string, unknown>,
+  data: Record<string, unknown>,
+  keys: string[]
+) {
+  const sources = summary === order ? [summary, data] : [summary, order, data];
+
+  for (const source of sources) {
+    for (const key of keys) {
+      const value = readNumber(source[key]);
+      if (value != null) return value;
+    }
+  }
+
+  return undefined;
+}
+
+function debugBillingSummary(
+  source: 'tracking',
+  order: Record<string, unknown>,
+  data: Record<string, unknown>,
+  summary: { source: string; record: Record<string, unknown> },
+  mapped: Record<string, number | undefined>
+) {
+  if (process.env.NODE_ENV === 'production') return;
+
+  const renderedFields = Object.entries(mapped)
+    .filter(([, value]) => value != null && value !== 0)
+    .map(([key]) => key);
+
+  console.debug('[checkout-billing]', {
+    source,
+    summaryObject: summary.source,
+    orderKeys: Object.keys(order),
+    dataKeys: Object.keys(data),
+    summaryKeys: Object.keys(summary.record),
+    renderedFields,
+  });
 }
 
 function normalizeToken(value: string) {

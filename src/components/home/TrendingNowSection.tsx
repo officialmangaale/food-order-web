@@ -1,6 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
+import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { AlertTriangle } from 'lucide-react';
@@ -116,26 +117,47 @@ export function TrendingNowSection() {
 
   if (trendingQuery.isLoading) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Trending dishes loading">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-label="Trending dishes loading"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <TrendingSkeleton />
-      </section>
+      </motion.section>
     );
   }
 
   if (trendingQuery.error && items.length === 0) {
     return (
-      <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="trending-now-heading">
+      <motion.section 
+        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+        aria-labelledby="trending-now-heading"
+        initial={{ opacity: 0, y: 20 }}
+        whileInView={{ opacity: 1, y: 0 }}
+        viewport={{ once: true, margin: "-50px" }}
+        transition={{ duration: 0.5, ease: 'easeOut' }}
+      >
         <SectionHeading />
         <TrendingError onRetry={() => trendingQuery.refetch()} />
-      </section>
+      </motion.section>
     );
   }
 
   if (visibleItems.length === 0) return null;
 
   return (
-    <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-labelledby="trending-now-heading">
+    <motion.section 
+      className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      aria-labelledby="trending-now-heading"
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
+    >
       <SectionHeading showViewAll={hasMoreItems} viewAllHref={viewAllHref} />
 
       <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
@@ -159,7 +181,7 @@ export function TrendingNowSection() {
         newRestaurantName={pendingItem?.restaurantName ?? ''}
         onCleared={handleCartCleared}
       />
-    </section>
+    </motion.section>
   );
 }
 

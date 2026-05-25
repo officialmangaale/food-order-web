@@ -72,13 +72,17 @@ export function HomeOfferSlider() {
   if (!activeOffer) return null;
 
   return (
-    <section
+    <motion.section
       className="mx-auto mt-4 max-w-7xl px-4 sm:mt-5 sm:px-6 lg:mt-6 lg:px-8"
       aria-label="Featured offers"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
+      initial={{ opacity: 0, y: 20 }}
+      whileInView={{ opacity: 1, y: 0 }}
+      viewport={{ once: true, margin: "-50px" }}
+      transition={{ duration: 0.5, ease: 'easeOut' }}
     >
       <div className="relative h-[280px] overflow-hidden rounded-[24px] bg-[#170707] shadow-[0_18px_48px_rgba(74,12,14,0.18)] sm:h-[340px] lg:h-[400px]">
         <AnimatePresence mode="wait" initial={false}>
@@ -105,7 +109,7 @@ export function HomeOfferSlider() {
               <span className="w-fit rounded-full bg-[#D71920] px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-white shadow-sm">
                 {activeOffer.badgeText || 'Exclusive Offer'}
               </span>
-              <h1 className="mt-4 max-w-[500px] text-[30px] font-extrabold leading-[1.05] tracking-normal text-white sm:text-[42px] lg:text-[52px]">
+              <h1 className="mt-4 max-w-[500px] text-[26px] font-extrabold leading-[1.05] tracking-normal text-white sm:text-[42px] lg:text-[52px]">
                 {activeOffer.title}
               </h1>
               {activeOffer.subtitle && (
@@ -156,7 +160,7 @@ export function HomeOfferSlider() {
           </div>
         )}
       </div>
-    </section>
+    </motion.section>
   );
 }
 

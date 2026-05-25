@@ -8,7 +8,7 @@ interface SkeletonProps {
 export function Skeleton({ className = '', rounded }: SkeletonProps) {
   return (
     <div
-      className={`animate-pulse bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]
+      className={`skeleton-shimmer bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 bg-[length:200%_100%]
         ${rounded ? 'rounded-full' : 'rounded-xl'}
         ${className}
       `}
