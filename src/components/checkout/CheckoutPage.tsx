@@ -41,6 +41,8 @@ import type { CampaignContext } from '@/types/marketing';
 import type { PlaceOrderRequest } from '@/types/order';
 import type { CartItem, ValidatedTotals } from '@/types/cart';
 
+const EMPTY_CAMPAIGN_CONTEXTS: Record<string, CampaignContext> = {};
+const EMPTY_CHECKOUT_COUPONS: ReturnType<typeof useCampaignStore.getState>['checkoutCoupons'] = {};
 const EMPTY_TOTALS: ValidatedTotals = {
   subtotal: 0,
   cgst: 0,
@@ -78,8 +80,8 @@ export function CheckoutPage() {
   const { instructions, setInstructions, clearInstructions } = useCheckoutInstructions();
   const hasMounted = useHasMounted();
 
-  const items = useCartStore((state) => state.items);
-  const restaurantId = useCartStore((state) => state.restaurantId);
+  const items = useCartStore((state) => Array.isArray(state.items) ? state.items : []);
+  const restaurantId = useCartStore((state) => Number.isFinite(state.restaurantId) ? state.restaurantId : null);
   const restaurantName = useCartStore((state) => state.restaurantName);
   const clearCart = useCartStore((state) => state.clearCart);
   const setValidatedTotals = useCartStore((state) => state.setValidatedTotals);
@@ -91,8 +93,8 @@ export function CheckoutPage() {
   const latitude = useLocationStore((state) => state.latitude);
   const longitude = useLocationStore((state) => state.longitude);
   const setActiveOrder = useActiveOrderStore((state) => state.setActiveOrder);
-  const campaignContexts = useCampaignStore((state) => state.campaignContexts);
-  const checkoutCoupons = useCampaignStore((state) => state.checkoutCoupons);
+  const campaignContexts = useCampaignStore((state) => state.campaignContexts ?? EMPTY_CAMPAIGN_CONTEXTS);
+  const checkoutCoupons = useCampaignStore((state) => state.checkoutCoupons ?? EMPTY_CHECKOUT_COUPONS);
   const syncCampaignCoupon = useCampaignStore((state) => state.syncCampaignCoupon);
   const setCheckoutCoupon = useCampaignStore((state) => state.setCheckoutCoupon);
   const removeCheckoutCoupon = useCampaignStore((state) => state.removeCheckoutCoupon);
@@ -158,6 +160,9 @@ export function CheckoutPage() {
     placing,
   });
   const placeDisabled = Boolean(placeDisabledReason);
+  const fallbackReason = items.length > 0 && !restaurantId
+    ? 'The restaurant for this saved cart could not be restored.'
+    : '';
 
   useEffect(() => {
     if (!validationResult?.valid || totalInvalid) return;
@@ -203,6 +208,32 @@ export function CheckoutPage() {
     validationResult,
   ]);
 
+  useEffect(() => {
+    if (!hasMounted) return;
+    debugCheckout('entry-state', {
+      hasCartItems: items.length > 0,
+      itemCount: items.length,
+      hasRestaurantId: Boolean(restaurantId),
+      hasSelectedAddress: Boolean(selectedAddress),
+      isAuthenticated,
+      fallbackReason: fallbackReason || undefined,
+    });
+  }, [fallbackReason, hasMounted, isAuthenticated, items.length, restaurantId, selectedAddress]);
+
+  useEffect(() => {
+    if (!hasMounted || !restaurantId || items.length === 0) return;
+    debugCheckout('summary-status', {
+      status: validation.isLoading || validation.isFetching
+        ? 'loading'
+        : validation.error
+          ? 'failed'
+          : validationResult
+            ? 'loaded'
+            : 'idle',
+      failureReason: validation.error ? getErrorMessage(validation.error) : undefined,
+    });
+  }, [hasMounted, items.length, restaurantId, validation.error, validation.isFetching, validation.isLoading, validationResult]);
+
   if (!hasMounted) return <CheckoutPageSkeleton />;
 
   if (items.length === 0) {
@@ -224,6 +255,10 @@ export function CheckoutPage() {
         <CheckoutFooter />
       </main>
     );
+  }
+
+  if (fallbackReason) {
+    return <CheckoutRecoveryPanel reason={fallbackReason} />;
   }
 
   const handleSaveAddress = async (payload: CheckoutAddressPayload) => {
@@ -269,6 +304,7 @@ export function CheckoutPage() {
       });
       setCouponValidation(restaurantId, validationResult);
     } catch (error) {
+      debugCheckout('coupon-api-failure', { failureReason: getErrorMessage(error) });
       setCouponError(getErrorMessage(error));
     } finally {
       setCouponChecking(false);
@@ -385,6 +421,7 @@ export function CheckoutPage() {
         toast('Your session expired. Please log in again.', 'error');
       } else {
         const message = getErrorMessage(error);
+        debugCheckout('place-order-failure', { failureReason: message });
         setOrderError(message);
         toast(message, 'error');
       }
@@ -506,6 +543,36 @@ function CheckoutPageSkeleton() {
   );
 }
 
+function CheckoutRecoveryPanel({ reason }: { reason: string }) {
+  return (
+    <main className="min-h-screen bg-[#FFF7F5]">
+      <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8">
+        <CheckoutHeading />
+        <div className="mt-8 rounded-2xl border border-[#F0DADA] bg-white p-8 text-center shadow-[0_16px_40px_rgba(123,35,35,0.06)]">
+          <AlertCircle className="mx-auto h-10 w-10 text-[#A80F15]" aria-hidden="true" />
+          <h2 className="mt-4 text-2xl font-extrabold text-[#1F1717]">Checkout needs your cart again</h2>
+          <p className="mx-auto mt-2 max-w-md text-[#6B4B4B]">{reason} Please review your cart before continuing.</p>
+          <div className="mt-6 flex flex-wrap justify-center gap-3">
+            <Link
+              href="/cart"
+              className="inline-flex items-center justify-center rounded-xl bg-[#A80F15] px-6 py-3 font-bold text-white transition hover:bg-[#8F0D12]"
+            >
+              Return to Cart
+            </Link>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center rounded-xl border border-[#E7CACA] px-6 py-3 font-bold text-[#5F3030] transition hover:bg-[#FFF0F0]"
+            >
+              Browse Restaurants
+            </Link>
+          </div>
+        </div>
+      </div>
+      <CheckoutFooter />
+    </main>
+  );
+}
+
 function CheckoutHeading() {
   return (
     <header>
@@ -604,6 +671,12 @@ function getValidatedCouponCode(
 function getCustomerPhone(phone?: string | null) {
   const cleaned = phone?.replace(/\D/g, '');
   return cleaned ? { phone: cleaned } : undefined;
+}
+
+function debugCheckout(event: string, details: Record<string, unknown>) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[checkout]', event, details);
+  }
 }
 
 function buildPlaceOrderPayload({

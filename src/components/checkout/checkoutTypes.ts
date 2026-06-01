@@ -14,11 +14,11 @@ export interface CheckoutValidationResult {
 }
 
 export function buildCartItemsPayload(items: CartItem[]): CartValidateRequest['items'] {
-  return items.map((item) => ({
+  return (Array.isArray(items) ? items : []).map((item) => ({
     item_id: item.item_id,
     quantity: item.quantity,
     variant_id: item.variant_id,
-    addons: item.addons.map((addon) => ({
+    addons: (Array.isArray(item.addons) ? item.addons : []).map((addon) => ({
       addon_id: addon.addon_id,
       quantity: addon.quantity,
     })),

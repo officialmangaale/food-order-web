@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo } from 'react';
+import { useEffect } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { AppliedCouponRow } from '@/components/coupon/AppliedCouponRow';
 import { Button } from '@/components/ui/Button';
@@ -41,10 +41,12 @@ export function OrderSummaryCard({
   const awaitingBackendSummary = estimated && validating;
 
   // 1. Item Subtotal: sum of item price x quantity from cart
-  const localSubtotal = items.reduce((sum, item) => {
-    const base = item.variant_price ?? item.base_price;
-    const addons = item.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
-    return sum + (base + addons) * item.quantity;
+  const safeItems = Array.isArray(items) ? items : [];
+  const localSubtotal = safeItems.reduce((sum, item) => {
+    const base = safeNumber(item.variant_price ?? item.base_price);
+    const addons = (Array.isArray(item.addons) ? item.addons : [])
+      .reduce((sum, addon) => sum + safeNumber(addon.price) * safeNumber(addon.quantity), 0);
+    return sum + (base + addons) * safeNumber(item.quantity);
   }, 0);
   const displaySubtotal = totals.subtotal || localSubtotal;
 
@@ -57,10 +59,10 @@ export function OrderSummaryCard({
   const displayDeliveryFee = totals.delivery_fee || 0;
   const displayExtraCharges = totals.extra_charges || 0;
 
-  // 8. Platform Fee (fixed 2 if not provided by backend)
+  // Platform fee estimate is displayed when the validate breakdown omits it.
   const displayPlatformFee = totals.platform_fee_amount || totals.platform_fee || 2;
 
-  // 6. CGST & 7. SGST (2.5% of post-discount subtotal)
+  // CGST and SGST estimates are displayed when the validate breakdown omits them.
   const baseForTax = Math.max(0, displaySubtotal - totalDiscounts);
   const localCgst = Number((baseForTax * 0.025).toFixed(2));
   const localSgst = Number((baseForTax * 0.025).toFixed(2));
@@ -68,15 +70,15 @@ export function OrderSummaryCard({
   const displayCgst = totals.cgst || localCgst;
   const displaySgst = totals.sgst || localSgst;
 
-  // 10. Exact Total
+  // If no exact backend total exists, keep the grand total consistent with this displayed bill.
   const localExactTotal = displaySubtotal - totalDiscounts + displayDeliveryFee + displayExtraCharges + displayCgst + displaySgst + displayPlatformFee;
+  const hasBackendExactTotal = totals.exact_total_amount > 0;
   const displayExactTotal = totals.exact_total_amount || localExactTotal;
-
-  // 9. Round Off & 11. Grand Total
   const localGrandTotal = Math.round(displayExactTotal);
-  const localRoundOff = Number((localGrandTotal - displayExactTotal).toFixed(2));
-
-  const displayGrandTotal = totals.grand_total || totals.total || localGrandTotal;
+  const displayGrandTotal = hasBackendExactTotal
+    ? totals.grand_total || totals.total || localGrandTotal
+    : localGrandTotal;
+  const localRoundOff = Number((displayGrandTotal - displayExactTotal).toFixed(2));
   const displayRoundOff = totals.round_off_amount || localRoundOff;
 
   const showBillBreakdown = !estimated || Boolean(displayGrandTotal || displaySubtotal);
@@ -102,7 +104,7 @@ export function OrderSummaryCard({
         grand_total: displayGrandTotal,
       }
     });
-  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, totals.platform_fee_amount, totals.platform_fee, totals.cgst, totals.sgst]);
+  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, estimated, totals.platform_fee_amount, totals.platform_fee, totals.cgst, totals.sgst]);
 
   return (
     <aside className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_18px_42px_rgba(123,35,35,0.08)] lg:sticky lg:top-32">
@@ -120,14 +122,14 @@ export function OrderSummaryCard({
       </div>
 
       <div className="space-y-4">
-        {items.map((item) => (
+        {safeItems.map((item) => (
           <div key={`${item.item_id}-${item.variant_id ?? 'base'}`} className="flex gap-3">
             <div className="min-w-0 flex-1">
               <p className="truncate font-bold text-[#1F1717]">{item.name}</p>
               <p className="mt-1 text-sm text-[#5D4444]">Qty: {item.quantity}</p>
-              {(item.variant_name || item.addons.length > 0) && (
+              {(item.variant_name || (item.addons?.length ?? 0) > 0) && (
                 <p className="mt-1 line-clamp-2 text-xs leading-5 text-[#8A6B6B]">
-                  {[item.variant_name, item.addons.map((addon) => addon.name).join(', ')].filter(Boolean).join(' / ')}
+                  {[item.variant_name, (item.addons ?? []).map((addon) => addon.name).join(', ')].filter(Boolean).join(' / ')}
                 </p>
               )}
             </div>
@@ -251,7 +253,12 @@ function SummarySkeleton() {
 }
 
 function getLineTotal(item: CartItem) {
-  const base = item.variant_price ?? item.base_price;
-  const addons = item.addons.reduce((sum, addon) => sum + addon.price * addon.quantity, 0);
-  return (base + addons) * item.quantity;
+  const base = safeNumber(item.variant_price ?? item.base_price);
+  const addons = (Array.isArray(item.addons) ? item.addons : [])
+    .reduce((sum, addon) => sum + safeNumber(addon.price) * safeNumber(addon.quantity), 0);
+  return (base + addons) * safeNumber(item.quantity);
+}
+
+function safeNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : 0;
 }

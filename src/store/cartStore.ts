@@ -126,6 +126,95 @@ export const useCartStore = create<CartState>()(
         items: state.items,
         validatedTotals: state.validatedTotals,
       }),
+      merge: (persistedState, currentState) => mergePersistedCartState(persistedState, currentState),
     }
   )
 );
+
+function mergePersistedCartState(persistedState: unknown, currentState: CartState): CartState {
+  const persisted = asRecord(persistedState);
+  if (!persisted) return currentState;
+
+  const items = normalizePersistedItems(persisted.items);
+  const restaurantId =
+    readPositiveNumber(persisted.restaurantId) ??
+    getSingleRestaurantId(items);
+
+  return {
+    ...currentState,
+    restaurantId,
+    restaurantName: typeof persisted.restaurantName === 'string' ? persisted.restaurantName : '',
+    restaurantSlug: typeof persisted.restaurantSlug === 'string' ? persisted.restaurantSlug : null,
+    items,
+    validatedTotals: null,
+  };
+}
+
+function normalizePersistedItems(value: unknown): CartItem[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((value) => normalizePersistedItem(value))
+    .filter((item): item is CartItem => item !== null);
+}
+
+function normalizePersistedItem(value: unknown): CartItem | null {
+  const item = asRecord(value);
+  const itemId = readPositiveNumber(item?.item_id);
+  const quantity = readPositiveNumber(item?.quantity);
+  const basePrice = readNumber(item?.base_price) ?? readNumber(item?.variant_price);
+  if (!item || !itemId || !quantity || basePrice == null) return null;
+
+  return {
+    ...item,
+    item_id: itemId,
+    name: typeof item.name === 'string' ? item.name : 'Item',
+    quantity,
+    base_price: basePrice,
+    variant_id: readPositiveNumber(item.variant_id),
+    variant_price: readNumber(item.variant_price),
+    restaurant_id: readPositiveNumber(item.restaurant_id),
+    addons: normalizePersistedAddons(item.addons),
+  } as CartItem;
+}
+
+function normalizePersistedAddons(value: unknown): CartAddon[] {
+  if (!Array.isArray(value)) return [];
+
+  return value
+    .map((value) => {
+      const addon = asRecord(value);
+      const addonId = readPositiveNumber(addon?.addon_id);
+      const price = readNumber(addon?.price);
+      const quantity = readPositiveNumber(addon?.quantity);
+      if (!addon || !addonId || price == null || !quantity) return null;
+
+      return {
+        addon_id: addonId,
+        name: typeof addon.name === 'string' ? addon.name : 'Addon',
+        price,
+        quantity,
+      };
+    })
+    .filter((addon): addon is CartAddon => addon !== null);
+}
+
+function getSingleRestaurantId(items: CartItem[]) {
+  const ids = Array.from(new Set(items.map((item) => item.restaurant_id).filter(Boolean)));
+  return ids.length === 1 ? ids[0] ?? null : null;
+}
+
+function readPositiveNumber(value: unknown) {
+  const number = readNumber(value);
+  return number != null && number > 0 ? number : undefined;
+}
+
+function readNumber(value: unknown) {
+  return typeof value === 'number' && Number.isFinite(value) ? value : undefined;
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
+}

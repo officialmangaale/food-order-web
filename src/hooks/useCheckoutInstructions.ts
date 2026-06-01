@@ -15,14 +15,22 @@ export function useCheckoutInstructions() {
   const setInstructions = useCallback((value: string) => {
     const limitedValue = value.slice(0, 300);
     if (typeof window === 'undefined') return;
-    window.localStorage.setItem(CHECKOUT_INSTRUCTIONS_KEY, limitedValue);
-    window.dispatchEvent(new Event(INSTRUCTIONS_EVENT));
+    try {
+      window.localStorage.setItem(CHECKOUT_INSTRUCTIONS_KEY, limitedValue);
+      window.dispatchEvent(new Event(INSTRUCTIONS_EVENT));
+    } catch {
+      debugStorageFailure('save');
+    }
   }, []);
 
   const clearInstructions = useCallback(() => {
     if (typeof window === 'undefined') return;
-    window.localStorage.removeItem(CHECKOUT_INSTRUCTIONS_KEY);
-    window.dispatchEvent(new Event(INSTRUCTIONS_EVENT));
+    try {
+      window.localStorage.removeItem(CHECKOUT_INSTRUCTIONS_KEY);
+      window.dispatchEvent(new Event(INSTRUCTIONS_EVENT));
+    } catch {
+      debugStorageFailure('clear');
+    }
   }, []);
 
   return {
@@ -46,9 +54,20 @@ function subscribeInstructions(onStoreChange: () => void) {
 
 function readInstructions() {
   if (typeof window === 'undefined') return '';
-  return window.localStorage.getItem(CHECKOUT_INSTRUCTIONS_KEY) ?? '';
+  try {
+    return window.localStorage.getItem(CHECKOUT_INSTRUCTIONS_KEY) ?? '';
+  } catch {
+    debugStorageFailure('read');
+    return '';
+  }
 }
 
 function getServerSnapshot() {
   return '';
+}
+
+function debugStorageFailure(operation: string) {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[checkout] instructions-storage-unavailable', { operation });
+  }
 }

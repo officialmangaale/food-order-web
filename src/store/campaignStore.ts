@@ -223,6 +223,14 @@ export const useCampaignStore = create<CampaignStoreState>()(
         campaignContexts: state.campaignContexts,
         checkoutCoupons: state.checkoutCoupons,
       }),
+      merge: (persistedState, currentState) => {
+        const persisted = asRecord(persistedState);
+        return {
+          ...currentState,
+          campaignContexts: asRecord(persisted?.campaignContexts) as Record<string, CampaignContext> | null ?? {},
+          checkoutCoupons: asRecord(persisted?.checkoutCoupons) as Record<string, CheckoutCouponState> | null ?? {},
+        };
+      },
       onRehydrateStorage: () => (state) => {
         state?.purgeExpired();
       },
@@ -247,4 +255,10 @@ function purgeExpiredContexts(contexts: Record<string, CampaignContext>) {
 
 function restaurantKey(restaurantId: number) {
   return String(restaurantId);
+}
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return value && typeof value === 'object' && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : null;
 }
