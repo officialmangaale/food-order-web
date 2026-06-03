@@ -14,6 +14,18 @@ interface ActiveOrderState {
   hasActiveOrder: () => boolean;
 }
 
+const ACTIVE_ORDER_STORAGE_KEY = 'mangaale-active-order';
+
+export function clearPersistedActiveOrderState() {
+  if (typeof window === 'undefined') return;
+
+  try {
+    window.localStorage.removeItem(ACTIVE_ORDER_STORAGE_KEY);
+  } catch {
+    // Storage may be unavailable; the in-memory store is still cleared by logout.
+  }
+}
+
 export const useActiveOrderStore = create<ActiveOrderState>()(
   persist(
     (set, get) => ({
@@ -42,7 +54,7 @@ export const useActiveOrderStore = create<ActiveOrderState>()(
       },
     }),
     {
-      name: 'mangaale-active-order',
+      name: ACTIVE_ORDER_STORAGE_KEY,
       storage: createJSONStorage(() => localStorage),
     }
   )

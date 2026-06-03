@@ -27,6 +27,8 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
   const validOrderId = Number.isFinite(numericOrderId) && numericOrderId > 0;
   const [loginOpen, setLoginOpen] = useState(false);
   const logout = useAuthStore((state) => state.logout);
+  const user = useAuthStore((state) => state.user);
+  const authPhone = useAuthStore((state) => state.phone);
   const setActiveOrder = useActiveOrderStore((state) => state.setActiveOrder);
   const { tracking, loading, error, errorStatus, authRequired, connected, refetch } = useOrderTracking(
     validOrderId ? numericOrderId : 0
@@ -48,8 +50,10 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
       status: tracking.orderStatus,
       total: tracking.grandTotal,
       created_at: tracking.createdAt ?? new Date().toISOString(),
+      customer_id: user?.id ?? user?.user_id,
+      customer_phone: tracking.customer.phone ?? user?.phone ?? authPhone ?? undefined,
     });
-  }, [numericOrderId, setActiveOrder, tracking]);
+  }, [authPhone, numericOrderId, setActiveOrder, tracking, user?.id, user?.phone, user?.user_id]);
 
   if (!hasMounted || loading) return <OrderTrackingSkeleton />;
 

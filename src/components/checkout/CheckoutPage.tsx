@@ -330,14 +330,20 @@ export function CheckoutPage() {
       return;
     }
 
-    const problems = getAddressProblems(selectedAddress, user?.name, user?.phone ?? authPhone);
+    const normalizedAddress = normalizeCheckoutAddressForSubmit(selectedAddress);
+    const problems = getAddressProblems(normalizedAddress, user?.name, user?.phone ?? authPhone);
     if (problems.length > 0) {
+      debugCheckout('address-validation-failure', {
+        failureReason: problems[0],
+        addressLine1Type: getValueType(selectedAddress?.address_line1),
+        normalizedAddress: summarizeAddressForDebug(normalizedAddress),
+      });
       setAddressError(problems[0]);
       addressSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
       return;
     }
 
-    if (!restaurantId || !selectedAddress) {
+    if (!restaurantId || !normalizedAddress) {
       setOrderError('Unable to prepare checkout. Please try again.');
       return;
     }
@@ -385,9 +391,9 @@ export function CheckoutPage() {
       const response = await placeOrder(
         buildPlaceOrderPayload({
           restaurantId,
-          address: selectedAddress,
-          customerName: selectedAddress.name || user?.name || '',
-          customerPhone: user?.phone || authPhone || selectedAddress.phone || '',
+          address: normalizedAddress,
+          customerName: normalizedAddress.name || safeText(user?.name) || '',
+          customerPhone: safeText(user?.phone) || safeText(authPhone) || normalizedAddress.phone || '',
           items,
           instructions,
           couponCode: couponCodeForOrder,
@@ -408,6 +414,8 @@ export function CheckoutPage() {
         status: response.status ?? 'placed',
         total: response.grand_total ?? response.exact_total_amount ?? response.total ?? finalValidation.totals.total,
         created_at: new Date().toISOString(),
+        customer_id: user?.id ?? user?.user_id,
+        customer_phone: user?.phone ?? authPhone ?? normalizedAddress.phone,
       });
       clearCampaignForRestaurant(restaurantId);
       clearCart();
@@ -615,17 +623,18 @@ function getAddressProblems(
   userName?: string,
   authPhone?: string | null
 ) {
-  if (!address) return ['Add a delivery address to continue.'];
+  const normalizedAddress = normalizeCheckoutAddressForSubmit(address);
+  if (!normalizedAddress) return ['Add a delivery address to continue.'];
 
   const problems: string[] = [];
-  const customerName = address.name || userName;
-  const customerPhone = authPhone || address.phone;
+  const customerName = normalizedAddress.name || safeText(userName);
+  const customerPhone = safeText(authPhone) || normalizedAddress.phone;
 
-  if (!customerName?.trim()) problems.push('Customer name is required.');
+  if (!customerName) problems.push('Customer name is required.');
   if (!customerPhone || customerPhone.replace(/\D/g, '').length < 10) problems.push('Valid phone number is required.');
-  if (!address.address_line1?.trim()) problems.push('Address line is required.');
-  if (!address.area?.trim()) problems.push('Area is required.');
-  if (!address.city?.trim()) problems.push('City is required.');
+  if (!normalizedAddress.address_line1) problems.push('Address line is required.');
+  if (!normalizedAddress.area) problems.push('Area is required.');
+  if (!normalizedAddress.city) problems.push('City is required.');
   return problems;
 }
 
@@ -679,6 +688,84 @@ function debugCheckout(event: string, details: Record<string, unknown>) {
   }
 }
 
+function normalizeCheckoutAddressForSubmit(
+  address: CheckoutAddress | null | undefined
+): CheckoutAddress | null {
+  if (!address) return null;
+
+  debugCheckout('address-normalization', {
+    addressLine1Type: getValueType(address.address_line1),
+    addressLine1Preview: previewValue(address.address_line1),
+  });
+
+  const normalized = {
+    ...address,
+    label: safeText(address.label),
+    name: safeText(address.name),
+    phone: safeText(address.phone),
+    address_line1: safeText(address.address_line1) ?? '',
+    area: safeText(address.area),
+    city: safeText(address.city),
+    state: safeText(address.state),
+    pincode: safeText(address.pincode),
+    landmark: safeText(address.landmark),
+  };
+
+  debugCheckout('normalized-address-payload', summarizeAddressForDebug(normalized));
+  return normalized;
+}
+
+function safeText(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    return (
+      safeText(record.address_line1) ??
+      safeText(record.line1) ??
+      safeText(record.address) ??
+      safeText(record.text) ??
+      safeText(record.value) ??
+      safeText(record.label) ??
+      safeText(record.name) ??
+      safeText(record.formatted_address)
+    );
+  }
+
+  return undefined;
+}
+
+function getValueType(value: unknown) {
+  if (value === null) return 'null';
+  if (Array.isArray(value)) return 'array';
+  return typeof value;
+}
+
+function previewValue(value: unknown) {
+  const text = safeText(value);
+  if (!text) return undefined;
+  return text.length > 16 ? `${text.slice(0, 16)}...` : text;
+}
+
+function summarizeAddressForDebug(address: CheckoutAddress | null) {
+  if (!address) return { present: false };
+
+  return {
+    present: true,
+    hasAddressLine1: Boolean(address.address_line1),
+    hasArea: Boolean(address.area),
+    hasCity: Boolean(address.city),
+    hasPincode: Boolean(address.pincode),
+    hasLandmark: Boolean(address.landmark),
+    hasCoordinates: address.latitude != null && address.longitude != null,
+  };
+}
+
 function buildPlaceOrderPayload({
   restaurantId,
   address,
@@ -710,12 +797,12 @@ function buildPlaceOrderPayload({
       phone: customerPhone,
     },
     delivery_address: {
-      address_line1: address.address_line1,
-      area: address.area ?? '',
-      city: address.city ?? '',
-      state: address.state,
-      pincode: address.pincode ?? '',
-      landmark: address.landmark,
+      address_line1: safeText(address.address_line1) ?? '',
+      area: safeText(address.area) ?? '',
+      city: safeText(address.city) ?? '',
+      state: safeText(address.state),
+      pincode: safeText(address.pincode) ?? '',
+      landmark: safeText(address.landmark),
       latitude: address.latitude,
       longitude: address.longitude,
     },

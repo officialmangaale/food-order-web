@@ -2,6 +2,7 @@
 
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import { clearPersistedActiveOrderState, useActiveOrderStore } from '@/store/activeOrderStore';
 import type { CustomerUser } from '@/types/auth';
 
 interface AuthState {
@@ -30,8 +31,12 @@ export const useAuthStore = create<AuthState>()(
 
       setPhone: (phone) => set({ phone }),
 
-      logout: () =>
-        set({ token: null, user: null, isAuthenticated: false }),
+      logout: () => {
+        useActiveOrderStore.getState().clearActiveOrder();
+        clearPersistedActiveOrderState();
+        debugLogoutCleanup();
+        set({ token: null, user: null, phone: null, isAuthenticated: false });
+      },
     }),
     {
       name: 'mangaale-auth',
@@ -45,3 +50,9 @@ export const useAuthStore = create<AuthState>()(
     }
   )
 );
+
+function debugLogoutCleanup() {
+  if (process.env.NODE_ENV !== 'production') {
+    console.debug('[auth] logout-cleared-tracking-state');
+  }
+}

@@ -210,6 +210,8 @@ export interface ActiveOrder {
   status: OrderStatus;
   total?: number;
   created_at: string;
+  customer_id?: number;
+  customer_phone?: string;
 }
 
 /** SSE event data from /orders/:id/live */

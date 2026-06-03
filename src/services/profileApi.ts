@@ -187,19 +187,46 @@ function normalizeAddresses(raw: unknown): CustomerAddress[] {
 function normalizeAddress(raw: Record<string, unknown>): CustomerAddress {
   return {
     id: (raw.id ?? raw.address_id ?? `local-${Date.now()}`) as number | string,
-    label: (raw.label ?? raw.type ?? raw.address_type) as string | undefined,
-    name: raw.name as string | undefined,
-    phone: raw.phone as string | undefined,
-    address_line1: (raw.address_line1 ?? raw.line1 ?? raw.address ?? '') as string,
-    area: raw.area as string | undefined,
-    city: raw.city as string | undefined,
-    state: raw.state as string | undefined,
-    pincode: (raw.pincode ?? raw.postal_code ?? raw.zip) as string | undefined,
-    landmark: raw.landmark as string | undefined,
+    label: readText(raw.label ?? raw.type ?? raw.address_type),
+    name: readText(raw.name),
+    phone: readText(raw.phone),
+    address_line1: readText(raw.address_line1 ?? raw.line1 ?? raw.address) ?? '',
+    area: readText(raw.area ?? raw.locality),
+    city: readText(raw.city),
+    state: readText(raw.state),
+    pincode: readText(raw.pincode ?? raw.postal_code ?? raw.zip),
+    landmark: readText(raw.landmark),
     latitude: toNumber(raw.latitude ?? raw.lat),
     longitude: toNumber(raw.longitude ?? raw.lng ?? raw.lon),
     is_default: Boolean(raw.is_default ?? raw.default),
   };
+}
+
+function readText(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') {
+    return String(value);
+  }
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    return (
+      readText(record.address_line1) ??
+      readText(record.line1) ??
+      readText(record.address) ??
+      readText(record.text) ??
+      readText(record.value) ??
+      readText(record.label) ??
+      readText(record.name) ??
+      readText(record.formatted_address)
+    );
+  }
+
+  return undefined;
 }
 
 function pickArray(value: unknown): unknown[] | undefined {

@@ -64,7 +64,7 @@ function mergeAddresses(primary: CustomerAddress[], local: CustomerAddress[]) {
   const seen = new Set<string>();
   const merged: CustomerAddress[] = [];
 
-  for (const address of [...local, ...primary]) {
+  for (const address of [...local, ...primary].map(normalizeCheckoutAddress)) {
     const key = String(address.id);
     if (seen.has(key)) continue;
     seen.add(key);
@@ -83,7 +83,7 @@ function upsertAddress(current: CustomerAddress[], next: CustomerAddress) {
 }
 
 function payloadToAddress(payload: CustomerAddressPayload, id: string): CustomerAddress {
-  return {
+  return normalizeCheckoutAddress({
     id,
     label: payload.label || 'Home',
     name: payload.name,
@@ -97,7 +97,7 @@ function payloadToAddress(payload: CustomerAddressPayload, id: string): Customer
     latitude: payload.latitude,
     longitude: payload.longitude,
     is_default: payload.is_default,
-  };
+  });
 }
 
 function readLocalAddresses() {
@@ -107,7 +107,7 @@ function readLocalAddresses() {
     const raw = window.localStorage.getItem(LOCAL_ADDRESSES_KEY);
     if (!raw) return [];
     const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? (parsed as CustomerAddress[]) : [];
+    return Array.isArray(parsed) ? (parsed as CustomerAddress[]).map(normalizeCheckoutAddress) : [];
   } catch {
     return [];
   }
@@ -118,4 +118,44 @@ function persistLocalAddresses(addresses: CustomerAddress[]) {
     window.localStorage.setItem(LOCAL_ADDRESSES_KEY, JSON.stringify(addresses));
   }
   return addresses;
+}
+
+function normalizeCheckoutAddress(address: CustomerAddress): CustomerAddress {
+  return {
+    ...address,
+    label: readText(address.label),
+    name: readText(address.name),
+    phone: readText(address.phone),
+    address_line1: readText(address.address_line1) ?? '',
+    area: readText(address.area),
+    city: readText(address.city),
+    state: readText(address.state),
+    pincode: readText(address.pincode),
+    landmark: readText(address.landmark),
+  };
+}
+
+function readText(value: unknown): string | undefined {
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    return trimmed || undefined;
+  }
+
+  if (typeof value === 'number' || typeof value === 'boolean') return String(value);
+
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    const record = value as Record<string, unknown>;
+    return (
+      readText(record.address_line1) ??
+      readText(record.line1) ??
+      readText(record.address) ??
+      readText(record.text) ??
+      readText(record.value) ??
+      readText(record.label) ??
+      readText(record.name) ??
+      readText(record.formatted_address)
+    );
+  }
+
+  return undefined;
 }
