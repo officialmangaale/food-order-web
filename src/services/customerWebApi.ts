@@ -105,7 +105,7 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
   });
 
   return {
-    valid: readBoolean(data.valid ?? data.success) ?? true,
+    valid: readBoolean(data.is_valid ?? data.isValid ?? data.valid ?? data.success) ?? true,
     subtotal,
     cgst,
     sgst,

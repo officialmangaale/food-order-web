@@ -39,6 +39,7 @@ export function OrderSummaryCard({
   onPlaceOrder,
 }: OrderSummaryCardProps) {
   const awaitingBackendSummary = estimated && validating;
+  const hasBackendSummary = !estimated;
 
   // 1. Item Subtotal: sum of item price x quantity from cart
   const safeItems = Array.isArray(items) ? items : [];
@@ -48,38 +49,31 @@ export function OrderSummaryCard({
       .reduce((sum, addon) => sum + safeNumber(addon.price) * safeNumber(addon.quantity), 0);
     return sum + (base + addons) * safeNumber(item.quantity);
   }, 0);
-  const displaySubtotal = totals.subtotal || localSubtotal;
+  const displaySubtotal = hasBackendSummary ? totals.subtotal : localSubtotal;
 
   // 2. Coupon Discount & 3. Offer Discount
-  const displayCouponDiscount = totals.discount_amount || totals.discount || 0;
-  const displayOfferDiscount = totals.offer_discount_amount || 0;
+  const displayCouponDiscount = hasBackendSummary ? totals.discount_amount || totals.discount : 0;
+  const displayOfferDiscount = hasBackendSummary ? totals.offer_discount_amount : 0;
   const totalDiscounts = displayCouponDiscount + displayOfferDiscount;
 
   // 4. Delivery Fee & 5. Extra Charges
-  const displayDeliveryFee = totals.delivery_fee || 0;
-  const displayExtraCharges = totals.extra_charges || 0;
+  const displayDeliveryFee = hasBackendSummary ? totals.delivery_fee : 0;
+  const displayExtraCharges = hasBackendSummary ? totals.extra_charges : 0;
 
-  // Platform fee estimate is displayed when the validate breakdown omits it.
-  const displayPlatformFee = totals.platform_fee_amount || totals.platform_fee || 2;
+  const displayPlatformFee = hasBackendSummary ? totals.platform_fee_amount || totals.platform_fee : 0;
 
-  // CGST and SGST estimates are displayed when the validate breakdown omits them.
-  const baseForTax = Math.max(0, displaySubtotal - totalDiscounts);
-  const localCgst = Number((baseForTax * 0.025).toFixed(2));
-  const localSgst = Number((baseForTax * 0.025).toFixed(2));
-  
-  const displayCgst = totals.cgst || localCgst;
-  const displaySgst = totals.sgst || localSgst;
+  const displayCgst = hasBackendSummary ? totals.cgst : 0;
+  const displaySgst = hasBackendSummary ? totals.sgst : 0;
+  const displayTaxAmount = hasBackendSummary ? totals.tax_amount || totals.taxes || displayCgst + displaySgst : 0;
 
-  // If no exact backend total exists, keep the grand total consistent with this displayed bill.
-  const localExactTotal = displaySubtotal - totalDiscounts + displayDeliveryFee + displayExtraCharges + displayCgst + displaySgst + displayPlatformFee;
-  const hasBackendExactTotal = totals.exact_total_amount > 0;
-  const displayExactTotal = totals.exact_total_amount || localExactTotal;
-  const localGrandTotal = Math.round(displayExactTotal);
-  const displayGrandTotal = hasBackendExactTotal
-    ? totals.grand_total || totals.total || localGrandTotal
-    : localGrandTotal;
-  const localRoundOff = Number((displayGrandTotal - displayExactTotal).toFixed(2));
-  const displayRoundOff = totals.round_off_amount || localRoundOff;
+  const localExactTotal = displaySubtotal - totalDiscounts + displayDeliveryFee + displayExtraCharges + displayTaxAmount;
+  const displayExactTotal = hasBackendSummary
+    ? totals.exact_total_amount || totals.total || totals.grand_total || localExactTotal
+    : localExactTotal;
+  const displayGrandTotal = hasBackendSummary
+    ? totals.grand_total || totals.total || displayExactTotal
+    : displayExactTotal;
+  const displayRoundOff = hasBackendSummary ? totals.round_off_amount : 0;
 
   const showBillBreakdown = !estimated || Boolean(displayGrandTotal || displaySubtotal);
   const displaySource = estimated ? (validating ? 'validate-pending' : 'fallback-local') : 'backend-validate';
@@ -88,8 +82,7 @@ export function OrderSummaryCard({
     if (process.env.NODE_ENV === 'production') return;
     console.debug('[checkout-billing]', {
       source: displaySource,
-      isPlatformFeeFallback: !totals.platform_fee_amount && !totals.platform_fee,
-      isTaxFallback: !totals.cgst && !totals.sgst,
+      hasBackendSummary,
       values: {
         subtotal: displaySubtotal,
         coupon_discount: displayCouponDiscount,
@@ -98,13 +91,14 @@ export function OrderSummaryCard({
         extra_charges: displayExtraCharges,
         cgst: displayCgst,
         sgst: displaySgst,
+        tax_amount: displayTaxAmount,
         platform_fee: displayPlatformFee,
         round_off: displayRoundOff,
         exact_total: displayExactTotal,
         grand_total: displayGrandTotal,
       }
     });
-  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, estimated, totals.platform_fee_amount, totals.platform_fee, totals.cgst, totals.sgst]);
+  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayTaxAmount, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, hasBackendSummary]);
 
   return (
     <aside className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_18px_42px_rgba(123,35,35,0.08)] lg:sticky lg:top-32">
