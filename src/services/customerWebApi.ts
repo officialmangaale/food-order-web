@@ -88,8 +88,7 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     'payable_total',
     'payableTotal',
   ]);
-
-  debugBillingSummary('validate', data, summary, {
+  const mappedSnapshot = {
     subtotal,
     discount_amount: discount,
     offer_discount_amount: offerDiscount,
@@ -102,10 +101,20 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     round_off_amount: roundOff,
     exact_total_amount: exactTotal,
     grand_total: explicitTotal,
-  });
+  };
+  const missingFields = Object.entries(mappedSnapshot)
+    .filter(([, value]) => value == null)
+    .map(([field]) => field);
+  const snapshotComplete = missingFields.length === 0;
+
+  debugBillingSummary('validate', data, summary, mappedSnapshot, missingFields);
 
   return {
-    valid: readBoolean(data.is_valid ?? data.isValid ?? data.valid ?? data.success) ?? true,
+    valid:
+      (readBoolean(data.is_valid ?? data.isValid ?? data.valid ?? data.success) ?? true) &&
+      snapshotComplete,
+    billing_snapshot_complete: snapshotComplete,
+    billing_snapshot_missing_fields: missingFields,
     subtotal,
     cgst,
     sgst,
@@ -124,7 +133,9 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     round_off_amount: roundOff ?? 0,
     grand_total: explicitTotal,
     total: explicitTotal,
-    message: readString(data.message ?? data.error),
+    message:
+      readString(data.message ?? data.error) ??
+      (snapshotComplete ? undefined : `Incomplete billing summary: ${missingFields.join(', ')}`),
     item_errors: Array.isArray(data.item_errors)
       ? (data.item_errors as CartValidateResponse['item_errors'])
       : Array.isArray(data.itemErrors)
@@ -352,7 +363,8 @@ function debugBillingSummary(
   source: 'validate' | 'place-order',
   root: Record<string, unknown>,
   summary: { source: string; record: Record<string, unknown> },
-  mapped: Record<string, number | undefined>
+  mapped: Record<string, number | undefined>,
+  missingFields: string[] = []
 ) {
   if (process.env.NODE_ENV === 'production') return;
 
@@ -366,6 +378,7 @@ function debugBillingSummary(
     rootKeys: Object.keys(root),
     summaryKeys: Object.keys(summary.record),
     renderedFields,
+    missingFields,
   });
 }
 

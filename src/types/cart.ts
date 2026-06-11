@@ -52,6 +52,8 @@ export interface CartValidateRequest {
 
 export interface CartValidateResponse {
   valid: boolean;
+  billing_snapshot_complete?: boolean;
+  billing_snapshot_missing_fields?: string[];
   subtotal?: number;
   cgst?: number;
   sgst?: number;
@@ -76,6 +78,8 @@ export interface CartValidateResponse {
 
 /** Shape of validated totals stored in the cart store */
 export interface ValidatedTotals {
+  snapshot_complete: boolean;
+  missing_fields: string[];
   subtotal: number;
   cgst: number;
   sgst: number;

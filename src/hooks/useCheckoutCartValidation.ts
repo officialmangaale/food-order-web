@@ -72,6 +72,8 @@ export function toValidationResult(response: CartValidateResponse): CheckoutVali
   const grandTotal = response.grand_total ?? response.exact_total_amount ?? response.total ?? 0;
 
   const totals: ValidatedTotals = {
+    snapshot_complete: response.billing_snapshot_complete === true,
+    missing_fields: response.billing_snapshot_missing_fields ?? [],
     subtotal: response.subtotal ?? 0,
     cgst: response.cgst ?? 0,
     sgst: response.sgst ?? 0,
@@ -91,9 +93,13 @@ export function toValidationResult(response: CartValidateResponse): CheckoutVali
   };
 
   return {
-    valid: response.valid !== false,
+    valid: response.valid !== false && totals.snapshot_complete,
     totals,
-    message: response.message,
+    message:
+      response.message ??
+      (totals.snapshot_complete
+        ? undefined
+        : `Billing summary is incomplete: ${totals.missing_fields.join(', ')}`),
     couponValidation: response.coupon_validation,
     itemErrors: response.item_errors,
   };

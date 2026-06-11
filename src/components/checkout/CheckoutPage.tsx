@@ -44,6 +44,8 @@ import type { CartItem, ValidatedTotals } from '@/types/cart';
 const EMPTY_CAMPAIGN_CONTEXTS: Record<string, CampaignContext> = {};
 const EMPTY_CHECKOUT_COUPONS: ReturnType<typeof useCampaignStore.getState>['checkoutCoupons'] = {};
 const EMPTY_TOTALS: ValidatedTotals = {
+  snapshot_complete: false,
+  missing_fields: [],
   subtotal: 0,
   cgst: 0,
   sgst: 0,
@@ -402,6 +404,7 @@ export function CheckoutPage() {
         token,
         orderKey
       );
+      debugFinalBillingMismatch(finalValidation.totals, response);
 
       if (!response.order_id) {
         throw new Error('Order was placed but no order ID was returned.');
@@ -686,6 +689,56 @@ function debugCheckout(event: string, details: Record<string, unknown>) {
   if (process.env.NODE_ENV !== 'production') {
     console.debug('[checkout]', event, details);
   }
+}
+
+function debugFinalBillingMismatch(
+  preview: ValidatedTotals,
+  placed: {
+    subtotal?: number;
+    discount_amount?: number;
+    offer_discount_amount?: number;
+    delivery_fee?: number;
+    extra_charges?: number;
+    cgst?: number;
+    sgst?: number;
+    tax_amount?: number;
+    platform_fee_amount?: number;
+    exact_total_amount?: number;
+    round_off_amount?: number;
+    grand_total?: number;
+  }
+) {
+  if (process.env.NODE_ENV === 'production') return;
+
+  const pairs: Record<string, [number, number | undefined]> = {
+    subtotal: [preview.subtotal, placed.subtotal],
+    discount_amount: [preview.discount_amount, placed.discount_amount],
+    offer_discount_amount: [preview.offer_discount_amount, placed.offer_discount_amount],
+    delivery_fee: [preview.delivery_fee, placed.delivery_fee],
+    extra_charges: [preview.extra_charges, placed.extra_charges],
+    cgst: [preview.cgst, placed.cgst],
+    sgst: [preview.sgst, placed.sgst],
+    tax_amount: [preview.tax_amount, placed.tax_amount],
+    platform_fee_amount: [preview.platform_fee_amount, placed.platform_fee_amount],
+    exact_total_amount: [preview.exact_total_amount, placed.exact_total_amount],
+    round_off_amount: [preview.round_off_amount, placed.round_off_amount],
+    grand_total: [preview.grand_total, placed.grand_total],
+  };
+  const mismatches = Object.fromEntries(
+    Object.entries(pairs)
+      .filter(([, [previewValue, placedValue]]) =>
+        placedValue == null || Math.abs(previewValue - placedValue) >= 0.01
+      )
+      .map(([field, [previewValue, placedValue]]) => [
+        field,
+        { preview: previewValue, placed: placedValue },
+      ])
+  );
+
+  debugCheckout('preview-place-billing-comparison', {
+    matches: Object.keys(mismatches).length === 0,
+    mismatches,
+  });
 }
 
 function normalizeCheckoutAddressForSubmit(

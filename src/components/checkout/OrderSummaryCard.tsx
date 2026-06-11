@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { AlertCircle, Loader2 } from 'lucide-react';
 import { AppliedCouponRow } from '@/components/coupon/AppliedCouponRow';
 import { Button } from '@/components/ui/Button';
-import { formatMoney } from '@/utils/money';
+import { formatMoney, formatMoneyDecimal } from '@/utils/money';
 import type { CartItem, ValidatedTotals } from '@/types/cart';
 
 interface OrderSummaryCardProps {
@@ -52,30 +52,23 @@ export function OrderSummaryCard({
   const displaySubtotal = hasBackendSummary ? totals.subtotal : localSubtotal;
 
   // 2. Coupon Discount & 3. Offer Discount
-  const displayCouponDiscount = hasBackendSummary ? totals.discount_amount || totals.discount : 0;
+  const displayCouponDiscount = hasBackendSummary ? totals.discount_amount : 0;
   const displayOfferDiscount = hasBackendSummary ? totals.offer_discount_amount : 0;
-  const totalDiscounts = displayCouponDiscount + displayOfferDiscount;
 
   // 4. Delivery Fee & 5. Extra Charges
   const displayDeliveryFee = hasBackendSummary ? totals.delivery_fee : 0;
   const displayExtraCharges = hasBackendSummary ? totals.extra_charges : 0;
 
-  const displayPlatformFee = hasBackendSummary ? totals.platform_fee_amount || totals.platform_fee : 0;
+  const displayPlatformFee = hasBackendSummary ? totals.platform_fee_amount : 0;
 
   const displayCgst = hasBackendSummary ? totals.cgst : 0;
   const displaySgst = hasBackendSummary ? totals.sgst : 0;
-  const displayTaxAmount = hasBackendSummary ? totals.tax_amount || totals.taxes || displayCgst + displaySgst : 0;
-
-  const localExactTotal = displaySubtotal - totalDiscounts + displayDeliveryFee + displayExtraCharges + displayTaxAmount;
-  const displayExactTotal = hasBackendSummary
-    ? totals.exact_total_amount || totals.total || totals.grand_total || localExactTotal
-    : localExactTotal;
-  const displayGrandTotal = hasBackendSummary
-    ? totals.grand_total || totals.total || displayExactTotal
-    : displayExactTotal;
+  const displayTaxAmount = hasBackendSummary ? totals.tax_amount : 0;
+  const displayExactTotal = hasBackendSummary ? totals.exact_total_amount : 0;
+  const displayGrandTotal = hasBackendSummary ? totals.grand_total : 0;
   const displayRoundOff = hasBackendSummary ? totals.round_off_amount : 0;
 
-  const showBillBreakdown = !estimated || Boolean(displayGrandTotal || displaySubtotal);
+  const showBillBreakdown = hasBackendSummary;
   const displaySource = estimated ? (validating ? 'validate-pending' : 'fallback-local') : 'backend-validate';
 
   useEffect(() => {
@@ -186,7 +179,7 @@ export function OrderSummaryCard({
       <div className="mb-6 flex items-end justify-between gap-3">
         <span className="text-2xl font-extrabold text-[#1F1717]">Grand Total</span>
         <span className="text-4xl font-extrabold tracking-normal text-[#A80F15]">
-          {formatMoney(displayGrandTotal)}
+          {hasBackendSummary ? formatMoneyDecimal(displayGrandTotal) : 'Calculating'}
         </span>
       </div>
 
@@ -204,7 +197,11 @@ export function OrderSummaryCard({
         onClick={onPlaceOrder}
         className="bg-[#A80F15] shadow-[0_10px_20px_rgba(168,15,21,0.18)] hover:bg-[#8F0D12]"
       >
-        {placing ? 'Placing order...' : `Place Order - ${formatMoney(displayGrandTotal)}`}
+        {placing
+          ? 'Placing order...'
+          : hasBackendSummary
+            ? `Place Order - ${formatMoneyDecimal(displayGrandTotal)}`
+            : 'Place Order'}
       </Button>
     </aside>
   );
@@ -228,7 +225,9 @@ function BillRow({
       }`}
     >
       <span>{label}</span>
-      <span className="shrink-0 text-right">{value < 0 ? `-${formatMoney(Math.abs(value))}` : formatMoney(value)}</span>
+      <span className="shrink-0 text-right">
+        {value < 0 ? `-${formatMoneyDecimal(Math.abs(value))}` : formatMoneyDecimal(value)}
+      </span>
     </div>
   );
 }

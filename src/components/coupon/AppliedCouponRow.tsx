@@ -1,7 +1,7 @@
 'use client';
 
 import { Tag } from 'lucide-react';
-import { formatMoney } from '@/utils/money';
+import { formatMoneyDecimal } from '@/utils/money';
 
 interface AppliedCouponRowProps {
   code: string;
@@ -17,7 +17,7 @@ export function AppliedCouponRow({ code, discountAmount }: AppliedCouponRowProps
         <Tag className="h-4 w-4 shrink-0" aria-hidden="true" />
         <span className="truncate">Discount {code}</span>
       </span>
-      <span>-{formatMoney(discountAmount)}</span>
+      <span>-{formatMoneyDecimal(discountAmount)}</span>
     </div>
   );
 }
