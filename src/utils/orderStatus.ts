@@ -10,83 +10,94 @@ export interface TrackingTimelineStep {
   state: TimelineStepState;
 }
 
-const STATUS_INDEX: Partial<Record<OrderStatus, number>> = {
-  pending: 0,
-  placed: 0,
-  confirmed: 1,
-  accepted: 1,
-  preparing: 2,
-  ready: 3,
-  ready_for_pickup: 3,
-  picked_up: 3,
-  out_for_delivery: 3,
-  delivered: 4,
-  completed: 4,
-};
-
-const BASE_STEPS: TrackingTimelineStep[] = [
-  {
-    id: 'placed',
-    title: 'Order Placed',
-    description: 'We received your order',
-    state: 'upcoming',
-  },
-  {
-    id: 'confirmed',
-    title: 'Order Confirmed',
-    description: 'The restaurant accepted your order',
-    state: 'upcoming',
-  },
-  {
-    id: 'preparing',
-    title: 'Preparing your food',
-    description: 'Chef is preparing your order',
-    state: 'upcoming',
-  },
-  {
-    id: 'out_for_delivery',
-    title: 'Out for Delivery',
-    description: 'Your order is on the way',
-    state: 'upcoming',
-  },
-  {
-    id: 'delivered',
-    title: 'Delivered',
-    description: 'Enjoy your meal',
-    state: 'upcoming',
-  },
-];
-
-export function getOrderProgress(orderStatus: OrderStatus, deliveryStatus?: string) {
+export function getOrderProgress(
+  orderStatus: OrderStatus,
+  deliveryStatus?: string,
+  orderType?: string,
+) {
+  const normalizedType = (orderType ?? '').trim().toLowerCase();
+  const isDelivery =
+    normalizedType === 'delivery' ||
+    Boolean(deliveryStatus) ||
+    ['picked_up', 'out_for_delivery', 'delivered'].includes(orderStatus);
+  const baseSteps = [
+    {
+      id: 'pending',
+      title: 'Order Placed',
+      description: 'We received your order',
+      state: 'upcoming',
+    },
+    {
+      id: 'confirmed',
+      title: 'Order Confirmed',
+      description: 'The restaurant accepted your order',
+      state: 'upcoming',
+    },
+    {
+      id: 'preparing',
+      title: 'Preparing your food',
+      description: 'Chef is preparing your order',
+      state: 'upcoming',
+    },
+    {
+      id: 'ready',
+      title: 'Ready',
+      description: isDelivery
+        ? 'Your order is ready for rider pickup'
+        : 'Your order is ready to be served',
+      state: 'upcoming',
+    },
+    ifDelivery(isDelivery, {
+      id: 'out_for_delivery',
+      title: 'Out for Delivery',
+      description: 'Your order is on the way',
+      state: 'upcoming',
+    }),
+    ifDelivery(isDelivery, {
+      id: 'delivered',
+      title: 'Delivered',
+      description: 'Your order reached you',
+      state: 'upcoming',
+    }),
+    {
+      id: 'completed',
+      title: 'Completed',
+      description: 'This order is closed',
+      state: 'upcoming',
+    },
+  ].filter((step): step is TrackingTimelineStep => step !== null);
+  const statusIndex: Partial<Record<OrderStatus, number>> = {
+    pending: 0,
+    placed: 0,
+    confirmed: 1,
+    accepted: 1,
+    preparing: 2,
+    ready: 3,
+    ready_for_pickup: 3,
+    picked_up: isDelivery ? 4 : 3,
+    out_for_delivery: isDelivery ? 4 : 3,
+    delivered: isDelivery ? 5 : 3,
+    completed: baseSteps.length - 1,
+  };
   const negative = isNegativeStatus(orderStatus);
-  const currentIndex = STATUS_INDEX[orderStatus] ?? 0;
-  const readyLabel = orderStatus === 'ready' || orderStatus === 'ready_for_pickup'
-    ? 'Ready for Dispatch'
-    : 'Out for Delivery';
+  const currentIndex = statusIndex[orderStatus] ?? 0;
 
-  const steps = BASE_STEPS.map((step, index) => {
-    let title = step.title;
-    let description = step.description;
-    if (step.id === 'out_for_delivery') {
-      title = readyLabel;
-      if (readyLabel === 'Ready for Dispatch') {
-        description = 'The restaurant is packing your order';
-      }
-    }
-
+  const steps = baseSteps.map((step, index) => {
     if (negative) {
       return {
         ...step,
-        title,
-        description,
         state: index === Math.max(0, currentIndex) ? 'cancelled' : 'upcoming',
       } satisfies TrackingTimelineStep;
     }
 
     return {
       ...step,
-      title,
-      description: getStepDescription(step.id, orderStatus, deliveryStatus, description),
+      description: getStepDescription(
+        step.id,
+        orderStatus,
+        deliveryStatus,
+        step.description,
+      ),
       state:
         index < currentIndex || isTerminalStatus(orderStatus)
           ? 'completed'
@@ -105,11 +116,24 @@ export function getOrderProgress(orderStatus: OrderStatus, deliveryStatus?: stri
   };
 }
 
+function ifDelivery(
+  isDelivery: boolean,
+  step: TrackingTimelineStep,
+): TrackingTimelineStep | null {
+  return isDelivery ? step : null;
+}
+
 export function getTrackingCopy(order: TrackingOrder) {
-  if (order.orderStatus === 'delivered' || order.orderStatus === 'completed') {
+  if (order.orderStatus === 'completed') {
     return {
-      title: 'Order Delivered!',
+      title: 'Order Complete',
       subtitle: 'Thanks for ordering with Mangaale',
+    };
+  }
+  if (order.orderStatus === 'delivered') {
+    return {
+      title: 'Order Delivered',
+      subtitle: 'The restaurant is closing your order',
     };
   }
 

@@ -138,6 +138,9 @@ export function normalizeTrackingOrder(raw: unknown): TrackingOrder {
       readString(order.payment_method ?? order.paymentMethod ?? data.payment_method) ?? 'cash',
     paymentStatus:
       readString(order.payment_status ?? order.paymentStatus ?? data.payment_status) ?? 'pending',
+    orderType: readString(
+      order.order_type ?? order.orderType ?? data.order_type ?? data.orderType
+    ),
     orderStatus: normalizeOrderStatus(
       order.order_status ?? order.orderStatus ?? order.status ?? data.order_status ?? data.status
     ),

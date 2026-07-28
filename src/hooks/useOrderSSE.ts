@@ -17,6 +17,7 @@ interface UseOrderSSEOptions {
 }
 
 export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }: UseOrderSSEOptions) {
+  const token = useAuthStore((s) => s.token);
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<OrderSSEEvent | null>(null);
   const cleanupRef = useRef<(() => void) | null>(null);
@@ -59,14 +60,14 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
       onError: () => setConnected(false),
     };
 
-    cleanupRef.current = subscribeToOrder(orderId, handlers);
+    cleanupRef.current = subscribeToOrder(orderId, token ?? '', handlers);
 
     return () => {
       cleanupRef.current?.();
       cleanupRef.current = null;
       window.setTimeout(() => setConnected(false), 0);
     };
-  }, [enabled, onEvent, orderId, onStatusChange]);
+  }, [enabled, onEvent, onStatusChange, orderId, token]);
 
   return { connected, lastEvent };
 }
@@ -78,7 +79,6 @@ export function useOrderTracking(orderId: number) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
-  const pollRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const fetchTracking = useCallback(async (showLoading = false) => {
     if (!orderId) {
@@ -124,36 +124,11 @@ export function useOrderTracking(orderId: number) {
     setTracking((prev) => (prev ? mergeTrackingOrderEvent(prev, event) : prev));
   }, []);
 
-  const handleStatusChange = useCallback((status: OrderStatus) => {
-    // Stop polling if terminal
-    if (isTerminalStatus(status) && pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-  }, []);
-
   const { connected } = useOrderSSE({
     orderId,
     enabled: Boolean(token && tracking && !isTerminalStatus(tracking.orderStatus)),
     onEvent: handleLiveEvent,
-    onStatusChange: handleStatusChange,
   });
-
-  // Fallback polling if SSE disconnected
-  useEffect(() => {
-    if (!connected && token && !pollRef.current && tracking && !isTerminalStatus(tracking.orderStatus)) {
-      pollRef.current = setInterval(() => void fetchTracking(false), 20000);
-    }
-
-    if (connected && pollRef.current) {
-      clearInterval(pollRef.current);
-      pollRef.current = null;
-    }
-
-    return () => {
-      if (pollRef.current) clearInterval(pollRef.current);
-    };
-  }, [connected, fetchTracking, token, tracking]);
 
   return {
     tracking,
