@@ -9,7 +9,11 @@ interface LiveTrackingTimelineProps {
 }
 
 export function LiveTrackingTimeline({ order }: LiveTrackingTimelineProps) {
-  const progress = getOrderProgress(order.orderStatus, order.deliveryStatus);
+  const progress = getOrderProgress(
+    order.orderStatus,
+    order.deliveryStatus,
+    order.orderType,
+  );
   const placedTime = formatFixedTime(order.createdAt);
 
   return (

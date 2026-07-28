@@ -14,7 +14,11 @@ interface OrderSummaryCardProps {
 
 export function OrderSummaryCard({ order }: OrderSummaryCardProps) {
   const { toast } = useToast();
-  const progress = getOrderProgress(order.orderStatus, order.deliveryStatus);
+  const progress = getOrderProgress(
+    order.orderStatus,
+    order.deliveryStatus,
+    order.orderType,
+  );
   const addressLine = formatAddress(order);
   const hasTaxBreakdown = typeof order.cgst === 'number' || typeof order.sgst === 'number';
 

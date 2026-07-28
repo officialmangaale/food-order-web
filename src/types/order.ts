@@ -191,6 +191,7 @@ export interface TrackingOrder {
   grandTotal: number;
   paymentMethod: string;
   paymentStatus: string;
+  orderType?: string;
   orderStatus: OrderStatus;
   deliveryStatus?: string;
   createdAt?: string;
@@ -214,9 +215,11 @@ export interface ActiveOrder {
   customer_phone?: string;
 }
 
-/** SSE event data from /orders/:id/live */
+/** Canonical order WebSocket event envelope. */
 export interface OrderSSEEvent {
   type: string;
+  event?: string;
+  event_id?: string;
   order_id?: number;
   status?: OrderStatus;
   order_status?: OrderStatus;
@@ -225,6 +228,8 @@ export interface OrderSSEEvent {
   data?: Partial<OrderTrackingResponse> | Record<string, unknown>;
   message?: string;
   timestamp?: string;
+  updated_at?: string;
+  order?: Partial<OrderTrackingResponse> | Record<string, unknown>;
 }
 
 /** Maps backend status to user-friendly labels */
@@ -239,24 +244,24 @@ export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
   picked_up: 'Picked Up',
   out_for_delivery: 'Out for Delivery',
   delivered: 'Delivered',
-  completed: 'Delivered',
+  completed: 'Completed',
   cancelled: 'Cancelled',
   rejected: 'Rejected by Restaurant',
   declined: 'Rejected by Restaurant',
 };
 
 export const ORDER_TIMELINE_STEPS: OrderStatus[] = [
-  'placed',
-  'accepted',
+  'pending',
+  'confirmed',
   'preparing',
   'ready',
-  'ready_for_pickup',
   'out_for_delivery',
   'delivered',
+  'completed',
 ];
 
 export function isTerminalStatus(status: OrderStatus): boolean {
-  return ['delivered', 'completed', 'cancelled', 'rejected', 'declined'].includes(status);
+  return ['completed', 'cancelled', 'rejected', 'declined'].includes(status);
 }
 
 export function isNegativeStatus(status: OrderStatus): boolean {
