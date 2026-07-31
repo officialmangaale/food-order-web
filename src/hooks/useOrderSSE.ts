@@ -8,6 +8,11 @@ import { getErrorMessage } from '@/services/http';
 import type { OrderSSEEvent, OrderStatus, TrackingOrder } from '@/types/order';
 import { isTerminalStatus } from '@/types/order';
 import { mergeTrackingOrderEvent, normalizeOrderStatus } from '@/utils/orderTrackingAdapter';
+import {
+  ORDER_POLL_ACTIVATION_DELAY_MS,
+  ORDER_POLL_INTERVAL_MS,
+  shouldPollOrder,
+} from '@/utils/realtimePolicy.mjs';
 
 interface UseOrderSSEOptions {
   orderId: number;
@@ -79,6 +84,7 @@ export function useOrderTracking(orderId: number) {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
+  const [pollingFallback, setPollingFallback] = useState(false);
 
   const fetchTracking = useCallback(async (showLoading = false) => {
     if (!orderId) {
@@ -130,6 +136,72 @@ export function useOrderTracking(orderId: number) {
     onEvent: handleLiveEvent,
   });
 
+  const hasTracking = Boolean(tracking);
+  const terminal = tracking ? isTerminalStatus(tracking.orderStatus) : false;
+
+  useEffect(() => {
+    const canPoll = shouldPollOrder({
+      connected,
+      hasToken: Boolean(token),
+      hasTracking,
+      terminal,
+    });
+    if (!canPoll) {
+      const resetTimer = window.setTimeout(() => setPollingFallback(false), 0);
+      return () => window.clearTimeout(resetTimer);
+    }
+
+    let active = true;
+    let inFlight = false;
+
+    const poll = async () => {
+      if (
+        !active ||
+        inFlight ||
+        !shouldPollOrder({
+          connected: false,
+          hasToken: true,
+          hasTracking: true,
+          terminal: false,
+          visibilityState: document.visibilityState,
+        })
+      ) {
+        return;
+      }
+      inFlight = true;
+      setPollingFallback(true);
+      try {
+        await fetchTracking(false);
+      } finally {
+        inFlight = false;
+      }
+    };
+
+    const activationTimer = window.setTimeout(() => {
+      void poll();
+    }, ORDER_POLL_ACTIVATION_DELAY_MS);
+    const interval = window.setInterval(() => {
+      void poll();
+    }, ORDER_POLL_INTERVAL_MS);
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'visible') void poll();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+
+    return () => {
+      active = false;
+      window.clearTimeout(activationTimer);
+      window.clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+    };
+  }, [connected, fetchTracking, hasTracking, terminal, token]);
+
+  const connectionStatus: 'connected' | 'reconnecting' | 'polling' = connected
+    ? 'connected'
+    : pollingFallback
+      ? 'polling'
+      : 'reconnecting';
+
   return {
     tracking,
     loading,
@@ -137,6 +209,7 @@ export function useOrderTracking(orderId: number) {
     errorStatus,
     authRequired: !token,
     connected,
+    connectionStatus,
     refetch: () => fetchTracking(true),
   };
 }
