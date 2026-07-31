@@ -16,6 +16,7 @@ import { useOrderTracking } from '@/hooks/useOrderSSE';
 import { useActiveOrderStore } from '@/store/activeOrderStore';
 import { useAuthStore } from '@/store/authStore';
 import { isTerminalStatus } from '@/types/order';
+import { realtimeConnectionLabel } from '@/utils/realtimePolicy.mjs';
 
 interface OrderTrackingPageProps {
   orderId: string;
@@ -30,7 +31,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
   const user = useAuthStore((state) => state.user);
   const authPhone = useAuthStore((state) => state.phone);
   const setActiveOrder = useActiveOrderStore((state) => state.setActiveOrder);
-  const { tracking, loading, error, errorStatus, authRequired, connected, refetch } = useOrderTracking(
+  const { tracking, loading, error, errorStatus, authRequired, connected, connectionStatus, refetch } = useOrderTracking(
     validOrderId ? numericOrderId : 0
   );
 
@@ -142,7 +143,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
               }`}
             >
               {connected ? <Wifi className="h-4 w-4" aria-hidden="true" /> : <WifiOff className="h-4 w-4" aria-hidden="true" />}
-              {connected ? 'Live updates on' : 'Live updates reconnecting'}
+              {realtimeConnectionLabel(connectionStatus)}
             </span>
           )}
         </div>
