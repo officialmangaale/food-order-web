@@ -90,8 +90,18 @@ export function RestaurantMenuLayout({
   };
 
   return (
-    <section id="restaurant-menu" className="bg-[#FFFDFD]">
-      <div className="mx-auto grid max-w-[1280px] gap-6 px-4 py-7 sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:px-8 lg:py-8">
+    <section id="restaurant-menu" className="bg-[#F7F8FA]">
+      <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-x-8 lg:px-8 lg:py-8">
+        <div className="order-1 flex min-w-0 gap-2 overflow-x-auto px-3 pb-5 pt-2 hide-scrollbar sm:px-6 lg:col-start-2 lg:px-0 lg:pb-7 lg:pt-0">
+          <RestaurantMenuSearch value={search} onChange={onSearchChange} />
+          <RestaurantFilterChips
+            filters={filters}
+            onChange={onFiltersChange}
+            hasBestsellerData={hasBestsellerData}
+            hasRatingData={hasRatingData}
+          />
+        </div>
+
         {loading ? (
           <MenuSidebarSkeleton />
         ) : (
@@ -102,17 +112,7 @@ export function RestaurantMenuLayout({
           />
         )}
 
-        <div className="min-w-0">
-          <div className="mb-7 flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
-            <RestaurantMenuSearch value={search} onChange={onSearchChange} />
-            <RestaurantFilterChips
-              filters={filters}
-              onChange={onFiltersChange}
-              hasBestsellerData={hasBestsellerData}
-              hasRatingData={hasRatingData}
-            />
-          </div>
-
+        <div className="order-3 min-w-0 px-3 py-3 sm:px-6 lg:col-start-2 lg:px-0 lg:py-0">
           {loading ? (
             <MenuContentSkeleton />
           ) : noResults ? (
@@ -152,7 +152,7 @@ export function RestaurantMenuLayout({
 
 function MenuSidebarSkeleton() {
   return (
-    <aside className="hidden lg:block">
+    <aside className="hidden lg:row-span-2 lg:row-start-1 lg:block">
       <div className="sticky top-28 space-y-4 border-r border-[#F0DDDD] pr-5">
         {[1, 2, 3, 4, 5].map((item) => (
           <Skeleton key={item} className="h-10 w-full" />

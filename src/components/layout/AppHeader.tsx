@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCartStore } from '@/store/cartStore';
@@ -107,29 +107,35 @@ export function AppHeader() {
 
   return (
     <>
-      <header className="safe-top sticky top-0 z-50 border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl transition-shadow">
+      <header
+        className={`safe-top top-0 z-50 transition-shadow ${
+          isRestaurantDetailHeader
+            ? 'restaurant-detail-header pointer-events-none fixed inset-x-0 h-[72px] border-transparent bg-transparent lg:sticky'
+            : 'sticky border-b border-[#E8DFDF] bg-[#FCF7F7]/95 backdrop-blur-xl'
+        }`}
+      >
         {isRestaurantDetailHeader ? (
           <>
-            <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-4 py-3 sm:px-6 lg:px-7">
-              <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute || lockedMode} />
+            <div className="mx-auto flex min-h-[72px] max-w-[1440px] items-center gap-4 px-3 py-3 sm:px-6 lg:px-7">
+              <Link
+                href={logoHref}
+                aria-label={isLockedRoute || lockedMode ? 'Back to restaurant home' : 'Mangaale home'}
+                className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/95 text-[#172033] shadow-sm backdrop-blur-sm lg:hidden"
+              >
+                <ArrowLeft className="h-6 w-6" aria-hidden="true" />
+              </Link>
+              <div className="hidden lg:block">
+                <HeaderLogo href={logoHref} isLockedRoute={isLockedRoute || lockedMode} />
+              </div>
               <SearchHeaderInput
                 value={searchQuery}
                 placeholder={searchPlaceholder}
                 onChange={setSearchQuery}
                 onSubmit={handleSearchSubmit}
                 onClear={() => setSearchQuery('')}
-                className="mx-auto hidden max-w-[520px] sm:block"
+                className="pointer-events-auto mx-auto hidden max-w-[520px] lg:block"
               />
-              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="ml-auto flex" />
-            </div>
-            <div className="px-4 pb-3 sm:hidden">
-              <SearchHeaderInput
-                value={searchQuery}
-                placeholder={searchPlaceholder}
-                onChange={setSearchQuery}
-                onSubmit={handleSearchSubmit}
-                onClear={() => setSearchQuery('')}
-              />
+              <HeaderActions totalItems={displayTotalItems} onAccountClick={handleAccountClick} className="pointer-events-auto ml-auto hidden lg:flex" />
             </div>
           </>
         ) : (

@@ -27,7 +27,7 @@ export function RestaurantMenuSection({
 }: RestaurantMenuSectionProps) {
   return (
     <section id={getSectionDomId(section.key)} className="scroll-mt-32">
-      <div className="mb-4 flex items-center gap-3">
+      <div className="sr-only mb-4 items-center gap-3 lg:not-sr-only lg:flex">
         <h2 className="text-2xl font-extrabold tracking-normal text-[#120F0F] sm:text-[28px]">
           {section.title}
         </h2>
@@ -37,7 +37,7 @@ export function RestaurantMenuSection({
           </span>
         )}
       </div>
-      <div className="space-y-5">
+      <div className="space-y-2 lg:space-y-5">
         {section.items.map((item) => (
           <RestaurantMenuItemCard
             key={`${section.key}-${item.id}`}

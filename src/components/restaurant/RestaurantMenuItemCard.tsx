@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Minus, Plus, Star, Utensils } from 'lucide-react';
+import { Flame, Leaf, Minus, Plus, Star, Utensils } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { useToast } from '@/components/ui/Toast';
 import { formatMoney } from '@/utils/money';
@@ -102,15 +102,16 @@ export function RestaurantMenuItemCard({
     <motion.article
       initial={{ opacity: 0, y: 8 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`flex min-h-[148px] gap-4 rounded-2xl border bg-white p-4 shadow-[0_10px_26px_rgba(123,35,35,0.04)] transition sm:p-5 ${
-        unavailable ? 'border-[#E8D8D8] opacity-70' : 'border-[#F0DADA] hover:border-[#E8BABA] hover:shadow-[0_14px_34px_rgba(123,35,35,0.08)]'
+      className={`flex min-h-[141px] gap-2.5 rounded-2xl border bg-white px-2.5 py-2 shadow-[0_2px_5px_rgba(23,32,51,0.03)] transition sm:gap-4 sm:p-5 ${
+        unavailable ? 'border-[#DCE1E7] opacity-70' : 'border-[#DCE1E7] hover:border-[#AEB7C4] hover:shadow-[0_8px_22px_rgba(23,32,51,0.08)]'
       }`}
     >
       <div className="min-w-0 flex-1">
-        <div className="mb-2 flex items-center gap-2">
+        <div className="mb-1.5 flex min-h-[18px] items-center gap-1.5">
           {isVeg != null && <FoodTypeIndicator vegetarian={isVeg} />}
           {item.is_bestseller && (
-            <span className="rounded-full bg-[#FFF3D9] px-2 py-0.5 text-[11px] font-bold text-[#9A5A00]">
+            <span className="inline-flex items-center gap-1 rounded-full bg-[#FFF5DE] px-2 py-0.5 text-[10px] font-bold text-[#946200] sm:px-2.5 sm:py-1 sm:text-[11px]">
+              <Flame className="h-3 w-3" aria-hidden="true" />
               Bestseller
             </span>
           )}
@@ -121,34 +122,36 @@ export function RestaurantMenuItemCard({
           )}
         </div>
 
-        <h3 className="text-lg font-extrabold leading-snug tracking-normal text-[#130F0F] sm:text-xl">
+        <h3 className="text-[13px] font-extrabold leading-[18px] tracking-[-0.01em] text-[#172033] sm:text-xl">
           {item.name}
         </h3>
-        <p className="mt-1 text-sm font-extrabold text-[#241818]">
+        <p className="mt-0.5 text-[12px] font-bold text-[#7B8497] sm:mt-1 sm:text-[14px]">
           {item.display_price ?? formatMoney(item.price)}
         </p>
-        {rating && (
-          <div className="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[#916000]">
-            <Star className="h-3.5 w-3.5 fill-current text-[#E5A300]" aria-hidden="true" />
-            <span>{rating.toFixed(1)}</span>
-            {item.rating_count && <span className="text-[#6D5555]">({item.rating_count})</span>}
-          </div>
-        )}
         {item.description && (
-          <p className="mt-2 line-clamp-2 max-w-[760px] text-sm leading-6 text-[#4F3030] sm:text-base">
+          <p className="mt-1 line-clamp-2 max-w-[760px] text-[11px] leading-4 text-[#7B8497] sm:mt-2 sm:text-base sm:leading-6">
             {item.description}
           </p>
         )}
-        {hasCustomOptions && (
-          <p className="mt-2 text-xs font-semibold text-[#9C6B6B]">Customisable</p>
+        {(rating || hasCustomOptions) && (
+          <div className="mt-1.5 flex flex-wrap items-center gap-2 text-[11px] font-semibold sm:mt-2 sm:text-[12px]">
+            {rating && (
+              <span className="inline-flex items-center gap-1 text-[#7B8497]">
+                <Star className="h-3.5 w-3.5 fill-current text-[#F59E0B]" aria-hidden="true" />
+                {rating.toFixed(1)}
+                {item.rating_count && <span>({item.rating_count})</span>}
+              </span>
+            )}
+            {hasCustomOptions && <span className="text-[#0F5E58]">Customisable</span>}
+          </div>
         )}
         {unavailable && (
           <p className="mt-2 text-xs font-bold uppercase tracking-normal text-[#B31317]">Unavailable</p>
         )}
       </div>
 
-      <div className="flex w-[104px] shrink-0 flex-col items-center sm:w-[132px]">
-        <div className="flex h-24 w-24 items-center justify-center overflow-hidden rounded-2xl bg-[#FCE4E0] sm:h-[120px] sm:w-[120px]">
+      <div className="flex w-[96px] shrink-0 flex-col items-center sm:w-[132px]">
+        <div className="flex h-[86px] w-[96px] items-center justify-center overflow-hidden rounded-2xl bg-[#EDF1F4] sm:h-[120px] sm:w-[120px]">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -159,19 +162,19 @@ export function RestaurantMenuItemCard({
               onError={() => setImageFailed(true)}
             />
           ) : (
-            <div className="flex h-full w-full items-center justify-center bg-[#FCE4E0] text-[#8D5F5F]">
+            <div className="flex h-full w-full items-center justify-center bg-[#EDF1F4] text-[#7B8497]">
               <Utensils className="h-8 w-8" aria-hidden="true" />
             </div>
           )}
         </div>
 
-        <div className="-mt-4">
+        <div className="mt-1.5">
           {!hasCustomOptions && quantity > 0 ? (
-            <div className="flex h-9 items-center rounded-lg bg-[#B4080B] text-white shadow-[0_8px_18px_rgba(180,8,11,0.22)]">
+            <div className="flex h-8 items-center rounded-xl bg-[#14B8A6] text-white shadow-[0_6px_14px_rgba(20,184,166,0.2)]">
               <button
                 type="button"
                 onClick={() => updateQuantity(item.id, quantity - 1)}
-                className="flex h-9 w-9 items-center justify-center rounded-l-lg transition hover:bg-white/10"
+                className="flex h-8 w-8 items-center justify-center rounded-l-xl transition hover:bg-white/10"
                 aria-label={`Decrease ${item.name}`}
               >
                 <Minus className="h-4 w-4" aria-hidden="true" />
@@ -180,7 +183,7 @@ export function RestaurantMenuItemCard({
               <button
                 type="button"
                 onClick={handleAdd}
-                className="flex h-9 w-9 items-center justify-center rounded-r-lg transition hover:bg-white/10"
+                className="flex h-8 w-8 items-center justify-center rounded-r-xl transition hover:bg-white/10"
                 aria-label={`Increase ${item.name}`}
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
@@ -191,7 +194,7 @@ export function RestaurantMenuItemCard({
               type="button"
               disabled={addDisabled}
               onClick={handleAdd}
-              className="h-9 min-w-24 rounded-lg border border-[#DCA6A6] bg-white px-3 text-xs font-extrabold text-[#A80F15] shadow-[0_6px_14px_rgba(123,35,35,0.08)] transition hover:border-[#B31317] hover:bg-[#B4080B] hover:text-white disabled:cursor-not-allowed disabled:border-[#E7D6D6] disabled:bg-white disabled:text-[#BFAAAA] sm:text-sm"
+              className="h-8 min-w-[58px] rounded-xl border border-[#14B8A6] bg-white px-3 text-[14px] font-extrabold text-[#14B8A6] transition hover:bg-[#14B8A6] hover:text-white disabled:cursor-not-allowed disabled:border-[#D8DDE3] disabled:bg-white disabled:text-[#AEB7C4] sm:h-9 sm:min-w-24"
             >
               {unavailable ? 'Unavailable' : 'ADD'}
             </button>
@@ -205,12 +208,14 @@ export function RestaurantMenuItemCard({
 function FoodTypeIndicator({ vegetarian }: { vegetarian: boolean }) {
   return (
     <span
-      className={`flex h-[18px] w-[18px] items-center justify-center rounded-[4px] border-2 ${
-        vegetarian ? 'border-[#1B9A51]' : 'border-[#D71920]'
-      }`}
+      className="flex h-[18px] w-[18px] items-center justify-center"
       aria-label={vegetarian ? 'Vegetarian' : 'Non-vegetarian'}
     >
-      <span className={`h-2 w-2 rounded-full ${vegetarian ? 'bg-[#1B9A51]' : 'bg-[#D71920]'}`} />
+      {vegetarian ? (
+        <Leaf className="h-4 w-4 fill-current text-[#22C55E]" aria-hidden="true" />
+      ) : (
+        <span className="h-2.5 w-2.5 rounded-full bg-[#F6464D]" />
+      )}
     </span>
   );
 }
