@@ -1,4 +1,4 @@
-const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
+const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? 'https://restaurant-prod.mangaale.com';
 
 const EMPTY_URL_VALUES = new Set(['', 'null', 'undefined', 'none', 'n/a']);
 const URL_SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
