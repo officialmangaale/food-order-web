@@ -69,13 +69,13 @@ function CategoryList({
               onClick={() => onSelect(category.key)}
               className={`flex min-h-12 w-full items-center justify-between rounded-l-lg border-r-2 px-3 py-2 text-left text-base transition ${
                 active
-                  ? 'border-[#B31317] bg-[#FFF0F0] font-bold text-[#A80F15]'
-                  : 'border-transparent text-[#5B3737] hover:bg-[#FFF7F7] hover:text-[#A80F15]'
+                  ? 'border-[#16B8A6] bg-[#E8F8F5] font-bold text-[#0E4B47]'
+                  : 'border-transparent text-[#737B8C] hover:bg-[#F3FBF9] hover:text-[#0E4B47]'
               }`}
             >
               <span className="min-w-0 truncate">{category.name}</span>
               {category.categoryType === 'offer' && (
-                <span className="ml-2 rounded-full bg-[#FBE8E8] px-2 py-0.5 text-[11px] font-bold uppercase text-[#B31317]">
+                <span className="ml-2 rounded-full bg-[#FEF2F2] px-2 py-0.5 text-[11px] font-bold uppercase text-[#EF4444]">
                   Offer
                 </span>
               )}

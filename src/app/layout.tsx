@@ -3,6 +3,7 @@ import './globals.css';
 import { Providers } from '@/components/Providers';
 import { AppHeader } from '@/components/layout/AppHeader';
 import { BottomCartBar } from '@/components/layout/BottomCartBar';
+import { MobileBottomNavigation } from '@/components/layout/MobileBottomNavigation';
 import { ToastProvider } from '@/components/ui/Toast';
 
 export const metadata: Metadata = {
@@ -25,6 +26,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <AppHeader />
             {children}
             <BottomCartBar />
+            <MobileBottomNavigation />
           </ToastProvider>
         </Providers>
       </body>

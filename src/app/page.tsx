@@ -10,28 +10,27 @@ import { Skeleton } from '@/components/ui/Skeleton';
 
 export default function HomePage() {
   return (
-    <>
+    <main className="flex min-h-screen flex-col pb-6">
+      <div className="order-0 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+        <ActiveOrderCard />
+      </div>
       <HomeOfferSlider />
       <Suspense fallback={<ExploreCategoriesFallback />}>
         <ExploreCategories />
       </Suspense>
-      <TrendingNowSection />
-
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-        <ActiveOrderCard />
-      </div>
       <NearbyRestaurantsSection />
-    </>
+      <TrendingNowSection />
+    </main>
   );
 }
 
 function ExploreCategoriesFallback() {
   return (
-    <section className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Loading categories">
-      <Skeleton className="mb-4 h-8 w-56" />
+    <section className="order-1 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Loading categories">
+      <Skeleton className="mb-4 hidden h-8 w-56 sm:block" />
       <div className="flex gap-3 overflow-hidden pb-2">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Skeleton key={item} className="h-12 w-28 shrink-0 rounded-2xl" />
+          <Skeleton key={item} className="h-[82px] w-[66px] shrink-0 rounded-[18px]" />
         ))}
       </div>
     </section>

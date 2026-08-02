@@ -21,6 +21,11 @@ export function BottomCartBar() {
     pathname.startsWith('/orders/') ||
     pathname.startsWith('/profile') ||
     pathname.startsWith('/search');
+  const floatsAboveNavigation =
+    pathname === '/' ||
+    pathname === '/restaurants' ||
+    pathname === '/trending' ||
+    pathname.startsWith('/categories/');
 
   if (!hasMounted || hidden) return null;
 
@@ -32,10 +37,12 @@ export function BottomCartBar() {
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 100, opacity: 0 }}
           transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-          className="fixed bottom-0 left-0 right-0 z-40 p-3 safe-bottom backdrop-blur-xl sm:p-4"
+          className={`fixed left-0 right-0 z-40 p-3 safe-bottom backdrop-blur-xl sm:p-4 ${
+            floatsAboveNavigation ? 'bottom-[86px] md:bottom-0' : 'bottom-0'
+          }`}
         >
           <Link href="/cart" className="mx-auto block w-full max-w-[520px]">
-            <div className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-[#B4080B] px-4 py-3 text-white shadow-[0_14px_38px_rgba(180,8,11,0.28)] transition hover:bg-[#A80F15] sm:px-6">
+            <div className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-[#0E4B47] px-4 py-3 text-white shadow-[0_14px_38px_rgba(14,75,71,0.24)] transition hover:bg-[#0C7C72] sm:px-6">
               <div className="min-w-0">
                 <p className="text-xs font-extrabold uppercase tracking-normal">
                   {totalItems} item{totalItems === 1 ? '' : 's'}

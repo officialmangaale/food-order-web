@@ -32,7 +32,7 @@ export function RestaurantMenuSection({
           {section.title}
         </h2>
         {section.categoryType === 'offer' && (
-          <span className="rounded-full bg-[#FBE8E8] px-3 py-1 text-xs font-extrabold uppercase text-[#B31317]">
+          <span className="rounded-full bg-[#FEF2F2] px-3 py-1 text-xs font-extrabold uppercase text-[#EF4444]">
             Offer
           </span>
         )}

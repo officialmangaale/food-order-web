@@ -117,8 +117,8 @@ export function TrendingNowSection() {
 
   if (trendingQuery.isLoading) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-label="Trending dishes loading"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -133,8 +133,8 @@ export function TrendingNowSection() {
 
   if (trendingQuery.error && items.length === 0) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-labelledby="trending-now-heading"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -150,8 +150,8 @@ export function TrendingNowSection() {
   if (visibleItems.length === 0) return null;
 
   return (
-    <motion.section 
-      className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+    <motion.section
+      className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
       aria-labelledby="trending-now-heading"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -162,7 +162,7 @@ export function TrendingNowSection() {
 
       <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
         {visibleItems.map((item) => (
-          <div key={`${item.restaurantId}-${item.itemId}`} className="w-[280px] shrink-0 sm:w-auto">
+          <div key={`${item.restaurantId}-${item.itemId}`} className="w-[156px] shrink-0 sm:w-auto">
             <TrendingItemCard item={item} onAdd={handleAddItem} />
           </div>
         ))}
@@ -193,14 +193,17 @@ function SectionHeading({
   viewAllHref?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 id="trending-now-heading" className="text-xl font-extrabold text-[#1F1A1A] sm:text-2xl">
-        Trending Now
-      </h2>
+    <div className="relative mb-4">
+      <div className="pr-16">
+        <h2 id="trending-now-heading" className="text-lg font-extrabold tracking-[-0.025em] text-[#172033] sm:text-3xl">
+          Trending favourites
+        </h2>
+        <p className="mt-1 whitespace-nowrap text-xs font-medium text-[#737B8C] sm:text-sm">Popular dishes people are ordering</p>
+      </div>
       {showViewAll && (
         <Link
           href={viewAllHref}
-          className="shrink-0 text-sm font-bold text-[#A80F15] transition hover:text-[#7C1118] hover:underline"
+          className="absolute right-0 top-1 shrink-0 text-sm font-bold text-[#16B8A6] transition hover:text-[#109F90] hover:underline"
         >
           View All
         </Link>
@@ -213,7 +216,7 @@ function TrendingSkeleton() {
   return (
     <div className="-mx-4 flex gap-4 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-3 lg:gap-6">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="w-[280px] shrink-0 overflow-hidden rounded-2xl border border-[#F0DADA] bg-white sm:w-auto">
+        <div key={item} className="w-[156px] shrink-0 overflow-hidden rounded-[22px] border border-[#E3E7EA] bg-white sm:w-auto">
           <Skeleton className="h-[176px] w-full rounded-none sm:h-[184px]" />
           <div className="space-y-3 p-4">
             <Skeleton className="h-5 w-4/5" />
@@ -231,21 +234,21 @@ function TrendingSkeleton() {
 
 function TrendingError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
+    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEF2F2] text-[#EF4444]">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#1F1A1A]">Trending dishes are unavailable</h3>
-            <p className="mt-1 text-sm leading-6 text-[#7B6B6B]">Please try again in a moment.</p>
+            <h3 className="text-base font-extrabold text-[#172033]">Trending dishes are unavailable</h3>
+            <p className="mt-1 text-sm leading-6 text-[#737B8C]">Please try again in a moment.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
+          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
         >
           Retry
         </button>

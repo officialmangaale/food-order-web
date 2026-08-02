@@ -73,7 +73,7 @@ export function HomeOfferSlider() {
 
   return (
     <motion.section
-      className="mx-auto mt-4 max-w-7xl px-4 sm:mt-5 sm:px-6 lg:mt-6 lg:px-8"
+      className="order-2 mx-auto mt-6 w-full max-w-7xl px-4 sm:mt-9 sm:px-6 lg:px-8"
       aria-label="Featured offers"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -84,7 +84,7 @@ export function HomeOfferSlider() {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <div className="relative h-[280px] overflow-hidden rounded-[24px] bg-[#170707] shadow-[0_18px_48px_rgba(74,12,14,0.18)] sm:h-[340px] lg:h-[400px]">
+      <div className="relative h-[178px] overflow-hidden rounded-[24px] bg-[#103F3C] shadow-[0_18px_48px_rgba(14,75,71,0.16)] sm:h-[260px] lg:h-[340px]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={String(activeOffer.id)}
@@ -101,33 +101,32 @@ export function HomeOfferSlider() {
               alt={getOfferImageAlt(activeOffer)}
               priority={activeSlot === 0}
             />
-            <div className="absolute inset-0 bg-black/25" />
-            <div className="absolute inset-0 bg-gradient-to-r from-black/75 via-black/45 to-black/20" />
-            <div className="absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-black/50 to-transparent" />
+            <div className="absolute inset-0 bg-[#103F3C]/35" />
+            <div className="absolute inset-0 bg-gradient-to-r from-[#103F3C] from-0% via-[#103F3C]/95 via-48% to-[#103F3C]/12" />
 
-            <div className="relative z-10 flex h-full max-w-2xl flex-col justify-center px-5 py-6 sm:px-8 lg:px-10">
-              <span className="w-fit rounded-full bg-[#D71920] px-4 py-1.5 text-xs font-extrabold uppercase tracking-[0.12em] text-white shadow-sm">
+            <div className="relative z-10 flex h-full max-w-[64%] flex-col justify-center px-5 py-4 sm:max-w-[58%] sm:px-8 lg:px-10">
+              <span className="hidden w-fit rounded-full bg-white/14 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white shadow-sm sm:inline-flex">
                 {activeOffer.badgeText || 'Exclusive Offer'}
               </span>
-              <h1 className="mt-4 max-w-[500px] text-[26px] font-extrabold leading-[1.05] tracking-normal text-white sm:text-[42px] lg:text-[52px]">
+              <h2 className="max-w-[500px] text-base font-extrabold leading-[1.12] tracking-[-0.025em] text-white sm:mt-4 sm:text-[34px] lg:text-[44px]">
                 {activeOffer.title}
-              </h1>
+              </h2>
               {activeOffer.subtitle && (
-                <p className="mt-4 max-w-[430px] text-sm font-medium leading-6 text-white/90 sm:text-base lg:text-lg">
+                <p className="mt-2 line-clamp-1 max-w-[430px] text-[11px] font-medium leading-4 text-white/80 sm:mt-3 sm:line-clamp-2 sm:text-base sm:leading-6 lg:text-lg">
                   {activeOffer.subtitle}
                 </p>
               )}
-              <div className="mt-6 flex flex-wrap items-center gap-3">
+              <div className="mt-2.5 flex flex-wrap items-center gap-3 sm:mt-5">
                 <OfferCta offer={activeOffer} isLockedRoute={isLockedRoute} lockedHomeLink={lockedHomeLink} />
                 {!hasCoordinates && !isLockedRoute && (
-                  <span className="inline-flex items-center gap-1.5 rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur">
+                  <span className="hidden items-center gap-1.5 rounded-full bg-white/12 px-3 py-2 text-xs font-semibold text-white/85 backdrop-blur sm:inline-flex">
                     <MapPin className="h-3.5 w-3.5" aria-hidden="true" />
                     Set location to see nearby offers
                   </span>
                 )}
               </div>
               {(activeOffer.restaurantName || activeOffer.deliveryTime || activeOffer.distanceKm != null) && (
-                <p className="mt-4 text-xs font-semibold text-white/75 sm:text-sm">
+                <p className="mt-4 hidden text-xs font-semibold text-white/75 sm:block sm:text-sm">
                   {[activeOffer.restaurantName, activeOffer.displayPrice, activeOffer.deliveryTime, formatDistance(activeOffer.distanceKm)]
                     .filter(Boolean)
                     .join(' - ')}
@@ -155,7 +154,7 @@ export function HomeOfferSlider() {
         )}
 
         {isFallback && (
-          <div className="pointer-events-none absolute right-4 top-4 z-20 rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/70 backdrop-blur">
+          <div className="pointer-events-none absolute right-4 top-4 z-20 hidden rounded-full border border-white/15 bg-black/20 px-3 py-1 text-[11px] font-bold uppercase tracking-[0.12em] text-white/70 backdrop-blur sm:block">
             Fresh picks
           </div>
         )}
@@ -175,7 +174,7 @@ function OfferCta({
 }) {
   const href = getOfferHref(offer, isLockedRoute, lockedHomeLink);
   const className =
-    'inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#D71920] px-5 py-3 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#B5141A] sm:min-h-12 sm:px-6 sm:text-base';
+    'inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-[#0E4B47] shadow-sm transition hover:bg-[#E8F8F5] sm:min-h-12 sm:px-6 sm:text-base';
 
   if (/^https?:\/\//i.test(href)) {
     return (
@@ -237,8 +236,8 @@ function getOfferHref(offer: HomeMenuOffer, isLockedRoute: boolean, lockedHomeLi
 
 function HomeOfferSkeleton() {
   return (
-    <section className="mx-auto mt-4 max-w-7xl px-4 sm:mt-5 sm:px-6 lg:mt-6 lg:px-8" aria-label="Loading offers">
-      <Skeleton className="h-[280px] rounded-[24px] sm:h-[340px] lg:h-[400px]" />
+    <section className="order-2 mx-auto mt-7 w-full max-w-7xl px-4 sm:mt-9 sm:px-6 lg:px-8" aria-label="Loading offers">
+      <Skeleton className="h-[178px] rounded-[24px] sm:h-[260px] lg:h-[340px]" />
     </section>
   );
 }

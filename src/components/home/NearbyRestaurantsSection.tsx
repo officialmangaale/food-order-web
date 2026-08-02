@@ -50,8 +50,8 @@ export function NearbyRestaurantsSection() {
 
   if (!hasLocation) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-3 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-labelledby="nearby-restaurants-heading"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -67,8 +67,8 @@ export function NearbyRestaurantsSection() {
 
   if (nearbyQuery.isLoading) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-3 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-label="Loading nearby restaurants"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -83,8 +83,8 @@ export function NearbyRestaurantsSection() {
 
   if (nearbyQuery.error && restaurants.length === 0) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-3 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-labelledby="nearby-restaurants-heading"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -99,8 +99,8 @@ export function NearbyRestaurantsSection() {
 
   if (visibleRestaurants.length === 0) {
     return (
-      <motion.section 
-        className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+      <motion.section
+        className="order-3 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
         aria-labelledby="nearby-restaurants-heading"
         initial={{ opacity: 0, y: 20 }}
         whileInView={{ opacity: 1, y: 0 }}
@@ -115,8 +115,8 @@ export function NearbyRestaurantsSection() {
   }
 
   return (
-    <motion.section 
-      className="mx-auto mt-8 max-w-7xl px-4 sm:px-6 lg:px-8" 
+    <motion.section
+      className="order-3 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
       aria-labelledby="nearby-restaurants-heading"
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
@@ -127,7 +127,7 @@ export function NearbyRestaurantsSection() {
 
       <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
         {visibleRestaurants.map((restaurant) => (
-          <div key={restaurant.id} className="w-[280px] shrink-0 sm:w-auto">
+          <div key={restaurant.id} className="w-[220px] shrink-0 sm:w-auto">
             <NearbyRestaurantCard restaurant={restaurant} />
           </div>
         ))}
@@ -144,14 +144,17 @@ function SectionHeading({
   viewAllHref?: string;
 }) {
   return (
-    <div className="mb-4 flex items-center justify-between gap-4">
-      <h2 id="nearby-restaurants-heading" className="text-xl font-extrabold text-[#1F1A1A] sm:text-2xl">
-        Nearby Restaurants
-      </h2>
+    <div className="relative mb-4">
+      <div className="pr-16">
+        <h2 id="nearby-restaurants-heading" className="text-lg font-extrabold tracking-[-0.025em] text-[#172033] sm:text-3xl">
+          Popular near you
+        </h2>
+        <p className="mt-1 whitespace-nowrap text-xs font-medium text-[#737B8C] sm:text-sm">Loved around your neighbourhood</p>
+      </div>
       {showViewAll && (
         <Link
           href={viewAllHref}
-          className="shrink-0 text-sm font-bold text-[#A80F15] transition hover:text-[#7C1118] hover:underline"
+          className="absolute right-0 top-1 shrink-0 text-sm font-bold text-[#16B8A6] transition hover:text-[#109F90] hover:underline"
         >
           View All
         </Link>
@@ -164,7 +167,7 @@ function NearbyRestaurantsSkeleton() {
   return (
     <div className="-mx-4 flex gap-4 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-3 lg:gap-6">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="w-[280px] shrink-0 overflow-hidden rounded-2xl border border-[#F0DADA] bg-white sm:w-auto">
+        <div key={item} className="w-[220px] shrink-0 overflow-hidden rounded-[22px] border border-[#E3E7EA] bg-white sm:w-auto">
           <Skeleton className="h-[168px] w-full rounded-none sm:h-[176px]" />
           <div className="space-y-3 p-4">
             <Skeleton className="h-5 w-4/5" />
@@ -179,21 +182,21 @@ function NearbyRestaurantsSkeleton() {
 
 function LocationPrompt({ onSetLocation }: { onSetLocation: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
+    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0F0] text-[#A80F15]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8F8F5] text-[#0E4B47]">
             <LocateFixed className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#1F1A1A]">Find restaurants near you</h3>
-            <p className="mt-1 text-sm leading-6 text-[#7B6B6B]">Set your location to discover restaurants within 7 km.</p>
+            <h3 className="text-base font-extrabold text-[#172033]">Find restaurants near you</h3>
+            <p className="mt-1 text-sm leading-6 text-[#737B8C]">Set your location to discover restaurants within 7 km.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onSetLocation}
-          className="rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
+          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
         >
           Set Location
         </button>
@@ -204,16 +207,16 @@ function LocationPrompt({ onSetLocation }: { onSetLocation: () => void }) {
 
 function NearbyRestaurantsEmpty({ onChangeLocation }: { onChangeLocation: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15]">
+    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F5] text-[#0E4B47]">
         <MapPin className="h-6 w-6" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 text-base font-extrabold text-[#1F1A1A]">No restaurants found within 7 km</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7B6B6B]">Try changing your delivery location.</p>
+      <h3 className="mt-4 text-base font-extrabold text-[#172033]">No restaurants found within 7 km</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#737B8C]">Try changing your delivery location.</p>
       <button
         type="button"
         onClick={onChangeLocation}
-        className="mt-5 rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
+        className="mt-5 rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
       >
         Change location
       </button>
@@ -223,21 +226,21 @@ function NearbyRestaurantsEmpty({ onChangeLocation }: { onChangeLocation: () => 
 
 function NearbyRestaurantsError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
+    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEF2F2] text-[#EF4444]">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#1F1A1A]">Could not load nearby restaurants</h3>
-            <p className="mt-1 text-sm leading-6 text-[#7B6B6B]">Please try again in a moment.</p>
+            <h3 className="text-base font-extrabold text-[#172033]">Could not load nearby restaurants</h3>
+            <p className="mt-1 text-sm leading-6 text-[#737B8C]">Please try again in a moment.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
+          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
         >
           Retry
         </button>
