@@ -1,6 +1,7 @@
 import type { OrderSSEEvent } from '@/types/order';
+import { buildOrderTrackingWebSocketUrl as buildOrderTrackingWebSocketUrlRaw } from '@/utils/websocketUrl.mjs';
 
-const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
+const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? 'https://restaurant-prod.mangaale.com';
 const MAX_RECONNECT_DELAY_MS = 30_000;
 
 export interface SSEHandlers {
@@ -10,12 +11,14 @@ export interface SSEHandlers {
   onConnected?: () => void;
 }
 
-function orderSocketUrl(orderId: number, token: string): string {
-  const url = new URL('/ws/orders/status', RESTAURANT_BASE || window.location.origin);
-  url.protocol = url.protocol === 'https:' ? 'wss:' : 'ws:';
-  url.searchParams.set('order_id', String(orderId));
-  url.searchParams.set('token', token);
-  return url.toString();
+export function buildOrderTrackingWebSocketUrl(
+  orderId: number,
+  token: string,
+  baseURL: string = RESTAURANT_BASE,
+  origin?: string,
+): string {
+  const resolvedOrigin = origin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
+  return buildOrderTrackingWebSocketUrlRaw(orderId, token, baseURL, resolvedOrigin);
 }
 
 /**
@@ -35,7 +38,7 @@ export function subscribeToOrder(
   const connect = () => {
     if (stopped) return;
     socket?.close();
-    socket = new WebSocket(orderSocketUrl(orderId, token));
+    socket = new WebSocket(buildOrderTrackingWebSocketUrl(orderId, token));
 
     socket.onopen = () => {
       reconnectAttempts = 0;

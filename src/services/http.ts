@@ -1,4 +1,4 @@
-const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
+const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? 'https://restaurant-prod.mangaale.com';
 const USER_BASE = process.env.NEXT_PUBLIC_USER_SERVICE_BASE_URL ?? '';
 
 const TIMEOUT_MS = 15_000;

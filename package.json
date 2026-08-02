@@ -7,7 +7,7 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "test": "node --test src/utils/realtimePolicy.test.mjs"
+    "test": "node --test src/utils/realtimePolicy.test.mjs src/utils/websocketUrl.test.mjs"
   },
   "dependencies": {
     "@tanstack/react-query": "^5.100.9",
