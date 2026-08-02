@@ -218,6 +218,25 @@ select:focus-visible {
   padding-bottom: 5.5rem;
 }
 
+@keyframes restaurantHeaderSurface {
+  from {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  to {
+    background-color: rgba(247, 248, 250, 0.97);
+    box-shadow: 0 1px 0 rgba(23, 32, 51, 0.06);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .restaurant-detail-header {
+    animation: restaurantHeaderSurface linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 7rem;
+  }
+}
+
 @media (min-width: 640px) {
   .pb-cart-safe {
     padding-bottom: 6rem;

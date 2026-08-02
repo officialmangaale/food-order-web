@@ -17,15 +17,15 @@ export function RestaurantFilterChips({
   hasRatingData,
 }: RestaurantFilterChipsProps) {
   return (
-    <div className="flex gap-2 overflow-x-auto pb-1 sm:flex-wrap sm:overflow-visible">
+    <div className="flex shrink-0 gap-2 [&>button:first-child]:w-[58px] [&>button:first-child]:px-3 sm:flex-wrap sm:[&>button:first-child]:w-auto sm:[&>button:first-child]:px-4">
       <FilterChip
         active={filters.vegOnly}
         onClick={() => onChange({ ...filters, vegOnly: !filters.vegOnly })}
       >
-        <span className="flex h-4 w-4 items-center justify-center rounded-[4px] border border-[#1B9A51] text-[#1B9A51]">
-          <Leaf className="h-3 w-3" aria-hidden="true" />
+        <span className="flex h-5 w-5 items-center justify-center text-[#14B8A6]">
+          <Leaf className="h-4 w-4 fill-current" aria-hidden="true" />
         </span>
-        Veg Only
+        <span className="sr-only sm:not-sr-only">Veg Only</span>
       </FilterChip>
       <FilterChip
         active={filters.bestsellers}
@@ -60,11 +60,11 @@ function FilterChip({ active, disabled, onClick, children }: FilterChipProps) {
       disabled={disabled}
       onClick={onClick}
       aria-pressed={active}
-      className={`flex h-10 shrink-0 items-center gap-1.5 rounded-full border px-4 text-sm font-medium transition focus:outline-none focus:ring-4 focus:ring-[#B31317]/10 ${
+      className={`flex h-10 shrink-0 items-center justify-center gap-1.5 rounded-xl border text-sm font-semibold transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#14B8A6]/15 sm:h-12 ${
         active
-          ? 'border-[#B31317] bg-[#B31317] text-white shadow-sm'
-          : 'border-[#E6B8B8] bg-white text-[#2B2020] hover:border-[#B31317] hover:bg-[#FFF7F7]'
-      } disabled:cursor-not-allowed disabled:opacity-45`}
+          ? 'border-[#14B8A6] bg-[#E8F8F5] text-[#0F766E]'
+          : 'border-[#D8DDE3] bg-white text-[#172033] hover:border-[#14B8A6] hover:bg-[#F0FDFA]'
+      } px-4 disabled:cursor-not-allowed disabled:opacity-45`}
     >
       {children}
     </button>

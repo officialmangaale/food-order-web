@@ -17,7 +17,7 @@ export function RestaurantCategorySidebar({
 
   return (
     <>
-      <aside className="hidden lg:block">
+      <aside className="hidden lg:row-span-2 lg:row-start-1 lg:block">
         <nav
           className="sticky top-28 border-r border-[#F0DDDD] pr-5"
           aria-label="Menu categories"
@@ -26,9 +26,9 @@ export function RestaurantCategorySidebar({
         </nav>
       </aside>
 
-      <div className="lg:hidden">
-        <div className="-mx-4 overflow-x-auto px-4 pb-3 hide-scrollbar sm:-mx-6 sm:px-6">
-          <div className="flex min-w-max gap-2">
+      <div className="order-2 sticky top-[72px] z-30 border-b border-[#D8DDE3] bg-white lg:hidden">
+        <div className="overflow-x-auto px-3 hide-scrollbar sm:px-6">
+          <div className="flex min-w-max">
             {categories.map((category) => {
               const active = category.key === activeKey;
               return (
@@ -36,10 +36,10 @@ export function RestaurantCategorySidebar({
                   key={category.key}
                   type="button"
                   onClick={() => onSelect(category.key)}
-                  className={`h-10 shrink-0 whitespace-nowrap rounded-full border px-4 text-sm font-semibold transition ${
+                  className={`relative h-10 shrink-0 whitespace-nowrap border-b-2 px-5 text-[13px] font-bold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-[#14B8A6] ${
                     active
-                      ? 'border-[#B31317] bg-[#B31317] text-white'
-                      : 'border-[#E8C7C7] bg-white text-[#4A3030]'
+                      ? 'border-[#14B8A6] text-[#14B8A6]'
+                      : 'border-transparent text-[#172033] hover:text-[#0F766E]'
                   }`}
                 >
                   {category.name}
