@@ -170,11 +170,11 @@ export function RestaurantMenuItemCard({
 
         <div className="mt-1.5">
           {!hasCustomOptions && quantity > 0 ? (
-            <div className="flex h-8 items-center rounded-xl bg-[#14B8A6] text-white shadow-[0_6px_14px_rgba(20,184,166,0.2)]">
+            <div className="flex h-10 items-center rounded-xl bg-[#14B8A6] text-white shadow-[0_6px_14px_rgba(20,184,166,0.2)]">
               <button
                 type="button"
                 onClick={() => updateQuantity(item.id, quantity - 1)}
-                className="flex h-8 w-8 items-center justify-center rounded-l-xl transition hover:bg-white/10"
+                className="flex h-10 w-10 items-center justify-center rounded-l-xl transition hover:bg-white/10"
                 aria-label={`Decrease ${item.name}`}
               >
                 <Minus className="h-4 w-4" aria-hidden="true" />
@@ -183,7 +183,7 @@ export function RestaurantMenuItemCard({
               <button
                 type="button"
                 onClick={handleAdd}
-                className="flex h-8 w-8 items-center justify-center rounded-r-xl transition hover:bg-white/10"
+                className="flex h-10 w-10 items-center justify-center rounded-r-xl transition hover:bg-white/10"
                 aria-label={`Increase ${item.name}`}
               >
                 <Plus className="h-4 w-4" aria-hidden="true" />
@@ -194,7 +194,7 @@ export function RestaurantMenuItemCard({
               type="button"
               disabled={addDisabled}
               onClick={handleAdd}
-              className="h-8 min-w-[58px] rounded-xl border border-[#14B8A6] bg-white px-3 text-[14px] font-extrabold text-[#14B8A6] transition hover:bg-[#14B8A6] hover:text-white disabled:cursor-not-allowed disabled:border-[#D8DDE3] disabled:bg-white disabled:text-[#AEB7C4] sm:h-9 sm:min-w-24"
+              className="h-10 min-w-[68px] rounded-xl border border-[#14B8A6] bg-white px-3 text-[14px] font-extrabold text-[#14B8A6] transition hover:bg-[#14B8A6] hover:text-white disabled:cursor-not-allowed disabled:border-[#D8DDE3] disabled:bg-white disabled:text-[#AEB7C4] sm:min-w-24"
             >
               {unavailable ? 'Unavailable' : 'ADD'}
             </button>

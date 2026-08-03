@@ -12,7 +12,7 @@ interface CardProps {
 export function Card({ children, className = '', padding = true, onClick }: CardProps) {
   return (
     <div
-      className={`bg-white rounded-2xl shadow-card border border-gray-100 ${padding ? 'p-4' : ''} ${onClick ? 'cursor-pointer hover:shadow-md transition-shadow' : ''} ${className}`}
+      className={`rounded-card border border-line bg-surface shadow-card ${padding ? 'p-4 sm:p-5' : ''} ${onClick ? 'card-hover cursor-pointer hover:border-line-interactive' : ''} ${className}`}
       onClick={onClick}
     >
       {children}

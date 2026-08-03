@@ -117,8 +117,8 @@ export function AppHeader() {
           isRestaurantDetailHeader
             ? 'restaurant-detail-header pointer-events-none fixed inset-x-0 h-[72px] border-transparent bg-transparent lg:sticky'
             : isHomePage
-            ? 'sticky border-b border-transparent bg-[#F7F8FA]/95 backdrop-blur-xl'
-            : 'sticky border-b border-[#E3E7EA] bg-white/95 backdrop-blur-xl'
+            ? 'sticky border-b border-transparent bg-canvas/95 backdrop-blur-xl'
+            : 'sticky border-b border-line bg-surface/95 backdrop-blur-xl'
         }`}
       >
         {isRestaurantDetailHeader ? (
@@ -127,7 +127,7 @@ export function AppHeader() {
               <Link
                 href={logoHref}
                 aria-label={isLockedRoute || lockedMode ? 'Back to restaurant home' : 'Mangaale home'}
-                className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/70 bg-white/95 text-[#172033] shadow-sm backdrop-blur-sm lg:hidden"
+                className="pointer-events-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-white/70 bg-surface/95 text-ink shadow-card backdrop-blur-sm transition hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 lg:hidden"
               >
                 <ArrowLeft className="h-6 w-6" aria-hidden="true" />
               </Link>
@@ -243,7 +243,7 @@ function HeaderLogo({ href, isLockedRoute }: HeaderLogoProps) {
       aria-label={isLockedRoute ? 'Back to restaurant home' : 'Mangaale home'}
       className="flex shrink-0 items-center"
     >
-      <span className="text-[28px] font-extrabold leading-none tracking-[-0.04em] text-[#0E4B47] sm:text-[32px] lg:text-[34px]">
+      <span className="text-[28px] font-extrabold leading-none tracking-[-0.04em] text-brand-900 sm:text-[32px] lg:text-[34px]">
         Mangaale
       </span>
     </Link>
@@ -261,19 +261,19 @@ function HeaderLocationPill({ label, isPlaceholder, onClick }: HeaderLocationPil
     <button
       type="button"
       onClick={onClick}
-      className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-[#DDE3E7] bg-white px-4 text-left shadow-sm transition hover:border-[#B9DCD7] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16B8A6]/10 md:h-12 md:w-[230px] md:flex-none lg:w-[220px] xl:w-[240px]"
+      className="group flex h-11 w-full min-w-0 items-center gap-2 rounded-full border border-line bg-surface px-4 text-left shadow-card transition hover:border-line-interactive focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/10 md:h-12 md:w-[230px] md:flex-none lg:w-[220px] xl:w-[240px]"
       aria-label="Choose delivery location"
     >
-      <MapPin className="h-4 w-4 shrink-0 text-[#0E4B47]" aria-hidden="true" />
+      <MapPin className="h-4 w-4 shrink-0 text-brand-900" aria-hidden="true" />
       <span
         className={`min-w-0 flex-1 truncate text-sm font-medium ${
-          isPlaceholder ? 'text-[#737B8C]' : 'text-[#172033]'
+          isPlaceholder ? 'text-ink-muted' : 'text-ink'
         }`}
       >
         {label}
       </span>
       <ChevronDown
-        className="h-4 w-4 shrink-0 text-[#737B8C] transition group-hover:text-[#0E4B47]"
+        className="h-4 w-4 shrink-0 text-ink-muted transition group-hover:text-brand-900"
         aria-hidden="true"
       />
     </button>
@@ -285,16 +285,16 @@ function HomeLocationButton({ label, isPlaceholder, onClick }: HeaderLocationPil
     <button
       type="button"
       onClick={onClick}
-      className="group min-w-0 py-1 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16B8A6]/10"
+      className="group min-w-0 py-1 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/10"
       aria-label="Choose delivery location"
     >
-      <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-[#98A1B2]">
+      <span className="block text-[11px] font-bold uppercase tracking-[0.12em] text-ink-subtle">
         Delivering to
       </span>
-      <span className="mt-1 flex min-w-0 items-center gap-2 text-sm font-extrabold text-[#172033]">
-        <MapPin className="h-4 w-4 shrink-0 fill-[#0E4B47] text-[#0E4B47]" aria-hidden="true" />
-        <span className={`truncate ${isPlaceholder ? 'text-[#737B8C]' : ''}`}>{label}</span>
-        <ChevronDown className="h-4 w-4 shrink-0 transition group-hover:text-[#16B8A6]" aria-hidden="true" />
+      <span className="mt-1 flex min-w-0 items-center gap-2 text-sm font-extrabold text-ink">
+        <MapPin className="h-4 w-4 shrink-0 fill-brand-900 text-brand-900" aria-hidden="true" />
+        <span className={`truncate ${isPlaceholder ? 'text-ink-muted' : ''}`}>{label}</span>
+        <ChevronDown className="h-4 w-4 shrink-0 transition group-hover:text-brand-500" aria-hidden="true" />
       </span>
     </button>
   );
@@ -311,12 +311,12 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
     <div className={`shrink-0 items-center gap-2 ${className}`}>
       <Link
         href="/cart"
-        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#E3E7EA] bg-white text-[#172033] shadow-sm transition hover:border-[#B9DCD7] hover:text-[#0E4B47] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16B8A6]/10 lg:h-11 lg:w-11"
+        className="relative flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-card transition hover:border-line-interactive hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/10 lg:h-11 lg:w-11"
         aria-label="Cart"
       >
         <ShoppingCart className="h-[21px] w-[21px]" aria-hidden="true" />
         {totalItems > 0 && (
-          <span className="absolute right-1 top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-[#EF4444] px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
+          <span className="absolute right-1 top-1 flex min-h-4 min-w-4 items-center justify-center rounded-full bg-danger px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
             {totalItems > 9 ? '9+' : totalItems}
           </span>
         )}
@@ -325,7 +325,7 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
       <button
         type="button"
         onClick={onAccountClick}
-        className="flex h-10 w-10 items-center justify-center rounded-full border border-[#E3E7EA] bg-white text-[#172033] shadow-sm transition hover:border-[#B9DCD7] hover:text-[#0E4B47] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16B8A6]/10 lg:h-11 lg:w-11"
+        className="flex h-10 w-10 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-card transition hover:border-line-interactive hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/10 lg:h-11 lg:w-11"
         aria-label="Account"
         title="Account"
       >

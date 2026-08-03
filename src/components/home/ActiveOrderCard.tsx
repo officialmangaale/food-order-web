@@ -47,26 +47,29 @@ export function ActiveOrderCard() {
       animate={{ opacity: 1, y: 0 }}
       className="mb-1"
     >
-      <Link href={`/orders/${activeOrder.order_id}/track`}>
+      <Link
+        href={`/orders/${activeOrder.order_id}/track`}
+        className="block rounded-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
+      >
         <div className={`rounded-2xl p-4 flex items-center gap-3 shadow-card border ${
           isTerminal
-            ? 'bg-white border-[#E3E7EA]'
-            : 'bg-[#E8F8F5] border-[#C8EEE8]'
+            ? 'border-line bg-surface'
+            : 'border-brand-200 bg-brand-100'
         }`}>
           <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            isTerminal ? 'bg-[#EEF1F3]' : 'bg-white/80'
+            isTerminal ? 'bg-surface-muted' : 'bg-white/80'
           }`}>
-            <Truck className={`w-5 h-5 ${isTerminal ? 'text-[#737B8C]' : 'text-[#0E4B47]'}`} />
+            <Truck className={`w-5 h-5 ${isTerminal ? 'text-ink-muted' : 'text-brand-900'}`} />
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-[#172033] truncate">
+            <p className="truncate text-sm font-semibold text-ink">
               {activeOrder.restaurant_name}
             </p>
-            <p className={`text-xs font-medium ${isTerminal ? 'text-[#737B8C]' : 'text-[#109F90]'}`}>
+            <p className={`text-xs font-medium ${isTerminal ? 'text-ink-muted' : 'text-brand-600'}`}>
               {label}
             </p>
           </div>
-          <div className="flex items-center gap-1 text-[#9B8A8A] flex-shrink-0">
+          <div className="flex flex-shrink-0 items-center gap-1 text-ink-subtle">
             <span className="text-xs font-medium">Track</span>
             <ChevronRight className="w-4 h-4" />
           </div>
@@ -75,7 +78,7 @@ export function ActiveOrderCard() {
       {isTerminal && (
         <button
           onClick={(e) => { e.stopPropagation(); clearActiveOrder(); }}
-          className="text-xs text-[#9B8A8A] hover:text-[#6B4B4B] mt-1 ml-2"
+          className="ml-2 mt-1 rounded px-1 text-xs text-ink-subtle transition hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
         >
           Dismiss
         </button>

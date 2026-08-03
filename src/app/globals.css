@@ -13,6 +13,22 @@
   --color-brand-800: #0e5f59;
   --color-brand-900: #0e4b47;
 
+  --color-canvas: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-muted: #edf1f4;
+  --color-ink: #172033;
+  --color-ink-muted: #737b8c;
+  --color-ink-subtle: #98a1b2;
+  --color-line: #e3e7ea;
+  --color-line-strong: #cfd7dc;
+  --color-line-interactive: #b9dcd7;
+
+  --color-success: #22c55e;
+  --color-warning: #f59e0b;
+  --color-danger: #ef4444;
+  --color-bestseller: #fff5de;
+  --color-bestseller-ink: #946200;
+
   --color-cherry-50: #fef2f2;
   --color-cherry-100: #fde6e7;
   --color-cherry-200: #fbc8ca;
@@ -25,10 +41,34 @@
   --color-cherry-900: #7c1118;
   --color-cherry-950: #430509;
 
-  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
-  --shadow-elevated: 0 4px 12px rgba(0,0,0,0.08), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-card: 0 2px 5px rgba(23, 32, 51, 0.035), 0 1px 2px rgba(23, 32, 51, 0.04);
+  --shadow-elevated: 0 12px 34px rgba(23, 32, 51, 0.075), 0 3px 8px rgba(23, 32, 51, 0.04);
+  --shadow-floating: 0 18px 55px rgba(23, 32, 51, 0.16);
+  --shadow-brand: 0 12px 30px rgba(22, 184, 166, 0.24);
+
+  --radius-control: 0.875rem;
+  --radius-card: 1.375rem;
+  --radius-sheet: 1.875rem;
+
+  --text-display: 2.5rem;
+  --text-display--line-height: 1.08;
+  --text-display--letter-spacing: -0.04em;
+  --text-title: 2rem;
+  --text-title--line-height: 1.15;
+  --text-title--letter-spacing: -0.035em;
+  --text-section: 1.5rem;
+  --text-section--line-height: 1.2;
+  --text-section--letter-spacing: -0.025em;
 
   --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+:root {
+  color-scheme: light;
+  --page-gutter: 1rem;
+  --page-section-gap: 2rem;
+  --page-max-width: 80rem;
+  --content-max-width: 64rem;
 }
 
 html {
@@ -39,8 +79,10 @@ html {
 
 body {
   font-family: var(--font-sans);
-  background-color: #F7F8FA;
-  color: #172033;
+  min-height: 100dvh;
+  background-color: var(--color-canvas);
+  color: var(--color-ink);
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
@@ -50,12 +92,45 @@ body {
   min-width: 0;
 }
 
-button,
-a,
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-brand-900);
+}
+
+@layer base {
+  h1,
+  h2,
+  h3 {
+    font-weight: 800;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  button,
+  a,
+  input,
+  select,
+  textarea {
+    font-family: inherit;
+    touch-action: manipulation;
+  }
+}
+
+button:disabled,
+input:disabled,
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
 input,
 select,
 textarea {
-  touch-action: manipulation;
+  accent-color: var(--color-brand-500);
+  caret-color: var(--color-brand-600);
 }
 
 /* ——— Scrollbar ——— */
@@ -165,24 +240,38 @@ a:active:not(:disabled) {
 
 /* ——— Responsive page container ——— */
 .page-container {
-  max-width: 80rem; /* 1280px */
+  width: 100%;
+  max-width: var(--page-max-width);
   margin-left: auto;
   margin-right: auto;
-  padding-left: 1rem;
-  padding-right: 1rem;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+}
+
+.content-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-left: auto;
+  margin-right: auto;
+  padding-left: var(--page-gutter);
+  padding-right: var(--page-gutter);
+}
+
+.page-section {
+  margin-top: var(--page-section-gap);
 }
 
 @media (min-width: 640px) {
-  .page-container {
-    padding-left: 1.5rem;
-    padding-right: 1.5rem;
+  :root {
+    --page-gutter: 1.5rem;
+    --page-section-gap: 2.5rem;
   }
 }
 
 @media (min-width: 1024px) {
-  .page-container {
-    padding-left: 2rem;
-    padding-right: 2rem;
+  :root {
+    --page-gutter: 2rem;
+    --page-section-gap: 3rem;
   }
 }
 

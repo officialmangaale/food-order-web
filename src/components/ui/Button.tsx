@@ -20,17 +20,17 @@ interface ButtonProps {
 }
 
 const variantClasses: Record<Variant, string> = {
-  primary: 'bg-brand-500 text-white hover:bg-brand-600 active:bg-brand-700 shadow-sm',
-  secondary: 'bg-gray-100 text-gray-900 hover:bg-gray-200 active:bg-gray-300',
-  outline: 'border border-gray-300 text-gray-700 hover:bg-gray-50 active:bg-gray-100',
-  ghost: 'text-gray-600 hover:bg-gray-100 active:bg-gray-200',
-  danger: 'bg-red-600 text-white hover:bg-red-700 active:bg-red-800',
+  primary: 'border border-transparent bg-brand-500 text-white shadow-brand hover:bg-brand-600 active:bg-brand-700',
+  secondary: 'border border-brand-100 bg-brand-50 text-brand-900 hover:border-brand-200 hover:bg-brand-100 active:bg-brand-200',
+  outline: 'border border-line-strong bg-white text-ink hover:border-brand-300 hover:bg-brand-50 hover:text-brand-900 active:bg-brand-100',
+  ghost: 'border border-transparent text-ink-muted hover:bg-brand-50 hover:text-brand-900 active:bg-brand-100',
+  danger: 'border border-transparent bg-danger text-white shadow-sm hover:bg-red-600 active:bg-red-700',
 };
 
 const sizeClasses: Record<Size, string> = {
-  sm: 'px-3 py-1.5 text-sm rounded-lg',
-  md: 'px-5 py-2.5 text-base rounded-xl',
-  lg: 'px-6 py-3.5 text-lg rounded-xl',
+  sm: 'min-h-10 rounded-full px-4 py-1.5 text-sm',
+  md: 'min-h-11 rounded-full px-5 py-2.5 text-[15px]',
+  lg: 'min-h-[52px] rounded-full px-6 py-3 text-base',
 };
 
 export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
@@ -41,9 +41,10 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
         type={type}
         whileTap={{ scale: 0.97 }}
         className={`
-          inline-flex items-center justify-center gap-2 font-semibold
-          transition-colors duration-150 cursor-pointer
-          disabled:opacity-50 disabled:cursor-not-allowed disabled:pointer-events-none
+          inline-flex cursor-pointer select-none items-center justify-center gap-2 font-bold
+          transition-[color,background-color,border-color,box-shadow,transform] duration-150
+          focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20
+          disabled:pointer-events-none disabled:cursor-not-allowed disabled:opacity-45 disabled:shadow-none
           ${variantClasses[variant]}
           ${sizeClasses[size]}
           ${fullWidth ? 'w-full' : ''}

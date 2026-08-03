@@ -30,8 +30,9 @@ export function BottomCartBar() {
   if (!hasMounted || hidden) return null;
 
   return (
-    <AnimatePresence>
-      {items.length > 0 && (
+    <>
+      <AnimatePresence>
+        {items.length > 0 && (
         <motion.div
           initial={{ y: 100, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
@@ -42,7 +43,7 @@ export function BottomCartBar() {
           }`}
         >
           <Link href="/cart" className="mx-auto block w-full max-w-[520px]">
-            <div className="flex min-h-14 items-center justify-between gap-3 rounded-2xl bg-[#0E4B47] px-4 py-3 text-white shadow-[0_14px_38px_rgba(14,75,71,0.24)] transition hover:bg-[#0C7C72] sm:px-6">
+            <div className="flex min-h-14 items-center justify-between gap-3 rounded-card bg-brand-900 px-4 py-3 text-white shadow-brand transition hover:bg-brand-700 sm:px-6">
               <div className="min-w-0">
                 <p className="text-xs font-extrabold uppercase tracking-normal">
                   {totalItems} item{totalItems === 1 ? '' : 's'}
@@ -59,7 +60,9 @@ export function BottomCartBar() {
             </div>
           </Link>
         </motion.div>
-      )}
-    </AnimatePresence>
+        )}
+      </AnimatePresence>
+      {items.length > 0 && <div className="h-[72px] sm:h-[88px]" aria-hidden="true" />}
+    </>
   );
 }

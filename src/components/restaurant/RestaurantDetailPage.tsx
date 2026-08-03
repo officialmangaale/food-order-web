@@ -462,7 +462,7 @@ function RestaurantDetailSkeleton() {
 function RestaurantFooter({ locked, lockedHref }: { locked: boolean; lockedHref: string }) {
   return (
     <footer className="mt-8 border-t border-[#E9CFCF] bg-white">
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
         <Link
           href={locked ? lockedHref : '/'}
           className="text-3xl font-extrabold tracking-normal text-[#A80F15]"

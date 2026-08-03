@@ -84,7 +84,7 @@ export function HomeOfferSlider() {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <div className="relative h-[178px] overflow-hidden rounded-[24px] bg-[#103F3C] shadow-[0_18px_48px_rgba(14,75,71,0.16)] sm:h-[260px] lg:h-[340px]">
+      <div className="relative h-[178px] overflow-hidden rounded-[24px] bg-brand-900 shadow-elevated sm:h-[260px] lg:h-[340px]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={String(activeOffer.id)}
@@ -101,8 +101,8 @@ export function HomeOfferSlider() {
               alt={getOfferImageAlt(activeOffer)}
               priority={activeSlot === 0}
             />
-            <div className="absolute inset-0 bg-[#103F3C]/35" />
-            <div className="absolute inset-0 bg-gradient-to-r from-[#103F3C] from-0% via-[#103F3C]/95 via-48% to-[#103F3C]/12" />
+            <div className="absolute inset-0 bg-brand-900/35" />
+            <div className="absolute inset-0 bg-gradient-to-r from-brand-900 from-0% via-brand-900/95 via-48% to-brand-900/12" />
 
             <div className="relative z-10 flex h-full max-w-[64%] flex-col justify-center px-5 py-4 sm:max-w-[58%] sm:px-8 lg:px-10">
               <span className="hidden w-fit rounded-full bg-white/14 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white shadow-sm sm:inline-flex">
@@ -112,7 +112,7 @@ export function HomeOfferSlider() {
                 {activeOffer.title}
               </h2>
               {activeOffer.subtitle && (
-                <p className="mt-2 line-clamp-1 max-w-[430px] text-[11px] font-medium leading-4 text-white/80 sm:mt-3 sm:line-clamp-2 sm:text-base sm:leading-6 lg:text-lg">
+                <p className="mt-2 line-clamp-2 max-w-[430px] text-[11px] font-medium leading-4 text-white/80 sm:mt-3 sm:text-base sm:leading-6 lg:text-lg">
                   {activeOffer.subtitle}
                 </p>
               )}
@@ -145,7 +145,7 @@ export function HomeOfferSlider() {
                 aria-label={`Show offer ${index + 1}`}
                 aria-current={index === activeSlot ? 'true' : undefined}
                 onClick={() => setActiveIndex(index)}
-                className={`h-2.5 rounded-full transition-all ${
+                className={`h-2.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white focus-visible:ring-offset-2 focus-visible:ring-offset-brand-900 ${
                   index === activeSlot ? 'w-8 bg-white' : 'w-2.5 bg-white/50 hover:bg-white/75'
                 }`}
               />
@@ -174,7 +174,7 @@ function OfferCta({
 }) {
   const href = getOfferHref(offer, isLockedRoute, lockedHomeLink);
   const className =
-    'inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-[#0E4B47] shadow-sm transition hover:bg-[#E8F8F5] sm:min-h-12 sm:px-6 sm:text-base';
+    'inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-brand-900 shadow-sm transition hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/35 sm:min-h-12 sm:px-6 sm:text-base';
 
   if (/^https?:\/\//i.test(href)) {
     return (

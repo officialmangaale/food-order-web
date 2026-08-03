@@ -125,7 +125,7 @@ export function NearbyRestaurantsSection() {
     >
       <SectionHeading showViewAll={hasMoreRestaurants} viewAllHref={viewAllHref} />
 
-      <div className="-mx-4 flex gap-4 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
+      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
         {visibleRestaurants.map((restaurant) => (
           <div key={restaurant.id} className="w-[220px] shrink-0 sm:w-auto">
             <NearbyRestaurantCard restaurant={restaurant} />
@@ -146,15 +146,15 @@ function SectionHeading({
   return (
     <div className="relative mb-4">
       <div className="pr-16">
-        <h2 id="nearby-restaurants-heading" className="text-lg font-extrabold tracking-[-0.025em] text-[#172033] sm:text-3xl">
+        <h2 id="nearby-restaurants-heading" className="text-lg font-extrabold tracking-[-0.025em] text-ink sm:text-3xl">
           Popular near you
         </h2>
-        <p className="mt-1 whitespace-nowrap text-xs font-medium text-[#737B8C] sm:text-sm">Loved around your neighbourhood</p>
+        <p className="mt-1 whitespace-nowrap text-xs font-medium text-ink-muted sm:text-sm">Loved around your neighbourhood</p>
       </div>
       {showViewAll && (
         <Link
           href={viewAllHref}
-          className="absolute right-0 top-1 shrink-0 text-sm font-bold text-[#16B8A6] transition hover:text-[#109F90] hover:underline"
+          className="absolute right-0 top-1 shrink-0 rounded-full px-1 text-sm font-bold text-brand-500 transition hover:text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
         >
           View All
         </Link>
@@ -165,9 +165,9 @@ function SectionHeading({
 
 function NearbyRestaurantsSkeleton() {
   return (
-    <div className="-mx-4 flex gap-4 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-3 lg:gap-6">
+    <div className="-mx-4 flex gap-3 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-3 lg:gap-6">
       {[1, 2, 3].map((item) => (
-        <div key={item} className="w-[220px] shrink-0 overflow-hidden rounded-[22px] border border-[#E3E7EA] bg-white sm:w-auto">
+        <div key={item} className="w-[220px] shrink-0 overflow-hidden rounded-card border border-line bg-surface sm:w-auto">
           <Skeleton className="h-[168px] w-full rounded-none sm:h-[176px]" />
           <div className="space-y-3 p-4">
             <Skeleton className="h-5 w-4/5" />
@@ -182,21 +182,21 @@ function NearbyRestaurantsSkeleton() {
 
 function LocationPrompt({ onSetLocation }: { onSetLocation: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
+    <div className="rounded-card border border-line bg-surface px-5 py-6 shadow-card">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-[#E8F8F5] text-[#0E4B47]">
+          <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-brand-100 text-brand-900">
             <LocateFixed className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#172033]">Find restaurants near you</h3>
-            <p className="mt-1 text-sm leading-6 text-[#737B8C]">Set your location to discover restaurants within 7 km.</p>
+            <h3 className="text-base font-extrabold text-ink">Find restaurants near you</h3>
+            <p className="mt-1 text-sm leading-6 text-ink-muted">Set your location to discover restaurants within 7 km.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onSetLocation}
-          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
+          className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
         >
           Set Location
         </button>
@@ -207,16 +207,16 @@ function LocationPrompt({ onSetLocation }: { onSetLocation: () => void }) {
 
 function NearbyRestaurantsEmpty({ onChangeLocation }: { onChangeLocation: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F5] text-[#0E4B47]">
+    <div className="rounded-card border border-line bg-surface px-6 py-8 text-center shadow-card">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-900">
         <MapPin className="h-6 w-6" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 text-base font-extrabold text-[#172033]">No restaurants found within 7 km</h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#737B8C]">Try changing your delivery location.</p>
+      <h3 className="mt-4 text-base font-extrabold text-ink">No restaurants found within 7 km</h3>
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-muted">Try changing your delivery location.</p>
       <button
         type="button"
         onClick={onChangeLocation}
-        className="mt-5 rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
+        className="mt-5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
       >
         Change location
       </button>
@@ -226,21 +226,21 @@ function NearbyRestaurantsEmpty({ onChangeLocation }: { onChangeLocation: () => 
 
 function NearbyRestaurantsError({ onRetry }: { onRetry: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
+    <div className="rounded-card border border-line bg-surface px-5 py-6 shadow-card">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEF2F2] text-[#EF4444]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cherry-50 text-danger">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#172033]">Could not load nearby restaurants</h3>
-            <p className="mt-1 text-sm leading-6 text-[#737B8C]">Please try again in a moment.</p>
+            <h3 className="text-base font-extrabold text-ink">Could not load nearby restaurants</h3>
+            <p className="mt-1 text-sm leading-6 text-ink-muted">Please try again in a moment.</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
+          className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
         >
           Retry
         </button>

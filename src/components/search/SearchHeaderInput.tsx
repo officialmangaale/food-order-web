@@ -28,7 +28,7 @@ export function SearchHeaderInput({
         Search Mangaale
       </label>
       <Search
-        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-[#172033]"
+        className="pointer-events-none absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-ink"
         aria-hidden="true"
       />
       <input
@@ -37,13 +37,13 @@ export function SearchHeaderInput({
         value={value}
         onChange={(event) => onChange(event.target.value)}
         placeholder={placeholder}
-        className="h-11 w-full rounded-2xl border border-[#DDE3E7] bg-white pl-12 pr-11 text-sm font-medium text-[#172033] shadow-[0_8px_28px_rgba(23,32,51,0.035)] outline-none transition placeholder:font-normal placeholder:text-[#98A1B2] hover:border-[#B9DCD7] focus:border-[#16B8A6] focus:bg-white focus:ring-4 focus:ring-[#16B8A6]/10 md:h-12 md:text-[15px] lg:rounded-full"
+        className="h-11 w-full rounded-control border border-line bg-surface pl-12 pr-11 text-sm font-medium text-ink shadow-card outline-none transition placeholder:font-normal placeholder:text-ink-subtle hover:border-line-interactive focus:border-brand-500 focus:bg-surface focus:ring-4 focus:ring-brand-500/10 md:h-12 md:text-[15px] lg:rounded-full"
       />
       {value && onClear && (
         <button
           type="button"
           onClick={onClear}
-          className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-[#737B8C] transition hover:bg-[#E8F8F5] hover:text-[#0E4B47]"
+          className="absolute right-3 top-1/2 flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-full text-ink-muted transition hover:bg-brand-50 hover:text-brand-900"
           aria-label="Clear search"
         >
           <X className="h-4 w-4" aria-hidden="true" />

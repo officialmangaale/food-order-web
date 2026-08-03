@@ -20,10 +20,10 @@ export function NearbyRestaurantCard({ restaurant }: NearbyRestaurantCardProps) 
   return (
     <Link
       href={`/restaurants/${restaurant.id}`}
-      className="group block h-full overflow-hidden rounded-[22px] border border-[#E3E7EA] bg-white shadow-[0_12px_34px_rgba(23,32,51,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(14,75,71,0.10)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-[#16B8A6]/10"
+      className="group block h-full overflow-hidden rounded-card border border-line bg-surface shadow-card transition hover:-translate-y-0.5 hover:shadow-elevated focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
     >
       <article className="flex h-full flex-col overflow-hidden">
-        <div className="relative h-28 overflow-hidden bg-[#F3FBF9] sm:h-[176px]">
+        <div className="relative h-28 overflow-hidden bg-brand-50 sm:h-[176px]">
           {canShowImage ? (
             <img
               src={restaurant.imageUrl}
@@ -42,28 +42,28 @@ export function NearbyRestaurantCard({ restaurant }: NearbyRestaurantCardProps) 
           )}
 
           {restaurant.offerBadge && (
-            <span className="absolute left-3 top-3 rounded-full bg-[#0E4B47] px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-white shadow-sm">
+            <span className="absolute left-3 top-3 rounded-full bg-brand-900 px-3 py-1.5 text-[11px] font-extrabold uppercase tracking-[0.06em] text-white shadow-sm">
               {restaurant.offerBadge}
             </span>
           )}
 
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-[#172033] shadow-sm sm:bottom-3 sm:right-3 sm:gap-1.5 sm:px-2.5 sm:text-xs">
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold text-ink shadow-sm sm:bottom-3 sm:right-3 sm:gap-1.5 sm:px-2.5 sm:text-xs">
             {restaurant.rating != null ? (
               <Star className="h-3.5 w-3.5 fill-[#FFC247] text-[#FFC247]" aria-hidden="true" />
             ) : (
-              <Store className="h-3.5 w-3.5 text-[#0E4B47]" aria-hidden="true" />
+              <Store className="h-3.5 w-3.5 text-brand-900" aria-hidden="true" />
             )}
             {overlayMeta}
           </span>
         </div>
 
         <div className="flex flex-1 flex-col p-3 sm:p-4">
-          <h3 className="line-clamp-1 text-[15px] font-extrabold leading-snug text-[#172033] sm:text-lg">
+          <h3 className="line-clamp-1 text-[15px] font-extrabold leading-snug text-ink sm:text-lg">
             {restaurant.name}
           </h3>
-          <p className="mt-1 line-clamp-1 text-xs text-[#737B8C] sm:text-sm">{subtitle}</p>
+          <p className="mt-1 line-clamp-1 text-xs text-ink-muted sm:text-sm">{subtitle}</p>
 
-          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-[#737B8C] sm:mt-3 sm:gap-x-3 sm:text-xs">
+          <div className="mt-2 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-semibold text-ink-muted sm:mt-3 sm:gap-x-3 sm:text-xs">
             {restaurant.distance && (
               <span className="inline-flex items-center gap-1">
                 <MapPin className="h-3.5 w-3.5" aria-hidden="true" />

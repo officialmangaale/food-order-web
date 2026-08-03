@@ -169,7 +169,7 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
 function OrderTrackingFooter() {
   return (
     <footer className="mt-10 border-t border-[#E9CFCF] bg-[#FFF0ED]">
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
+      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
         <p className="text-2xl font-extrabold tracking-normal text-[#1F1717]">Mangaale</p>
         <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#5F4444]">
           <Link href="/restaurants">Browse Menus</Link>

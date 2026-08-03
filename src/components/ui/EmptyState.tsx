@@ -20,12 +20,12 @@ const icons = {
 export function EmptyState({ icon = 'search', title, description, actionLabel, onAction }: EmptyStateProps) {
   const Icon = icons[icon];
   return (
-    <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4">
-        <Icon className="w-7 h-7 text-gray-400" />
+    <div className="flex flex-col items-center justify-center px-6 py-16 text-center">
+      <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-brand-50">
+        <Icon className="h-7 w-7 text-brand-800" aria-hidden="true" />
       </div>
-      <h3 className="text-lg font-semibold text-gray-900 mb-1">{title}</h3>
-      {description && <p className="text-sm text-gray-500 max-w-xs">{description}</p>}
+      <h3 className="mb-1 text-lg font-extrabold text-ink">{title}</h3>
+      {description && <p className="max-w-xs text-sm leading-6 text-ink-muted">{description}</p>}
       {actionLabel && onAction && (
         <Button variant="outline" size="sm" className="mt-4" onClick={onAction}>
           {actionLabel}

@@ -28,9 +28,9 @@ function ExploreCategoriesFallback() {
   return (
     <section className="order-1 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Loading categories">
       <Skeleton className="mb-4 hidden h-8 w-56 sm:block" />
-      <div className="flex gap-3 overflow-hidden pb-2">
+      <div className="flex gap-2 overflow-hidden pb-2 sm:gap-3">
         {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Skeleton key={item} className="h-[82px] w-[66px] shrink-0 rounded-[18px]" />
+          <Skeleton key={item} className="h-[76px] w-[60px] shrink-0 rounded-[18px] sm:h-[98px] sm:w-[82px] sm:rounded-[22px]" />
         ))}
       </div>
     </section>

@@ -22,8 +22,8 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
   );
 
   return (
-    <article className="group flex h-full flex-col overflow-hidden rounded-[22px] border border-[#E3E7EA] bg-white shadow-[0_12px_34px_rgba(23,32,51,0.055)] transition hover:-translate-y-0.5 hover:shadow-[0_18px_42px_rgba(14,75,71,0.10)]">
-      <div className="relative h-24 overflow-hidden bg-[#F3FBF9] sm:h-[172px] lg:h-[180px]">
+    <article className="group flex h-full flex-col overflow-hidden rounded-card border border-line bg-surface shadow-card transition hover:-translate-y-0.5 hover:shadow-elevated">
+      <div className="relative h-[92px] overflow-hidden bg-brand-50 sm:h-[172px] lg:h-[180px]">
         {canShowImage ? (
           <img
             src={item.imageUrl}
@@ -41,7 +41,7 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
         {item.isVegetarian != null && (
           <span
             className={`absolute left-2 top-2 rounded-full bg-white/95 px-2 py-1 text-[10px] font-extrabold shadow-sm sm:left-3 sm:top-3 sm:px-2.5 sm:text-xs ${
-              item.isVegetarian ? 'text-[#22C55E]' : 'text-[#EF4444]'
+              item.isVegetarian ? 'text-success' : 'text-danger'
             }`}
           >
             {item.isVegetarian ? 'Veg' : 'Non-veg'}
@@ -57,11 +57,11 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
 
       <div className="flex flex-1 flex-col p-3 sm:p-4">
         <div className="flex items-start justify-between gap-2 sm:gap-4">
-          <h3 className="line-clamp-2 min-h-9 text-sm font-extrabold leading-snug text-[#172033] sm:min-h-10 sm:text-base">
+          <h3 className="line-clamp-2 min-h-9 text-sm font-extrabold leading-snug text-ink sm:min-h-10 sm:text-base">
             {item.name}
           </h3>
           {canCustomize && (
-            <span className="hidden shrink-0 rounded-full bg-[#E8F8F5] px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-[#0E4B47] sm:inline-flex">
+            <span className="hidden shrink-0 rounded-full bg-brand-100 px-2 py-1 text-[10px] font-extrabold uppercase tracking-[0.08em] text-brand-900 sm:inline-flex">
               Custom
             </span>
           )}
@@ -69,18 +69,18 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
 
         <Link
           href={`/restaurants/${item.restaurantId}`}
-          className="mt-2 hidden truncate text-sm font-bold text-[#737B8C] transition hover:text-[#0E4B47] sm:block"
+          className="mt-2 hidden truncate text-sm font-bold text-ink-muted transition hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 sm:block"
         >
           {item.restaurantName}
         </Link>
 
         {item.description && (
-          <p className="mt-1.5 line-clamp-1 min-h-5 text-xs leading-5 text-[#737B8C] sm:mt-2 sm:line-clamp-2 sm:min-h-10 sm:text-sm">
+          <p className="mt-1.5 line-clamp-1 min-h-5 text-xs leading-5 text-ink-muted sm:mt-2 sm:line-clamp-2 sm:min-h-10 sm:text-sm">
             {item.description}
           </p>
         )}
 
-        <div className="mt-3 hidden flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-[#737B8C] sm:flex">
+        <div className="mt-3 hidden flex-wrap items-center gap-x-3 gap-y-1 text-xs font-semibold text-ink-muted sm:flex">
           {item.deliveryTime && (
             <span className="inline-flex items-center gap-1">
               <Clock className="h-3.5 w-3.5" aria-hidden="true" />
@@ -96,7 +96,7 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
         </div>
 
         <div className="mt-auto flex items-end justify-between gap-2 pt-3 sm:gap-4 sm:pt-4">
-          <p className="text-sm font-extrabold text-[#172033] sm:text-xl">
+          <p className="text-sm font-extrabold text-ink sm:text-xl">
             {item.displayPrice || formatMoney(item.price)}
           </p>
           <button
@@ -104,7 +104,7 @@ export function CategoryItemCard({ item, onAdd }: CategoryItemCardProps) {
             aria-label={`Add ${item.name}`}
             onClick={() => onAdd(item)}
             disabled={disabled}
-            className="flex h-9 min-w-[64px] shrink-0 items-center justify-center rounded-full border border-[#16B8A6] bg-white px-3 text-xs font-extrabold text-[#16B8A6] transition hover:bg-[#16B8A6] hover:text-white focus:outline-none focus:ring-4 focus:ring-[#16B8A6]/10 disabled:cursor-not-allowed disabled:opacity-50 sm:h-10 sm:min-w-[86px] sm:px-5 sm:text-sm"
+            className="flex h-10 min-w-[68px] shrink-0 items-center justify-center rounded-full border border-brand-500 bg-surface px-3 text-xs font-extrabold text-brand-500 transition hover:bg-brand-500 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 disabled:cursor-not-allowed disabled:opacity-50 sm:min-w-[86px] sm:px-5 sm:text-sm"
           >
             ADD
           </button>

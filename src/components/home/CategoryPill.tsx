@@ -26,15 +26,15 @@ export function CategoryPill({ category, active, onClick }: CategoryPillProps) {
       type="button"
       aria-pressed={active}
       onClick={() => onClick(category)}
-      className={`group flex w-[66px] shrink-0 flex-col items-center gap-1.5 bg-transparent text-xs font-bold tracking-normal text-[#737B8C] transition focus:outline-none focus:ring-4 focus:ring-[#16B8A6]/10 sm:w-[82px] sm:gap-2 sm:text-sm ${
+      className={`group flex w-[60px] shrink-0 flex-col items-center gap-1.5 rounded-[18px] bg-transparent text-xs font-bold tracking-normal text-ink-muted transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 sm:w-[82px] sm:gap-2 sm:rounded-[22px] sm:text-sm ${
         active
-          ? 'text-[#0E4B47]'
-          : 'hover:text-[#172033]'
+          ? 'text-brand-900'
+          : 'hover:text-ink'
       }`}
     >
       <span
-        className={`flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-[18px] border shadow-[0_8px_22px_rgba(23,32,51,0.035)] transition sm:h-[72px] sm:w-[72px] sm:rounded-[22px] ${
-          active ? 'border-[#16B8A6] bg-[#E8F8F5] text-[#0E4B47]' : 'border-[#E3E7EA] bg-[#F3FBF9] text-[#172033] group-hover:border-[#B9DCD7]'
+        className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border shadow-card transition sm:h-[72px] sm:w-[72px] sm:rounded-[22px] ${
+          active ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-line bg-brand-50/55 text-ink group-hover:border-line-interactive group-hover:bg-brand-50'
         }`}
       >
         {canShowImage ? (
@@ -46,7 +46,7 @@ export function CategoryPill({ category, active, onClick }: CategoryPillProps) {
             onError={() => setImageFailed(true)}
           />
         ) : (
-          <CategoryIconGlyph category={category} className="h-7 w-7 sm:h-8 sm:w-8" />
+          <CategoryIconGlyph category={category} className="h-6 w-6 sm:h-8 sm:w-8" />
         )}
       </span>
       <span className="whitespace-nowrap">{category.name}</span>

@@ -230,7 +230,7 @@ export function ExploreCategories({
 
   const categorySectionClassName = embedded
     ? className
-    : `order-1 mx-auto mt-3 w-full max-w-7xl px-4 sm:mt-6 sm:px-6 lg:px-8 ${className}`;
+    : `order-1 mx-auto mt-4 w-full max-w-7xl px-4 sm:mt-7 sm:px-6 lg:px-8 ${className}`;
   const itemsSectionClassName = embedded
     ? ''
     : 'order-4 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
@@ -245,16 +245,16 @@ export function ExploreCategories({
         viewport={{ once: true, margin: "-50px" }}
         transition={{ duration: 0.5, ease: 'easeOut' }}
       >
-        <div className="space-y-4">
+        <div className="space-y-3 sm:space-y-4">
         <div className="flex items-center justify-between gap-4">
-          <h2 id="explore-categories-heading" className="sr-only text-2xl font-extrabold text-[#172033] sm:not-sr-only">
+          <h2 id="explore-categories-heading" className="sr-only text-section font-extrabold text-ink sm:not-sr-only">
             Explore Categories
           </h2>
           {!categoriesLoading && !categoriesError && hasExtraCategories && (
             <button
               type="button"
               onClick={() => setCategoriesExpanded((expanded) => !expanded)}
-              className="hidden shrink-0 text-sm font-bold text-[#16B8A6] transition hover:text-[#109F90] hover:underline sm:block"
+              className="hidden shrink-0 rounded-full px-2 py-1 text-sm font-bold text-brand-500 transition hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 sm:block"
               aria-expanded={categoriesExpanded}
             >
               {categoriesExpanded ? 'Show Less' : 'View All'}
@@ -273,7 +273,7 @@ export function ExploreCategories({
             onSetLocation={() => setLocationOpen(true)}
           />
         ) : (
-          <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0">
+          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:gap-3 sm:overflow-visible sm:px-0">
             {visibleCategories.map((category) => (
               <CategoryPill
                 key={category.key}
@@ -333,9 +333,9 @@ export function ExploreCategories({
 
 function CategoryPillsSkeleton() {
   return (
-    <div className="flex gap-3 overflow-hidden pb-2">
+    <div className="flex gap-2 overflow-hidden pb-2 sm:gap-3">
       {[1, 2, 3, 4, 5, 6].map((item) => (
-        <Skeleton key={item} className="h-[82px] w-[66px] shrink-0 rounded-[18px]" />
+        <Skeleton key={item} className="h-[76px] w-[60px] shrink-0 rounded-[18px] sm:h-[98px] sm:w-[82px] sm:rounded-[22px]" />
       ))}
     </div>
   );
@@ -343,21 +343,21 @@ function CategoryPillsSkeleton() {
 
 function CategoryError({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-5 py-6 shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
+    <div className="rounded-card border border-line bg-surface px-5 py-6 shadow-card">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#FEF2F2] text-[#EF4444]">
+          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cherry-50 text-danger">
             <AlertTriangle className="h-5 w-5" aria-hidden="true" />
           </span>
           <div>
-            <h3 className="text-base font-extrabold text-[#172033]">Could not load categories</h3>
-            <p className="mt-1 text-sm leading-6 text-[#737B8C]">{message}</p>
+            <h3 className="text-base font-extrabold text-ink">Could not load categories</h3>
+            <p className="mt-1 text-sm leading-6 text-ink-muted">{message}</p>
           </div>
         </div>
         <button
           type="button"
           onClick={onRetry}
-          className="rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
+          className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
         >
           Retry
         </button>
@@ -378,21 +378,21 @@ function CategoryEmpty({
   const needsLocation = mode === 'global' && !hasLocation;
 
   return (
-    <div className="rounded-2xl border border-[#E3E7EA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(23,32,51,0.05)]">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#E8F8F5] text-[#0E4B47]">
+    <div className="rounded-card border border-line bg-surface px-6 py-8 text-center shadow-card">
+      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-900">
         <MapPin className="h-6 w-6" aria-hidden="true" />
       </div>
-      <h3 className="mt-4 text-base font-extrabold text-[#172033]">
+      <h3 className="mt-4 text-base font-extrabold text-ink">
         {needsLocation ? 'Set your location to see nearby dishes.' : 'No categories available near you'}
       </h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#737B8C]">
+      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-muted">
         {needsLocation ? 'Choose where to deliver and we will refresh nearby categories.' : 'Try changing your location.'}
       </p>
       {mode === 'global' && (
         <button
           type="button"
           onClick={onSetLocation}
-          className="mt-5 rounded-full bg-[#16B8A6] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#109F90]"
+          className="mt-5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
         >
           {hasLocation ? 'Change location' : 'Set location'}
         </button>
