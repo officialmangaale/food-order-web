@@ -21,3 +21,10 @@ test('customer tracking uses WS for HTTP service URLs', () => {
     'ws://localhost:8082/ws/orders/status?order_id=7&token=token',
   );
 });
+
+test('customer tracking never falls back to the food frontend origin', () => {
+  assert.throws(
+    () => buildOrderTrackingWebSocketUrl(7, 'token', ''),
+    (error) => error.code === 'CONFIGURATION_ERROR',
+  );
+});

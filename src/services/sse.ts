@@ -1,7 +1,8 @@
 import type { OrderSSEEvent } from '@/types/order';
 import { buildOrderTrackingWebSocketUrl as buildOrderTrackingWebSocketUrlRaw } from '@/utils/websocketUrl.mjs';
 
-const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? 'https://restaurant-prod.mangaale.com';
+const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
+const RESTAURANT_WS_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_WS_BASE_URL ?? RESTAURANT_BASE;
 const MAX_RECONNECT_DELAY_MS = 30_000;
 
 export interface SSEHandlers {
@@ -14,11 +15,9 @@ export interface SSEHandlers {
 export function buildOrderTrackingWebSocketUrl(
   orderId: number,
   token: string,
-  baseURL: string = RESTAURANT_BASE,
-  origin?: string,
+  baseURL: string = RESTAURANT_WS_BASE,
 ): string {
-  const resolvedOrigin = origin || (typeof window !== 'undefined' ? window.location.origin : 'http://localhost');
-  return buildOrderTrackingWebSocketUrlRaw(orderId, token, baseURL, resolvedOrigin);
+  return buildOrderTrackingWebSocketUrlRaw(orderId, token, baseURL);
 }
 
 /**
@@ -38,7 +37,14 @@ export function subscribeToOrder(
   const connect = () => {
     if (stopped) return;
     socket?.close();
-    socket = new WebSocket(buildOrderTrackingWebSocketUrl(orderId, token));
+    try {
+      socket = new WebSocket(buildOrderTrackingWebSocketUrl(orderId, token));
+    } catch {
+      // A missing/malformed build-time service origin is surfaced through the
+      // existing fallback state without logging a credential-bearing URL.
+      handlers.onError?.(new Event('error'));
+      return;
+    }
 
     socket.onopen = () => {
       reconnectAttempts = 0;
