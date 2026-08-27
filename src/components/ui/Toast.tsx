@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useCallback, type ReactNode } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { X, CheckCircle, AlertTriangle, Info } from 'lucide-react';
 
 type ToastType = 'success' | 'error' | 'info';
@@ -22,8 +22,21 @@ export function useToast() {
   return useContext(ToastContext);
 }
 
+const toneClasses: Record<ToastType, string> = {
+  success: 'border-green-200 bg-success-tint text-success',
+  error: 'border-red-200 bg-danger-tint text-danger',
+  info: 'border-line bg-surface text-ink',
+};
+
+const icons: Record<ToastType, ReactNode> = {
+  success: <CheckCircle className="h-5 w-5 shrink-0" aria-hidden="true" />,
+  error: <AlertTriangle className="h-5 w-5 shrink-0" aria-hidden="true" />,
+  info: <Info className="h-5 w-5 shrink-0 text-brand-700" aria-hidden="true" />,
+};
+
 export function ToastProvider({ children }: { children: ReactNode }) {
   const [toasts, setToasts] = useState<Toast[]>([]);
+  const reduceMotion = useReducedMotion();
 
   const toast = useCallback((message: string, type: ToastType = 'info') => {
     const id = `${Date.now()}-${Math.random()}`;
@@ -49,26 +62,18 @@ export function ToastProvider({ children }: { children: ReactNode }) {
           {toasts.map((t) => (
             <motion.div
               key={t.id}
-              initial={{ opacity: 0, y: 30, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              initial={reduceMotion ? { opacity: 0 } : { opacity: 0, y: 24, scale: 0.96 }}
+              animate={reduceMotion ? { opacity: 1 } : { opacity: 1, y: 0, scale: 1 }}
+              exit={reduceMotion ? { opacity: 0 } : { opacity: 0, y: -8, scale: 0.96 }}
               role="status"
-              className={`flex items-center gap-3 rounded-control border px-4 py-3 shadow-elevated ${
-                t.type === 'success'
-                  ? 'bg-green-50 border-green-200 text-green-800'
-                  : t.type === 'error'
-                    ? 'bg-red-50 border-red-200 text-red-800'
-                    : 'border-line bg-surface text-ink'
-              }`}
+              className={`flex items-center gap-3 rounded-control border px-4 py-3 shadow-elevated ${toneClasses[t.type]}`}
             >
-              {t.type === 'success' && <CheckCircle className="w-5 h-5 text-green-500 flex-shrink-0" />}
-              {t.type === 'error' && <AlertTriangle className="w-5 h-5 text-red-500 flex-shrink-0" />}
-              {t.type === 'info' && <Info className="w-5 h-5 text-blue-500 flex-shrink-0" />}
-              <p className="text-sm font-medium flex-1">{t.message}</p>
+              {icons[t.type]}
+              <p className="flex-1 text-sm font-semibold">{t.message}</p>
               <button
                 type="button"
                 onClick={() => dismiss(t.id)}
-                className="flex h-8 w-8 items-center justify-center rounded-full text-ink-subtle transition hover:bg-black/5 hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20"
+                className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-current opacity-60 transition-opacity hover:opacity-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-current"
                 aria-label="Dismiss notification"
               >
                 <X className="h-4 w-4" aria-hidden="true" />

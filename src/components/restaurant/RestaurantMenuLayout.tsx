@@ -90,16 +90,19 @@ export function RestaurantMenuLayout({
   };
 
   return (
-    <section id="restaurant-menu" className="bg-[#F7F8FA]">
-      <div className="mx-auto grid max-w-[1280px] lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-x-8 lg:px-8 lg:py-8">
-        <div className="order-1 flex min-w-0 gap-2 overflow-x-auto px-3 pb-5 pt-2 hide-scrollbar sm:px-6 lg:col-start-2 lg:px-0 lg:pb-7 lg:pt-0">
+    <section id="restaurant-menu">
+      <div className="page-container grid py-4 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-x-8 lg:py-8">
+        {/* Search stacks above the filter chips on mobile so neither is cramped. */}
+        <div className="order-1 flex min-w-0 flex-col gap-3 pb-5 sm:flex-row sm:items-center lg:col-start-2 lg:pb-7">
           <RestaurantMenuSearch value={search} onChange={onSearchChange} />
-          <RestaurantFilterChips
-            filters={filters}
-            onChange={onFiltersChange}
-            hasBestsellerData={hasBestsellerData}
-            hasRatingData={hasRatingData}
-          />
+          <div className="hide-scrollbar -mx-[var(--page-gutter)] flex gap-2 overflow-x-auto px-[var(--page-gutter)] sm:mx-0 sm:px-0">
+            <RestaurantFilterChips
+              filters={filters}
+              onChange={onFiltersChange}
+              hasBestsellerData={hasBestsellerData}
+              hasRatingData={hasRatingData}
+            />
+          </div>
         </div>
 
         {loading ? (
@@ -112,11 +115,11 @@ export function RestaurantMenuLayout({
           />
         )}
 
-        <div className="order-3 min-w-0 px-3 py-3 sm:px-6 lg:col-start-2 lg:px-0 lg:py-0">
+        <div className="order-3 min-w-0 py-3 lg:col-start-2 lg:py-0">
           {loading ? (
             <MenuContentSkeleton />
           ) : noResults ? (
-            <div className="rounded-2xl border border-[#F0DADA] bg-white">
+            <div className="rounded-card border border-line bg-surface shadow-card">
               <EmptyState
                 icon="search"
                 title={search ? 'No items found in this menu' : 'Menu is being updated'}
@@ -153,7 +156,7 @@ export function RestaurantMenuLayout({
 function MenuSidebarSkeleton() {
   return (
     <aside className="hidden lg:row-span-2 lg:row-start-1 lg:block">
-      <div className="sticky top-28 space-y-4 border-r border-[#F0DDDD] pr-5">
+      <div className="sticky top-[calc(var(--header-height)+1.5rem)] space-y-3 border-r border-line pr-5">
         {[1, 2, 3, 4, 5].map((item) => (
           <Skeleton key={item} className="h-10 w-full" />
         ))}

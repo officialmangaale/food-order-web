@@ -1,20 +1,27 @@
 'use client';
 
 import { type ReactNode } from 'react';
+import { PageHeader } from '@/components/layout/PageHeader';
 import { ProfileSidebar } from '@/components/profile/ProfileSidebar';
 
 interface ProfilePageLayoutProps {
   title: string;
+  description?: string;
   children: ReactNode;
 }
 
-export function ProfilePageLayout({ title, children }: ProfilePageLayoutProps) {
+/**
+ * Profile shares the app's page frame — same container width, gutters and
+ * header treatment as every other route — so it does not read as a separate
+ * product.
+ */
+export function ProfilePageLayout({ title, description, children }: ProfilePageLayoutProps) {
   return (
-    <main className="min-h-[calc(100vh-5rem)] bg-[#FFF8F7] px-4 py-6 pb-24 sm:px-6 lg:px-8 lg:py-10">
-      <div className="mx-auto grid max-w-7xl gap-6 lg:grid-cols-[280px_minmax(0,1fr)] lg:gap-10">
+    <main id="main-content" className="page-main page-container">
+      <div className="grid gap-6 lg:grid-cols-[248px_minmax(0,1fr)] lg:gap-10">
         <ProfileSidebar />
         <section className="min-w-0">
-          <h1 className="mb-6 text-3xl font-extrabold tracking-normal text-[#1F1A1A] sm:text-4xl">{title}</h1>
+          <PageHeader eyebrow="Account" title={title} meta={description} />
           {children}
         </section>
       </div>

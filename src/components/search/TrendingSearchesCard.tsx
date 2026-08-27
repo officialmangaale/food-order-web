@@ -24,7 +24,7 @@ export function TrendingSearchesCard({ onSelect, compact }: TrendingSearchesCard
   }
 
   return (
-    <section className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_12px_32px_rgba(168,15,21,0.06)]">
+    <section className="rounded-card border border-line bg-surface p-5 shadow-card">
       <CardTitle>Trending Now</CardTitle>
       <div className="mt-4 flex flex-wrap gap-2">
         {TRENDING_SEARCHES.map((term) => (
@@ -40,9 +40,9 @@ function TrendChip({ term, onSelect }: { term: string; onSelect: (term: string) 
     <button
       type="button"
       onClick={() => onSelect(term)}
-      className="inline-flex shrink-0 items-center gap-2 rounded-full border border-[#E9CBCB] bg-[#FFFDFD] px-3.5 py-2 text-sm font-semibold text-[#4B3A3A] transition hover:border-[#B31317] hover:bg-[#FFF7F5] hover:text-[#A80F15]"
+      className="inline-flex h-10 shrink-0 items-center gap-2 rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-ink-muted transition-colors hover:border-brand-300 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
     >
-      <TrendingUp className="h-3.5 w-3.5 text-[#A80F15]" aria-hidden="true" />
+      <TrendingUp className="h-3.5 w-3.5 shrink-0 text-brand-700" aria-hidden="true" />
       {term}
     </button>
   );
@@ -50,8 +50,6 @@ function TrendChip({ term, onSelect }: { term: string; onSelect: (term: string) 
 
 function CardTitle({ children }: { children: string }) {
   return (
-    <h2 className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#A80F15]">
-      {children}
-    </h2>
+    <h2 className="text-eyebrow uppercase text-ink-subtle">{children}</h2>
   );
 }

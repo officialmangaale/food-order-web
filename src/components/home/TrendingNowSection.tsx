@@ -1,14 +1,13 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { motion } from 'framer-motion';
-import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { AlertTriangle } from 'lucide-react';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
+import { CardRail, HomeSection } from '@/components/home/HomeSection';
 import { TrendingItemCard } from '@/components/home/TrendingItemCard';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { MediaCardSkeleton } from '@/components/ui/Skeleton';
 import { useTrendingItems } from '@/hooks/useTrendingItems';
 import { useCartStore } from '@/store/cartStore';
 import { useLocationStore } from '@/store/locationStore';
@@ -63,8 +62,6 @@ export function TrendingNowSection() {
   }, [lat, lng]);
   const categoryMenuItem = customizeItem ? trendingItemToMenuItem(customizeItem) : null;
 
-  if (isLockedRoute) return null;
-
   const addItemDirectly = (item: TrendingItem) => {
     setRestaurant(item.restaurantId, item.restaurantName, item.restaurantSlug);
     addItem({
@@ -84,7 +81,12 @@ export function TrendingNowSection() {
   };
 
   const hasCustomOptions = (item: TrendingItem) =>
-    Boolean(item.hasVariants || item.hasAddons || (item.variants?.length ?? 0) > 0 || (item.addons?.length ?? 0) > 0);
+    Boolean(
+      item.hasVariants ||
+        item.hasAddons ||
+        (item.variants?.length ?? 0) > 0 ||
+        (item.addons?.length ?? 0) > 0
+    );
 
   const handleAddItem = (item: TrendingItem) => {
     if (isDifferentRestaurant(item.restaurantId)) {
@@ -115,58 +117,40 @@ export function TrendingNowSection() {
     addItemDirectly(item);
   };
 
-  if (trendingQuery.isLoading) {
-    return (
-      <motion.section
-        className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-        aria-label="Trending dishes loading"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <SectionHeading />
-        <TrendingSkeleton />
-      </motion.section>
-    );
-  }
-
-  if (trendingQuery.error && items.length === 0) {
-    return (
-      <motion.section
-        className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-        aria-labelledby="trending-now-heading"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
-      >
-        <SectionHeading />
-        <TrendingError onRetry={() => trendingQuery.refetch()} />
-      </motion.section>
-    );
-  }
-
-  if (visibleItems.length === 0) return null;
+  if (isLockedRoute) return null;
+  // Trending is supplementary — stay silent rather than showing an empty rail.
+  if (!trendingQuery.isLoading && !trendingQuery.error && visibleItems.length === 0) return null;
 
   return (
-    <motion.section
-      className="order-5 mx-auto mt-9 w-full max-w-7xl px-4 sm:px-6 lg:px-8"
-      aria-labelledby="trending-now-heading"
-      initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "-50px" }}
-      transition={{ duration: 0.5, ease: 'easeOut' }}
+    <HomeSection
+      id="trending-now"
+      title="Trending favourites"
+      description="Popular dishes people are ordering"
+      viewAllHref={hasMoreItems ? viewAllHref : undefined}
     >
-      <SectionHeading showViewAll={hasMoreItems} viewAllHref={viewAllHref} />
-
-      <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-3 lg:gap-6">
-        {visibleItems.map((item) => (
-          <div key={`${item.restaurantId}-${item.itemId}`} className="w-[140px] shrink-0 sm:w-auto">
-            <TrendingItemCard item={item} onAdd={handleAddItem} />
-          </div>
-        ))}
-      </div>
+      {trendingQuery.isLoading ? (
+        <CardRail>
+          {Array.from({ length: HOME_TRENDING_VISIBLE }, (_, index) => (
+            <MediaCardSkeleton key={index} />
+          ))}
+        </CardRail>
+      ) : trendingQuery.error && items.length === 0 ? (
+        <ErrorState
+          title="Trending dishes are unavailable"
+          message="Please try again in a moment."
+          onRetry={() => trendingQuery.refetch()}
+        />
+      ) : (
+        <CardRail itemWidth="w-[168px]">
+          {visibleItems.map((item) => (
+            <TrendingItemCard
+              key={`${item.restaurantId}-${item.itemId}`}
+              item={item}
+              onAdd={handleAddItem}
+            />
+          ))}
+        </CardRail>
+      )}
 
       <ItemCustomizeModal
         item={categoryMenuItem}
@@ -181,78 +165,6 @@ export function TrendingNowSection() {
         newRestaurantName={pendingItem?.restaurantName ?? ''}
         onCleared={handleCartCleared}
       />
-    </motion.section>
-  );
-}
-
-function SectionHeading({
-  showViewAll,
-  viewAllHref = '/trending',
-}: {
-  showViewAll?: boolean;
-  viewAllHref?: string;
-}) {
-  return (
-    <div className="relative mb-4">
-      <div className="pr-16">
-        <h2 id="trending-now-heading" className="text-lg font-extrabold tracking-[-0.025em] text-ink sm:text-3xl">
-          Trending favourites
-        </h2>
-        <p className="mt-1 whitespace-nowrap text-xs font-medium text-ink-muted sm:text-sm">Popular dishes people are ordering</p>
-      </div>
-      {showViewAll && (
-        <Link
-          href={viewAllHref}
-          className="absolute right-0 top-1 shrink-0 rounded-full px-1 text-sm font-bold text-brand-500 transition hover:text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
-        >
-          View All
-        </Link>
-      )}
-    </div>
-  );
-}
-
-function TrendingSkeleton() {
-  return (
-    <div className="-mx-4 flex gap-3 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-3 lg:gap-6">
-      {[1, 2, 3].map((item) => (
-        <div key={item} className="w-[140px] shrink-0 overflow-hidden rounded-card border border-line bg-surface sm:w-auto">
-          <Skeleton className="h-[92px] w-full rounded-none sm:h-[184px]" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-4/5" />
-            <Skeleton className="h-10 w-full" />
-            <div className="flex items-center justify-between pt-1">
-              <Skeleton className="h-7 w-20" />
-              <Skeleton className="h-11 w-11 rounded-full" rounded />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function TrendingError({ onRetry }: { onRetry: () => void }) {
-  return (
-    <div className="rounded-card border border-line bg-surface px-5 py-6 shadow-card">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cherry-50 text-danger">
-            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h3 className="text-base font-extrabold text-ink">Trending dishes are unavailable</h3>
-            <p className="mt-1 text-sm leading-6 text-ink-muted">Please try again in a moment.</p>
-          </div>
-        </div>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
-        >
-          Retry
-        </button>
-      </div>
-    </div>
+    </HomeSection>
   );
 }

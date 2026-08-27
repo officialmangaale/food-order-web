@@ -1,6 +1,5 @@
 'use client';
 
-import { useState } from 'react';
 import {
   Hamburger,
   IceCreamBowl,
@@ -9,6 +8,7 @@ import {
   Soup,
   UtensilsCrossed,
 } from 'lucide-react';
+import { Thumbnail } from '@/components/ui/Thumbnail';
 import type { HomeCategory } from '@/types/category';
 
 interface CategoryPillProps {
@@ -18,38 +18,41 @@ interface CategoryPillProps {
 }
 
 export function CategoryPill({ category, active, onClick }: CategoryPillProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const canShowImage = Boolean(category.imageUrl && !imageFailed);
-
   return (
     <button
       type="button"
-      aria-pressed={active}
+      role="radio"
+      aria-checked={active}
       onClick={() => onClick(category)}
-      className={`group flex w-[60px] shrink-0 flex-col items-center gap-1.5 rounded-[18px] bg-transparent text-xs font-bold tracking-normal text-ink-muted transition focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 sm:w-[82px] sm:gap-2 sm:rounded-[22px] sm:text-sm ${
-        active
-          ? 'text-brand-900'
-          : 'hover:text-ink'
-      }`}
+      className="group flex w-[68px] shrink-0 flex-col items-center gap-2 rounded-control bg-transparent text-center text-[11px] font-bold text-ink-muted transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 sm:w-[84px] sm:text-xs"
     >
       <span
-        className={`flex h-[52px] w-[52px] shrink-0 items-center justify-center overflow-hidden rounded-[18px] border shadow-card transition sm:h-[72px] sm:w-[72px] sm:rounded-[22px] ${
-          active ? 'border-brand-500 bg-brand-50 text-brand-900' : 'border-line bg-brand-50/55 text-ink group-hover:border-line-interactive group-hover:bg-brand-50'
+        className={`relative flex h-[68px] w-[68px] shrink-0 items-center justify-center overflow-hidden rounded-control border-2 transition-[border-color,box-shadow] duration-[var(--duration-fast)] sm:h-[84px] sm:w-[84px] ${
+          active
+            ? 'border-brand-700 shadow-brand'
+            : 'border-transparent shadow-card group-hover:border-brand-300'
         }`}
       >
-        {canShowImage ? (
-          <img
-            src={category.imageUrl ?? ''}
+        {category.imageUrl ? (
+          <Thumbnail
+            src={category.imageUrl}
             alt=""
-            aria-hidden="true"
-            className="h-full w-full object-cover"
-            onError={() => setImageFailed(true)}
+            ratio="square"
+            className="h-full w-full"
           />
         ) : (
-          <CategoryIconGlyph category={category} className="h-6 w-6 sm:h-8 sm:w-8" />
+          <span
+            className={`flex h-full w-full items-center justify-center ${
+              active ? 'bg-brand-100 text-brand-900' : 'bg-surface-muted text-ink-muted'
+            }`}
+          >
+            <CategoryIconGlyph category={category} className="h-7 w-7 sm:h-8 sm:w-8" />
+          </span>
         )}
       </span>
-      <span className="whitespace-nowrap">{category.name}</span>
+      <span className={`line-clamp-2 leading-tight ${active ? 'text-brand-900' : ''}`}>
+        {category.name}
+      </span>
     </button>
   );
 }

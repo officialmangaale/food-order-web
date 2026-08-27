@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
 import { Wifi, WifiOff } from 'lucide-react';
 import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
 import { EstimatedArrivalCard } from '@/components/order/EstimatedArrivalCard';
@@ -127,59 +126,45 @@ export function OrderTrackingPage({ orderId }: OrderTrackingPageProps) {
   const terminal = isTerminalStatus(tracking.orderStatus);
 
   return (
-    <main className="min-h-screen bg-[#FFF7F5]">
-      <div className="mx-auto max-w-[1280px] px-4 py-8 sm:px-6 lg:px-8 lg:py-10">
-        <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="text-sm font-extrabold uppercase tracking-[0.16em] text-[#A80F15]">Order Tracking</p>
-            <p className="mt-1 text-sm font-medium text-[#6B4B4B]">Live updates for {tracking.displayOrderId}</p>
-          </div>
-          {!terminal && (
-            <span
-              className={`inline-flex min-h-10 items-center gap-2 rounded-full border px-4 text-sm font-extrabold ${
-                connected
-                  ? 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                  : 'border-[#F0DADA] bg-white text-[#8D6E6E]'
-              }`}
-            >
-              {connected ? <Wifi className="h-4 w-4" aria-hidden="true" /> : <WifiOff className="h-4 w-4" aria-hidden="true" />}
-              {realtimeConnectionLabel(connectionStatus)}
-            </span>
-          )}
+    <main id="main-content" className="page-main page-container">
+      <div className="mb-5 flex flex-wrap items-center justify-between gap-3">
+        <div className="min-w-0">
+          <p className="text-eyebrow uppercase text-brand-800">Order tracking</p>
+          <p className="mt-1 text-sm font-medium text-ink-muted">
+            Live updates for {tracking.displayOrderId}
+          </p>
         </div>
-
-        <div className="grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1fr)_minmax(380px,1fr)]">
-          <div className="space-y-6">
-            <OrderSuccessCard order={tracking} />
-            <EstimatedArrivalCard order={tracking} />
-            <LiveTrackingTimeline order={tracking} />
-          </div>
-          <div className="space-y-6">
-            <MapPreviewCard order={tracking} />
-            <OrderSummaryCard order={tracking} />
-          </div>
-        </div>
+        {!terminal && (
+          <span
+            className={`inline-flex h-10 items-center gap-2 rounded-full border px-4 text-sm font-bold ${
+              connected
+                ? 'border-green-200 bg-success-tint text-success'
+                : 'border-line-strong bg-surface text-ink-muted'
+            }`}
+          >
+            {connected ? (
+              <Wifi className="h-4 w-4 shrink-0" aria-hidden="true" />
+            ) : (
+              <WifiOff className="h-4 w-4 shrink-0" aria-hidden="true" />
+            )}
+            {realtimeConnectionLabel(connectionStatus)}
+          </span>
+        )}
       </div>
 
-      <OrderTrackingFooter />
+      <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(340px,1fr)] lg:gap-8">
+        <div className="space-y-6">
+          <OrderSuccessCard order={tracking} />
+          <EstimatedArrivalCard order={tracking} />
+          <LiveTrackingTimeline order={tracking} />
+        </div>
+        <div className="space-y-6">
+          <MapPreviewCard order={tracking} />
+          <OrderSummaryCard order={tracking} />
+        </div>
+      </div>
     </main>
   );
 }
 
-function OrderTrackingFooter() {
-  return (
-    <footer className="mt-10 border-t border-[#E9CFCF] bg-[#FFF0ED]">
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
-        <p className="text-2xl font-extrabold tracking-normal text-[#1F1717]">Mangaale</p>
-        <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#5F4444]">
-          <Link href="/restaurants">Browse Menus</Link>
-          <Link href="/orders">Track Order</Link>
-          <Link href="/privacy">Privacy Policy</Link>
-          <Link href="/terms">Terms of Service</Link>
-          <Link href="/help">Help Center</Link>
-        </nav>
-        <p className="text-sm text-[#6B5555]">{'\u00A9'} 2026 Mangaale. Culinary Excellence Delivered.</p>
-      </div>
-    </footer>
-  );
-}
+

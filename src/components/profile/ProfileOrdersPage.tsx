@@ -1,15 +1,15 @@
 'use client';
 
 import { useEffect } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { ArrowRight, PackageSearch, RotateCcw } from 'lucide-react';
+import { ArrowRight, RotateCcw } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
-import { Button } from '@/components/ui/Button';
+import { Button, ButtonLink } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { PanelSkeleton } from '@/components/ui/Skeleton';
 import { ProfilePageLayout } from '@/components/profile/ProfilePageLayout';
 import { ProfileRouteGuard } from '@/components/profile/ProfileRouteGuard';
 import {
@@ -22,6 +22,7 @@ import { getCustomerOrders, type CustomerOrder } from '@/services/customerOrders
 import { isAuthError } from '@/services/http';
 import { useAuthStore } from '@/store/authStore';
 import { formatMoney } from '@/utils/money';
+import { getOrderStatusBadgeVariant } from '@/utils/orderStatus';
 
 export function ProfileOrdersPage() {
   const router = useRouter();
@@ -29,12 +30,7 @@ export function ProfileOrdersPage() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
   const logout = useAuthStore((s) => s.logout);
 
-  const {
-    data,
-    isLoading,
-    error,
-    refetch,
-  } = useQuery({
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['customer-orders', token],
     queryFn: () => getCustomerOrders(token as string, { page: 1, limit: 10 }),
     enabled: Boolean(isAuthenticated && token),
@@ -55,33 +51,37 @@ export function ProfileOrdersPage() {
 
   return (
     <ProfileRouteGuard>
-      <ProfilePageLayout title="My Orders">
+      <ProfilePageLayout title="Your orders">
         {isLoading ? (
-          <OrdersSkeleton />
-        ) : error ? (
-          <div className="rounded-2xl border border-[#F0DADA] bg-white shadow-card">
-            <ErrorState
-              title="Could not load orders"
-              message="Please try again in a moment."
-              onRetry={() => refetch()}
-            />
+          <div className="space-y-4">
+            <PanelSkeleton className="h-40" />
+            <PanelSkeleton className="h-40" />
+            <PanelSkeleton className="h-40" />
           </div>
+        ) : error ? (
+          <ErrorState
+            title="Could not load orders"
+            message="Please try again in a moment."
+            onRetry={() => refetch()}
+          />
         ) : data?.orders.length ? (
           <div className="space-y-4">
             {data.orders.map((order) => (
-              <OrderCard key={String(order.order_id)} order={order} onReorder={() => handleReorder(order)} />
+              <OrderCard
+                key={String(order.order_id)}
+                order={order}
+                onReorder={() => handleReorder(order)}
+              />
             ))}
           </div>
         ) : (
-          <div className="rounded-2xl border border-[#F0DADA] bg-white shadow-card">
-            <EmptyState
-              icon="cart"
-              title="No orders yet"
-              description="Restaurants you order from will appear here."
-              actionLabel="Browse restaurants"
-              onAction={() => router.push('/')}
-            />
-          </div>
+          <EmptyState
+            icon="order"
+            title="No orders yet"
+            description="Restaurants you order from will appear here."
+            actionLabel="Browse restaurants"
+            onAction={() => router.push('/')}
+          />
         )}
       </ProfilePageLayout>
     </ProfileRouteGuard>
@@ -93,47 +93,40 @@ function OrderCard({ order, onReorder }: { order: CustomerOrder; onReorder: () =
   const orderId = String(order.order_id || order.id || '');
 
   return (
-    <article className="rounded-2xl border border-[#F0DADA] bg-white p-4 shadow-card sm:p-5">
+    <Card as="article">
       <div className="flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="min-w-0">
-              <h2 className="truncate text-xl font-extrabold text-[#1F1A1A]">
+              <h2 className="truncate text-base font-extrabold text-ink sm:text-lg">
                 {order.restaurant_name || 'Restaurant'}
               </h2>
-              <p className="mt-1 text-sm font-semibold text-[#6B5B5B]">{getOrderDate(order)}</p>
+              <p className="mt-1 text-sm text-ink-muted">{getOrderDate(order)}</p>
             </div>
-            <Badge variant={getStatusVariant(order.status)} className="capitalize">
+            <Badge variant={getOrderStatusBadgeVariant(order.status)} dot>
               {getOrderStatusLabel(order.status)}
             </Badge>
           </div>
 
-          <p className="mt-4 text-sm leading-6 text-[#2B2020]">{getItemSummary(order.items)}</p>
+          <p className="mt-3 text-sm leading-6 text-ink-muted">{getItemSummary(order.items)}</p>
           {order.order_number && (
-            <p className="mt-2 text-xs font-semibold uppercase tracking-[0.14em] text-[#8F6B65]">
+            <p className="mt-2 text-eyebrow uppercase text-ink-subtle">
               Order #{order.order_number}
             </p>
           )}
         </div>
 
-        <div className="flex flex-col gap-3 sm:flex-row lg:min-w-52 lg:flex-col lg:items-end">
-          <p className="text-2xl font-extrabold text-[#1F1A1A]">{formatMoney(getOrderTotal(order))}</p>
+        <div className="flex flex-col gap-3 lg:min-w-48 lg:items-end">
+          <p className="text-section text-ink">{formatMoney(getOrderTotal(order))}</p>
           <div className="flex flex-wrap gap-2">
             {orderId && (
-              <Link
-                href={`/orders/${orderId}/track`}
-                className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-[#A80F15] px-4 py-2 text-sm font-bold text-white transition hover:bg-[#8F0D12]"
-              >
+              <ButtonLink href={`/orders/${orderId}/track`} variant="primary" size="sm">
                 Track
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
-              </Link>
+              </ButtonLink>
             )}
             {canReorder && (
-              <Button
-                variant="outline"
-                className="min-h-11 border-[#E7B8B3] text-[#A80F15] hover:bg-[#FFF0F0]"
-                onClick={onReorder}
-              >
+              <Button variant="outline" size="sm" onClick={onReorder}>
                 <RotateCcw className="h-4 w-4" aria-hidden="true" />
                 Reorder
               </Button>
@@ -141,32 +134,6 @@ function OrderCard({ order, onReorder }: { order: CustomerOrder; onReorder: () =
           </div>
         </div>
       </div>
-    </article>
-  );
-}
-
-function getStatusVariant(status: CustomerOrder['status']) {
-  const value = String(status);
-  if (['delivered', 'completed'].includes(value)) return 'success';
-  if (['cancelled', 'rejected', 'declined'].includes(value)) return 'error';
-  if (['pending', 'placed', 'accepted', 'confirmed', 'preparing', 'ready', 'out_for_delivery'].includes(value)) {
-    return 'cherry';
-  }
-  return 'default';
-}
-
-function OrdersSkeleton() {
-  return (
-    <div className="space-y-4">
-      <div className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-card">
-        <div className="mb-4 flex items-center gap-3">
-          <PackageSearch className="h-5 w-5 text-[#A80F15]" aria-hidden="true" />
-          <Skeleton className="h-6 w-48" />
-        </div>
-        <Skeleton className="h-20 rounded-2xl" />
-      </div>
-      <Skeleton className="h-36 rounded-2xl" />
-      <Skeleton className="h-36 rounded-2xl" />
-    </div>
+    </Card>
   );
 }

@@ -11,7 +11,11 @@ interface SearchTabsProps {
 
 export function SearchTabs({ activeTab, onChange, dishCount, restaurantCount }: SearchTabsProps) {
   return (
-    <div className="flex w-full items-center rounded-2xl border border-[#F0DADA] bg-white p-1 sm:w-auto">
+    <div
+      role="tablist"
+      aria-label="Search result type"
+      className="flex w-full items-center rounded-full border border-line bg-surface p-1 sm:w-auto"
+    >
       <TabButton
         label="Dishes"
         count={dishCount}
@@ -42,9 +46,11 @@ function TabButton({
   return (
     <button
       type="button"
+      role="tab"
+      aria-selected={active}
       onClick={onClick}
-      className={`relative flex-1 rounded-xl px-4 py-2.5 text-sm font-bold transition sm:flex-none ${
-        active ? 'bg-[#A80F15] text-white shadow-[0_8px_18px_rgba(168,15,21,0.18)]' : 'text-[#6B5B5B] hover:text-[#A80F15]'
+      className={`relative h-10 flex-1 rounded-full px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 sm:flex-none ${
+        active ? 'bg-brand-700 text-white' : 'text-ink-muted hover:text-brand-800'
       }`}
     >
       {label}

@@ -1,9 +1,8 @@
 'use client';
 
 import { useEffect, useMemo, useRef, useState } from 'react';
-import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { AlertCircle, ShoppingBag } from 'lucide-react';
+import { AlertCircle } from 'lucide-react';
 import { AddressFormModal } from '@/components/checkout/AddressFormModal';
 import { CheckoutLoginPrompt } from '@/components/checkout/CheckoutLoginPrompt';
 import { DeliveryAddressSection } from '@/components/checkout/DeliveryAddressSection';
@@ -12,7 +11,11 @@ import { OrderSummaryCard } from '@/components/checkout/OrderSummaryCard';
 import { PaymentMethodSection } from '@/components/checkout/PaymentMethodSection';
 import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
 import { CouponInputCard } from '@/components/coupon/CouponInputCard';
-import { Button } from '@/components/ui/Button';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { ButtonLink } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { PanelSkeleton } from '@/components/ui/Skeleton';
 import { useToast } from '@/components/ui/Toast';
 import {
   buildCartValidatePayload,
@@ -63,6 +66,10 @@ const EMPTY_TOTALS: ValidatedTotals = {
   grand_total: 0,
   total: 0,
 };
+
+/** Shared by the page, its skeleton and the recovery panel. */
+const CHECKOUT_LAYOUT =
+  'grid gap-6 lg:grid-cols-[minmax(0,1.7fr)_minmax(340px,1fr)] lg:gap-8';
 
 export function CheckoutPage() {
   const router = useRouter();
@@ -240,21 +247,15 @@ export function CheckoutPage() {
 
   if (items.length === 0) {
     return (
-      <main className="min-h-screen bg-[#FFF7F5]">
-        <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8">
-          <CheckoutHeading />
-          <div className="mt-8 rounded-2xl border border-[#F0DADA] bg-white p-8 text-center shadow-[0_16px_40px_rgba(123,35,35,0.06)]">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#FFF0F0] text-[#A80F15]">
-              <ShoppingBag className="h-7 w-7" aria-hidden="true" />
-            </div>
-            <h2 className="mt-5 text-2xl font-extrabold text-[#1F1717]">Your cart is empty</h2>
-            <p className="mt-2 text-[#6B4B4B]">Add items from nearby restaurants to continue.</p>
-            <Button className="mt-6 bg-[#A80F15] hover:bg-[#8F0D12]" onClick={() => router.push('/')}>
-              Browse Restaurants
-            </Button>
-          </div>
-        </div>
-        <CheckoutFooter />
+      <main id="main-content" className="page-main page-container">
+        <CheckoutHeading />
+        <EmptyState
+          icon="cart"
+          title="Your cart is empty"
+          description="Add items from nearby restaurants to continue."
+          actionLabel="Browse restaurants"
+          onAction={() => router.push('/')}
+        />
       </main>
     );
   }
@@ -442,16 +443,15 @@ export function CheckoutPage() {
   };
 
   return (
-    <main className="min-h-screen bg-[#FFF7F5]">
-      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-        <CheckoutHeading />
+    <main id="main-content" className="page-main page-container pb-28 lg:pb-[var(--page-block-end)]">
+      <CheckoutHeading />
 
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
-          <div className="space-y-6" ref={addressSectionRef}>
+      <div className={CHECKOUT_LAYOUT}>
+        <div className="space-y-6" ref={addressSectionRef}>
             {!isAuthenticated && <CheckoutLoginPrompt onLogin={() => setLoginOpen(true)} />}
 
             {orderError && (
-              <div className="flex gap-3 rounded-2xl border border-red-100 bg-red-50 px-4 py-3 text-sm font-semibold text-red-700">
+              <div role="alert" className="flex gap-3 rounded-card border border-red-200 bg-danger-tint px-4 py-3 text-sm font-semibold text-danger">
                 <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
                 <p>{orderError}</p>
               </div>
@@ -499,22 +499,21 @@ export function CheckoutPage() {
             />
           </div>
 
-          <OrderSummaryCard
-            items={items}
-            restaurantName={restaurantName}
-            totals={totals}
-            couponCode={getValidatedCouponCode(activeCouponCode, validationResult)}
-            estimated={!validationResult}
-            validating={validation.isLoading || validation.isFetching}
-            validationError={validationError}
-            totalInvalid={totalInvalid}
-            placing={placing}
-            placeDisabled={placeDisabled}
-            placeDisabledReason={placeDisabledReason}
-            onRetrySummary={() => void validation.refetch()}
-            onPlaceOrder={handlePlaceOrder}
-          />
-        </div>
+        <OrderSummaryCard
+          items={items}
+          restaurantName={restaurantName}
+          totals={totals}
+          couponCode={getValidatedCouponCode(activeCouponCode, validationResult)}
+          estimated={!validationResult}
+          validating={validation.isLoading || validation.isFetching}
+          validationError={validationError}
+          totalInvalid={totalInvalid}
+          placing={placing}
+          placeDisabled={placeDisabled}
+          placeDisabledReason={placeDisabledReason}
+          onRetrySummary={() => void validation.refetch()}
+          onPlaceOrder={handlePlaceOrder}
+        />
       </div>
 
       {addressModalOpen && (
@@ -531,24 +530,21 @@ export function CheckoutPage() {
         onClose={() => setLoginOpen(false)}
         onVerified={() => setLoginOpen(false)}
       />
-      <CheckoutFooter />
     </main>
   );
 }
 
 function CheckoutPageSkeleton() {
   return (
-    <main className="min-h-screen bg-[#FFF7F5]">
-      <div className="mx-auto max-w-[1200px] px-4 py-10 sm:px-6 lg:px-8 lg:py-12">
-        <CheckoutHeading />
-        <div className="mt-8 grid gap-8 lg:grid-cols-[minmax(0,1fr)_minmax(320px,1fr)] xl:grid-cols-[minmax(0,1.9fr)_minmax(340px,1fr)]">
-          <div className="space-y-6">
-            <div className="h-72 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
-            <div className="h-52 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
-            <div className="h-64 animate-pulse rounded-2xl border border-[#F0DADA] bg-white" />
-          </div>
-          <div className="h-[420px] animate-pulse rounded-2xl border border-[#F0DADA] bg-white shadow-[0_18px_42px_rgba(123,35,35,0.08)]" />
+    <main className="page-main page-container">
+      <CheckoutHeading />
+      <div className={CHECKOUT_LAYOUT}>
+        <div className="space-y-6">
+          <PanelSkeleton className="h-72" />
+          <PanelSkeleton className="h-52" />
+          <PanelSkeleton className="h-64" />
         </div>
+        <PanelSkeleton className="h-[420px]" />
       </div>
     </main>
   );
@@ -556,59 +552,32 @@ function CheckoutPageSkeleton() {
 
 function CheckoutRecoveryPanel({ reason }: { reason: string }) {
   return (
-    <main className="min-h-screen bg-[#FFF7F5]">
-      <div className="mx-auto max-w-[1200px] px-4 py-12 sm:px-6 lg:px-8">
-        <CheckoutHeading />
-        <div className="mt-8 rounded-2xl border border-[#F0DADA] bg-white p-8 text-center shadow-[0_16px_40px_rgba(123,35,35,0.06)]">
-          <AlertCircle className="mx-auto h-10 w-10 text-[#A80F15]" aria-hidden="true" />
-          <h2 className="mt-4 text-2xl font-extrabold text-[#1F1717]">Checkout needs your cart again</h2>
-          <p className="mx-auto mt-2 max-w-md text-[#6B4B4B]">{reason} Please review your cart before continuing.</p>
-          <div className="mt-6 flex flex-wrap justify-center gap-3">
-            <Link
-              href="/cart"
-              className="inline-flex items-center justify-center rounded-xl bg-[#A80F15] px-6 py-3 font-bold text-white transition hover:bg-[#8F0D12]"
-            >
-              Return to Cart
-            </Link>
-            <Link
-              href="/"
-              className="inline-flex items-center justify-center rounded-xl border border-[#E7CACA] px-6 py-3 font-bold text-[#5F3030] transition hover:bg-[#FFF0F0]"
-            >
-              Browse Restaurants
-            </Link>
-          </div>
-        </div>
-      </div>
-      <CheckoutFooter />
+    <main className="page-main page-container">
+      <CheckoutHeading />
+      <ErrorState
+        title="Checkout needs your cart again"
+        message={`${reason} Please review your cart before continuing.`}
+      >
+        <ButtonLink href="/cart" variant="primary" size="md">
+          Return to cart
+        </ButtonLink>
+        <ButtonLink href="/" variant="outline" size="md">
+          Browse restaurants
+        </ButtonLink>
+      </ErrorState>
     </main>
   );
 }
 
 function CheckoutHeading() {
   return (
-    <header>
-      <h1 className="text-3xl font-extrabold leading-tight tracking-normal text-[#1F1717] sm:text-4xl lg:text-5xl">
-        Checkout
-      </h1>
-      <p className="mt-3 text-lg text-[#4F3030]">Confirm your details and place your order</p>
-    </header>
-  );
-}
-
-function CheckoutFooter() {
-  return (
-    <footer className="mt-14 border-t border-[#E9CFCF] bg-[#FFF0ED]">
-      <div className="mx-auto flex max-w-[1200px] flex-col gap-5 px-4 py-9 sm:px-6 lg:flex-row lg:items-center lg:justify-between lg:px-8">
-        <p className="text-2xl font-extrabold tracking-normal text-[#1F1717]">Mangaale</p>
-        <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#5F4444]">
-          <Link href="/privacy">Privacy Policy</Link>
-          <Link href="/terms">Terms of Service</Link>
-          <Link href="/help">Help Center</Link>
-          <Link href="/restaurants">Partner with Us</Link>
-        </nav>
-        <p className="text-sm text-[#6B5555]">{'\u00A9'} 2026 Mangaale. All rights reserved.</p>
-      </div>
-    </footer>
+    <PageHeader
+      eyebrow="Checkout"
+      title="Confirm and pay"
+      backHref="/cart"
+      backLabel="Back to cart"
+      meta="Step 2 of 2"
+    />
   );
 }
 

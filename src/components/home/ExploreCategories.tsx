@@ -1,14 +1,16 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState } from 'react';
-import { motion } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
-import { AlertTriangle, MapPin } from 'lucide-react';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CategoryItemsSection, CategoryItemsSkeleton } from '@/components/home/CategoryItemsSection';
 import { CategoryPill } from '@/components/home/CategoryPill';
+import { HomeSection } from '@/components/home/HomeSection';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { LocationModal } from '@/components/location/LocationModal';
+import { Button } from '@/components/ui/Button';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
 import { useCategoryItems } from '@/hooks/useCategoryItems';
 import { useExploreCategories } from '@/hooks/useExploreCategories';
@@ -228,87 +230,100 @@ export function ExploreCategories({
     addItemDirectly(item);
   };
 
-  const categorySectionClassName = embedded
-    ? className
-    : `order-1 mx-auto mt-4 w-full max-w-7xl px-4 sm:mt-7 sm:px-6 lg:px-8 ${className}`;
-  const itemsSectionClassName = embedded
-    ? ''
-    : 'order-4 mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8';
+  const showExpandToggle = !categoriesLoading && !categoriesError && hasExtraCategories;
 
   return (
     <>
-      <motion.section
-        className={categorySectionClassName}
-        aria-labelledby="explore-categories-heading"
-        initial={{ opacity: 0, y: 20 }}
-        whileInView={{ opacity: 1, y: 0 }}
-        viewport={{ once: true, margin: "-50px" }}
-        transition={{ duration: 0.5, ease: 'easeOut' }}
+      <HomeSection
+        id="explore-categories"
+        title="What are you craving?"
+        description="Pick a category to see dishes near you"
+        embedded={embedded}
+        className={embedded ? className : undefined}
       >
-        <div className="space-y-3 sm:space-y-4">
-        <div className="flex items-center justify-between gap-4">
-          <h2 id="explore-categories-heading" className="sr-only text-section font-extrabold text-ink sm:not-sr-only">
-            Explore Categories
-          </h2>
-          {!categoriesLoading && !categoriesError && hasExtraCategories && (
-            <button
-              type="button"
-              onClick={() => setCategoriesExpanded((expanded) => !expanded)}
-              className="hidden shrink-0 rounded-full px-2 py-1 text-sm font-bold text-brand-500 transition hover:bg-brand-50 hover:text-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15 sm:block"
-              aria-expanded={categoriesExpanded}
-            >
-              {categoriesExpanded ? 'Show Less' : 'View All'}
-            </button>
-          )}
-        </div>
-
         {categoriesLoading ? (
           <CategoryPillsSkeleton />
         ) : categoriesError ? (
-          <CategoryError message={categoriesError} onRetry={() => categoriesQuery.refetch()} />
+          <ErrorState
+            title="Could not load categories"
+            message={categoriesError}
+            onRetry={() => categoriesQuery.refetch()}
+          />
         ) : categories.length === 0 ? (
-          <CategoryEmpty
-            hasLocation={hasLocation}
-            mode={effectiveMode}
-            onSetLocation={() => setLocationOpen(true)}
+          <EmptyState
+            icon="location"
+            title={
+              effectiveMode === 'global' && !hasLocation
+                ? 'Set your location to see nearby dishes'
+                : 'No categories available near you'
+            }
+            description={
+              effectiveMode === 'global' && !hasLocation
+                ? 'Choose where to deliver and we will refresh nearby categories.'
+                : 'Try changing your location.'
+            }
+            actionLabel={
+              effectiveMode === 'global' ? (hasLocation ? 'Change location' : 'Set location') : undefined
+            }
+            onAction={effectiveMode === 'global' ? () => setLocationOpen(true) : undefined}
           />
         ) : (
-          <div className="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 hide-scrollbar sm:mx-0 sm:flex-wrap sm:gap-3 sm:overflow-visible sm:px-0">
-            {visibleCategories.map((category) => (
-              <CategoryPill
-                key={category.key}
-                category={category}
-                active={category.key === selectedCategoryKey}
-                onClick={handleCategorySelect}
-              />
-            ))}
-          </div>
-        )}
+          <>
+            <div
+              role="radiogroup"
+              aria-label="Food categories"
+              className="hide-scrollbar snap-row gutter-bleed flex gap-3 overflow-x-auto pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+            >
+              {visibleCategories.map((category) => (
+                <CategoryPill
+                  key={category.key}
+                  category={category}
+                  active={category.key === selectedCategoryKey}
+                  onClick={handleCategorySelect}
+                />
+              ))}
+            </div>
 
-        </div>
-      </motion.section>
+            {showExpandToggle && (
+              <div className="mt-4 flex justify-center">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setCategoriesExpanded((expanded) => !expanded)}
+                  aria-expanded={categoriesExpanded}
+                >
+                  {categoriesExpanded ? 'Show fewer categories' : 'Show all categories'}
+                </Button>
+              </div>
+            )}
+          </>
+        )}
+      </HomeSection>
 
       {categoriesLoading ? (
-        <section className={itemsSectionClassName} aria-label="Loading recommended dishes">
+        <section
+          className={embedded ? '' : 'page-container page-section'}
+          aria-label="Loading recommended dishes"
+        >
           <CategoryItemsSkeleton />
         </section>
       ) : selectedCategoryKey && categories.length > 0 ? (
-          <div ref={itemsSectionRef} className={itemsSectionClassName}>
-            <CategoryItemsSection
-              selectedCategory={selectedCategory}
-              items={items}
-              pagination={itemsResult?.pagination}
-              totalCount={itemsResult?.totalCount}
-              loading={itemsLoading}
-              errorMessage={itemsError}
-              hasLocation={hasLocation}
-              mode={effectiveMode}
-              viewAllHref={viewAllHref}
-              onRetry={() => itemsQuery.refetch()}
-              onAddItem={handleAddItem}
-              onSetLocation={() => setLocationOpen(true)}
-            />
-          </div>
+        <div ref={itemsSectionRef} className={embedded ? '' : 'page-container page-section'}>
+          <CategoryItemsSection
+            selectedCategory={selectedCategory}
+            items={items}
+            pagination={itemsResult?.pagination}
+            totalCount={itemsResult?.totalCount}
+            loading={itemsLoading}
+            errorMessage={itemsError}
+            hasLocation={hasLocation}
+            mode={effectiveMode}
+            viewAllHref={viewAllHref}
+            onRetry={() => itemsQuery.refetch()}
+            onAddItem={handleAddItem}
+            onSetLocation={() => setLocationOpen(true)}
+          />
+        </div>
       ) : null}
 
       <ItemCustomizeModal
@@ -333,70 +348,13 @@ export function ExploreCategories({
 
 function CategoryPillsSkeleton() {
   return (
-    <div className="flex gap-2 overflow-hidden pb-2 sm:gap-3">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
-        <Skeleton key={item} className="h-[76px] w-[60px] shrink-0 rounded-[18px] sm:h-[98px] sm:w-[82px] sm:rounded-[22px]" />
-      ))}
-    </div>
-  );
-}
-
-function CategoryError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="rounded-card border border-line bg-surface px-5 py-6 shadow-card">
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-start gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-cherry-50 text-danger">
-            <AlertTriangle className="h-5 w-5" aria-hidden="true" />
-          </span>
-          <div>
-            <h3 className="text-base font-extrabold text-ink">Could not load categories</h3>
-            <p className="mt-1 text-sm leading-6 text-ink-muted">{message}</p>
-          </div>
+    <div className="flex gap-3 overflow-hidden pb-1" aria-hidden="true">
+      {Array.from({ length: 6 }, (_, index) => (
+        <div key={index} className="w-[68px] shrink-0 sm:w-[84px]">
+          <Skeleton className="h-[68px] w-[68px] sm:h-[84px] sm:w-[84px]" />
+          <Skeleton className="mt-2 h-3 w-full" />
         </div>
-        <button
-          type="button"
-          onClick={onRetry}
-          className="rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
-        >
-          Retry
-        </button>
-      </div>
-    </div>
-  );
-}
-
-function CategoryEmpty({
-  hasLocation,
-  mode,
-  onSetLocation,
-}: {
-  hasLocation: boolean;
-  mode: 'global' | 'locked';
-  onSetLocation: () => void;
-}) {
-  const needsLocation = mode === 'global' && !hasLocation;
-
-  return (
-    <div className="rounded-card border border-line bg-surface px-6 py-8 text-center shadow-card">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-900">
-        <MapPin className="h-6 w-6" aria-hidden="true" />
-      </div>
-      <h3 className="mt-4 text-base font-extrabold text-ink">
-        {needsLocation ? 'Set your location to see nearby dishes.' : 'No categories available near you'}
-      </h3>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-muted">
-        {needsLocation ? 'Choose where to deliver and we will refresh nearby categories.' : 'Try changing your location.'}
-      </p>
-      {mode === 'global' && (
-        <button
-          type="button"
-          onClick={onSetLocation}
-          className="mt-5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
-        >
-          {hasLocation ? 'Change location' : 'Set location'}
-        </button>
-      )}
+      ))}
     </div>
   );
 }

@@ -8,16 +8,24 @@ import { NearbyRestaurantsSection } from '@/components/home/NearbyRestaurantsSec
 import { ActiveOrderCard } from '@/components/home/ActiveOrderCard';
 import { Skeleton } from '@/components/ui/Skeleton';
 
+/**
+ * Sections render in visual order. The previous implementation relied on
+ * `order-*` utilities to reshuffle a flex column, which meant DOM order and
+ * reading order disagreed for keyboard and screen-reader users.
+ */
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen flex-col pb-6">
-      <div className="order-0 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8">
+    <main id="main-content" className="page-main">
+      <div className="page-container">
         <ActiveOrderCard />
       </div>
+
       <HomeOfferSlider />
+
       <Suspense fallback={<ExploreCategoriesFallback />}>
         <ExploreCategories />
       </Suspense>
+
       <NearbyRestaurantsSection />
       <TrendingNowSection />
     </main>
@@ -26,11 +34,14 @@ export default function HomePage() {
 
 function ExploreCategoriesFallback() {
   return (
-    <section className="order-1 mx-auto mt-4 w-full max-w-7xl px-4 sm:px-6 lg:px-8" aria-label="Loading categories">
-      <Skeleton className="mb-4 hidden h-8 w-56 sm:block" />
-      <div className="flex gap-2 overflow-hidden pb-2 sm:gap-3">
-        {[1, 2, 3, 4, 5, 6].map((item) => (
-          <Skeleton key={item} className="h-[76px] w-[60px] shrink-0 rounded-[18px] sm:h-[98px] sm:w-[82px] sm:rounded-[22px]" />
+    <section className="page-container page-section" aria-label="Loading categories">
+      <Skeleton className="h-6 w-56" />
+      <div className="mt-4 flex gap-3 overflow-hidden pb-1">
+        {Array.from({ length: 6 }, (_, index) => (
+          <div key={index} className="w-[68px] shrink-0 sm:w-[84px]">
+            <Skeleton className="h-[68px] w-[68px] sm:h-[84px] sm:w-[84px]" />
+            <Skeleton className="mt-2 h-3 w-full" />
+          </div>
         ))}
       </div>
     </section>

@@ -6,7 +6,7 @@ import { LogOut, MapPinned, Package, Settings, User } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
 
 const sidebarItems = [
-  { href: '/profile', label: 'Profile Info', icon: User },
+  { href: '/profile', label: 'Profile info', icon: User },
   { href: '/profile/orders', label: 'Orders', icon: Package },
   { href: '/profile/addresses', label: 'Addresses', icon: MapPinned },
   { href: '/profile/settings', label: 'Settings', icon: Settings },
@@ -23,39 +23,41 @@ export function ProfileSidebar() {
   };
 
   return (
-    <aside className="lg:sticky lg:top-28 lg:self-start">
+    <aside className="lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:self-start">
+      {/* Horizontal tab strip on mobile, vertical nav on desktop. */}
       <nav
         aria-label="Profile sections"
-        className="flex gap-2 overflow-x-auto rounded-2xl border border-[#F0DADA] bg-white/75 p-2 shadow-card lg:block lg:space-y-2 lg:border-0 lg:bg-transparent lg:p-0 lg:shadow-none"
+        className="hide-scrollbar snap-row gutter-bleed flex gap-2 overflow-x-auto pb-1 sm:mx-0 sm:px-0 lg:block lg:space-y-1 lg:overflow-visible"
       >
         {sidebarItems.map((item) => {
           const Icon = item.icon;
-          const active = item.href === '/profile' ? pathname === '/profile' : pathname.startsWith(item.href);
+          const active =
+            item.href === '/profile' ? pathname === '/profile' : pathname.startsWith(item.href);
 
           return (
             <Link
               key={item.href}
               href={item.href}
-              className={`flex min-h-12 shrink-0 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold transition lg:w-full ${
+              aria-current={active ? 'page' : undefined}
+              className={`flex min-h-11 shrink-0 items-center gap-2.5 rounded-full px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 lg:w-full lg:rounded-control ${
                 active
-                  ? 'bg-[#F8D6D2] text-[#A80F15]'
-                  : 'text-[#2B2020] hover:bg-white hover:text-[#A80F15]'
+                  ? 'bg-brand-50 text-brand-900'
+                  : 'text-ink-muted hover:bg-surface-muted hover:text-ink'
               }`}
             >
-              <Icon className="h-5 w-5 shrink-0" aria-hidden="true" />
-              <span>{item.label}</span>
+              <Icon className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+              <span className="whitespace-nowrap">{item.label}</span>
             </Link>
           );
         })}
 
-        <div className="hidden lg:mt-3 lg:block lg:border-t lg:border-[#E8CACA] lg:pt-3" />
         <button
           type="button"
           onClick={handleLogout}
-          className="flex min-h-12 shrink-0 items-center gap-3 rounded-2xl px-4 py-3 text-sm font-bold text-[#A80F15] transition hover:bg-white lg:w-full"
+          className="flex min-h-11 shrink-0 items-center gap-2.5 rounded-full px-4 text-sm font-bold text-danger transition-colors hover:bg-danger-tint focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 lg:mt-3 lg:w-full lg:rounded-control lg:border-t lg:border-line lg:pt-3"
         >
-          <LogOut className="h-5 w-5 shrink-0" aria-hidden="true" />
-          <span>Logout</span>
+          <LogOut className="h-[18px] w-[18px] shrink-0" aria-hidden="true" />
+          <span className="whitespace-nowrap">Log out</span>
         </button>
       </nav>
     </aside>

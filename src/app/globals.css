@@ -1,80 +1,166 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+/* ============================================================================
+   MANGAALE DESIGN SYSTEM
+   Single source of truth for colour, type, spacing, radius, shadow and motion.
+
+   Direction: teal accent on a warm neutral canvas.
+   - Teal  (brand-*)  = action. Buttons, links, selection, focus.
+   - Cherry(cherry-*) = deal / urgency. Offers, discounts, destructive.
+   - Warm neutrals    = surfaces and text. Slightly warm so food photography
+                        sits on paper rather than on cold grey.
+
+   Never put white text on brand-50..brand-500 (contrast < 3:1).
+   Solid teal fills behind white text must be brand-700 or darker.
+   ============================================================================ */
+
 @theme {
-  --color-brand-50: #f3fbf9;
-  --color-brand-100: #e8f8f5;
-  --color-brand-200: #c8eee8;
-  --color-brand-300: #90ded4;
+  /* ——— Brand: teal (action) ——— */
+  --color-brand-50: #f2faf8;
+  --color-brand-100: #e3f4f0;
+  --color-brand-200: #c3e7e1;
+  --color-brand-300: #8ed2c9;
   --color-brand-400: #45c8ba;
   --color-brand-500: #16b8a6;
   --color-brand-600: #109f90;
-  --color-brand-700: #0c7c72;
+  --color-brand-700: #0c7c72; /* primary fill — 5.07:1 with white */
   --color-brand-800: #0e5f59;
   --color-brand-900: #0e4b47;
+  --color-brand-950: #08302e;
 
-  --color-canvas: #f7f8fa;
-  --color-surface: #ffffff;
-  --color-surface-muted: #edf1f4;
-  --color-ink: #172033;
-  --color-ink-muted: #737b8c;
-  --color-ink-subtle: #98a1b2;
-  --color-line: #e3e7ea;
-  --color-line-strong: #cfd7dc;
-  --color-line-interactive: #b9dcd7;
-
-  --color-success: #22c55e;
-  --color-warning: #f59e0b;
-  --color-danger: #ef4444;
-  --color-bestseller: #fff5de;
-  --color-bestseller-ink: #946200;
-
-  --color-cherry-50: #fef2f2;
+  /* ——— Cherry: offers, discounts, urgency ——— */
+  --color-cherry-50: #fef4f3;
   --color-cherry-100: #fde6e7;
   --color-cherry-200: #fbc8ca;
   --color-cherry-300: #f9a3a6;
   --color-cherry-400: #f36b70;
   --color-cherry-500: #e8383e;
-  --color-cherry-600: #D71920;
+  --color-cherry-600: #d71920;
   --color-cherry-700: #b5141a;
-  --color-cherry-800: #A80F15;
+  --color-cherry-800: #a80f15; /* 7.65:1 with white */
   --color-cherry-900: #7c1118;
   --color-cherry-950: #430509;
 
-  --shadow-card: 0 2px 5px rgba(23, 32, 51, 0.035), 0 1px 2px rgba(23, 32, 51, 0.04);
-  --shadow-elevated: 0 12px 34px rgba(23, 32, 51, 0.075), 0 3px 8px rgba(23, 32, 51, 0.04);
-  --shadow-floating: 0 18px 55px rgba(23, 32, 51, 0.16);
-  --shadow-brand: 0 12px 30px rgba(22, 184, 166, 0.24);
+  /* ——— Surfaces (warm neutral) ——— */
+  --color-canvas: #fbf8f5;
+  --color-surface: #ffffff;
+  --color-surface-muted: #f4efeb;
+  --color-surface-sunken: #f7f2ee;
 
-  --radius-control: 0.875rem;
-  --radius-card: 1.375rem;
-  --radius-sheet: 1.875rem;
+  /* ——— Text (warm neutral ramp) ——— */
+  --color-ink: #1c1917; /* 16.53:1 on canvas */
+  --color-ink-muted: #57534e; /*  7.21:1 on canvas */
+  --color-ink-subtle: #78716c; /*  4.53:1 on canvas — AA floor, body-safe */
+  --color-ink-inverse: #ffffff;
 
-  --text-display: 2.5rem;
-  --text-display--line-height: 1.08;
-  --text-display--letter-spacing: -0.04em;
-  --text-title: 2rem;
-  --text-title--line-height: 1.15;
-  --text-title--letter-spacing: -0.035em;
-  --text-section: 1.5rem;
-  --text-section--line-height: 1.2;
-  --text-section--letter-spacing: -0.025em;
+  /* ——— Lines ——— */
+  --color-line: #eae3dd;
+  --color-line-strong: #d6ccc4;
+  --color-line-interactive: #a8d5ce;
 
-  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  /* ——— Status ——— */
+  --color-success: #15803d;
+  --color-success-tint: #e9f5ed;
+  --color-warning: #b45309;
+  --color-warning-tint: #fdf2dd;
+  --color-danger: #dc2626;
+  --color-danger-tint: #fdecec;
+  --color-info: #0e5f59;
+  --color-info-tint: #e3f4f0;
+
+  /* Bestseller / rating accents */
+  --color-bestseller: #fff5de;
+  --color-bestseller-ink: #8a5a00;
+  --color-star: #f5a524;
+
+  /* Veg / non-veg indicators */
+  --color-veg: #15803d;
+  --color-nonveg: #c0392b;
+
+  /* ——— Radius ——— */
+  --radius-control: 0.875rem; /* 14px — inputs, small tiles */
+  --radius-card: 1.25rem; /* 20px — cards, panels */
+  --radius-sheet: 1.75rem; /* 28px — modals, bottom sheets */
+
+  /* ——— Shadows (warm-tinted to match the canvas) ——— */
+  --shadow-card: 0 1px 2px rgba(60, 45, 38, 0.04), 0 2px 6px rgba(60, 45, 38, 0.04);
+  --shadow-elevated: 0 4px 10px rgba(60, 45, 38, 0.05), 0 12px 28px rgba(60, 45, 38, 0.07);
+  --shadow-floating: 0 8px 20px rgba(60, 45, 38, 0.1), 0 20px 52px rgba(60, 45, 38, 0.14);
+  --shadow-brand: 0 8px 20px rgba(12, 124, 114, 0.22);
+  --shadow-cherry: 0 8px 20px rgba(168, 15, 21, 0.18);
+
+  /* ——— Type scale ———
+     Fluid via clamp() so desktop is genuinely larger than mobile without
+     needing per-breakpoint overrides at every call site. */
+  --text-display: clamp(1.875rem, 1.25rem + 3.1vw, 3rem);
+  --text-display--line-height: 1.1;
+  --text-display--letter-spacing: -0.035em;
+  --text-display--font-weight: 800;
+
+  --text-title: clamp(1.5rem, 1.2rem + 1.5vw, 2rem);
+  --text-title--line-height: 1.18;
+  --text-title--letter-spacing: -0.03em;
+  --text-title--font-weight: 800;
+
+  --text-section: clamp(1.125rem, 1rem + 0.75vw, 1.5rem);
+  --text-section--line-height: 1.25;
+  --text-section--letter-spacing: -0.02em;
+  --text-section--font-weight: 800;
+
+  --text-eyebrow: 0.6875rem;
+  --text-eyebrow--line-height: 1.2;
+  --text-eyebrow--letter-spacing: 0.12em;
+  --text-eyebrow--font-weight: 800;
+
+  /* ——— Motion ——— */
+  --ease-standard: cubic-bezier(0.2, 0, 0.2, 1);
+  --ease-out-soft: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
 }
 
 :root {
   color-scheme: light;
+
+  /* Page frame */
   --page-gutter: 1rem;
+  --page-max-width: 80rem; /* 1280px — every full-width route */
+  --content-max-width: 64rem; /* 1024px — reading-width routes */
   --page-section-gap: 2rem;
-  --page-max-width: 80rem;
-  --content-max-width: 64rem;
+  --page-block-start: 1.5rem;
+  --page-block-end: 4rem;
+
+  /* Sticky offsets */
+  --header-height: 4.5rem;
+
+  /* Motion */
+  --duration-fast: 130ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+}
+
+@media (min-width: 640px) {
+  :root {
+    --page-gutter: 1.5rem;
+    --page-section-gap: 2.5rem;
+    --page-block-start: 2rem;
+  }
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --page-gutter: 2rem;
+    --page-section-gap: 3rem;
+    --page-block-start: 2.5rem;
+    --header-height: 5rem;
+  }
 }
 
 html {
   -webkit-tap-highlight-color: transparent;
   overflow-x: hidden;
   scroll-behavior: smooth;
+  scroll-padding-top: calc(var(--header-height) + 1rem);
 }
 
 body {
@@ -88,12 +174,14 @@ body {
   overflow-x: hidden;
 }
 
+/* Guard against grid/flex children refusing to shrink — the main cause of
+   horizontal overflow at 320px. */
 * {
   min-width: 0;
 }
 
 ::selection {
-  background: var(--color-brand-200);
+  background: var(--color-brand-100);
   color: var(--color-brand-900);
 }
 
@@ -129,14 +217,75 @@ textarea:disabled {
 input,
 select,
 textarea {
-  accent-color: var(--color-brand-500);
-  caret-color: var(--color-brand-600);
+  accent-color: var(--color-brand-700);
+  caret-color: var(--color-brand-700);
+}
+
+/* ——— Focus ——— */
+:focus-visible {
+  outline: 2px solid var(--color-brand-700);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(12, 124, 114, 0.2);
+  border-color: var(--color-brand-700);
+}
+
+/* ============================================================================
+   LAYOUT UTILITIES
+   Every full-width route uses .page-container. Every route that opts into the
+   standard vertical rhythm uses .page-main. This is what keeps page widths and
+   gutters identical across the app.
+   ============================================================================ */
+
+.page-container {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+.content-container {
+  width: 100%;
+  max-width: var(--content-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+/* Full-width bleed inside a .page-container (edge-to-edge carousels on mobile).
+   Self-cancelling at `sm`, where these rows become grids. Defined this way
+   rather than relying on `sm:mx-0` utilities at the call site, because this
+   stylesheet is unlayered and would otherwise win over Tailwind's utilities. */
+.gutter-bleed {
+  margin-inline: calc(var(--page-gutter) * -1);
+  padding-inline: var(--page-gutter);
+}
+
+@media (min-width: 640px) {
+  .gutter-bleed {
+    margin-inline: 0;
+    padding-inline: 0;
+  }
+}
+
+.page-main {
+  display: flow-root;
+  min-height: calc(100dvh - var(--header-height));
+  padding-block: var(--page-block-start) var(--page-block-end);
+}
+
+.page-section + .page-section {
+  margin-top: var(--page-section-gap);
 }
 
 /* ——— Scrollbar ——— */
 ::-webkit-scrollbar {
-  width: 4px;
-  height: 4px;
+  width: 6px;
+  height: 6px;
 }
 
 ::-webkit-scrollbar-track {
@@ -144,7 +293,7 @@ textarea {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #d1d5db;
+  background: var(--color-line-strong);
   border-radius: 100px;
 }
 
@@ -157,9 +306,21 @@ textarea {
   display: none;
 }
 
-/* ——— Placeholders ——— */
+/* Horizontal scrollers snap so carousels stop mid-card instead of mid-gap. */
+.snap-row {
+  scroll-snap-type: x mandatory;
+  overscroll-behavior-x: contain;
+}
+
+.snap-row > * {
+  scroll-snap-align: start;
+}
+
+/* ——— Image placeholder for missing food/restaurant photography ——— */
 .food-placeholder {
-  background: linear-gradient(135deg, #16B8A6 0%, #0E4B47 100%);
+  background:
+    radial-gradient(circle at 25% 20%, rgba(255, 255, 255, 0.18) 0 24%, transparent 25%),
+    linear-gradient(135deg, var(--color-brand-900) 0%, var(--color-brand-600) 65%, var(--color-brand-400) 100%);
 }
 
 /* ——— Safe area insets ——— */
@@ -171,30 +332,109 @@ textarea {
   padding-top: env(safe-area-inset-top, 0px);
 }
 
-/* ——— Skeleton shimmer animation ——— */
+/* ——— Skeleton shimmer ——— */
 @keyframes shimmer {
-  0% { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, #edf0f2 25%, #f7f8fa 37%, #edf0f2 63%);
+  background: linear-gradient(90deg, #efe9e4 25%, #f8f4f1 37%, #efe9e4 63%);
   background-size: 200% 100%;
-  animation: shimmer 1.8s ease-in-out infinite;
+  animation: shimmer 1.6s ease-in-out infinite;
 }
 
 /* ——— Smooth image load ——— */
 .img-fade-in {
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity var(--duration-slow) var(--ease-standard);
 }
 
 .img-fade-in.loaded {
   opacity: 1;
 }
 
-/* ——— Reduced motion ——— */
+/* ——— Card hover (desktop pointers only) ——— */
+.card-hover {
+  transition:
+    transform var(--duration-base) var(--ease-standard),
+    box-shadow var(--duration-base) var(--ease-standard),
+    border-color var(--duration-base) var(--ease-standard);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .card-hover:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-elevated);
+  }
+}
+
+/* ——— Press feedback ——— */
+button:active:not(:disabled),
+a:active:not(:disabled) {
+  transform: scale(0.98);
+}
+
+/* ——— Entrance animation ——— */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp var(--duration-slow) var(--ease-out-soft) both;
+}
+
+/* ——— Bottom cart bar / mobile nav clearance ——— */
+.pb-cart-safe {
+  padding-bottom: 5.5rem;
+}
+
+@media (min-width: 640px) {
+  .pb-cart-safe {
+    padding-bottom: 6rem;
+  }
+}
+
+/* ——— Restaurant detail: header fades in a surface as the hero scrolls away ——— */
+@keyframes restaurantHeaderSurface {
+  from {
+    background-color: transparent;
+    box-shadow: none;
+  }
+  to {
+    background-color: rgba(251, 248, 245, 0.97);
+    box-shadow: 0 1px 0 var(--color-line);
+  }
+}
+
+@supports (animation-timeline: scroll()) {
+  .restaurant-detail-header {
+    animation: restaurantHeaderSurface linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 7rem;
+  }
+}
+
+/* ============================================================================
+   REDUCED MOTION
+   One block, applied last, so nothing above can reintroduce motion.
+   ============================================================================ */
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
@@ -207,138 +447,19 @@ textarea {
   .skeleton-shimmer {
     animation: none;
   }
-}
 
-/* ——— Better active press state for buttons ——— */
-button:active:not(:disabled),
-a:active:not(:disabled) {
-  transform: scale(0.98);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  button:active:not(:disabled),
-  a:active:not(:disabled) {
-    transform: none;
-  }
-}
-
-/* ——— Card transition utility ——— */
-.card-hover {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-}
-
-.card-hover:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 18px 42px rgba(14, 75, 71, 0.10);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .card-hover:hover {
-    transform: none;
-  }
-}
-
-/* ——— Responsive page container ——— */
-.page-container {
-  width: 100%;
-  max-width: var(--page-max-width);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: var(--page-gutter);
-  padding-right: var(--page-gutter);
-}
-
-.content-container {
-  width: 100%;
-  max-width: var(--content-max-width);
-  margin-left: auto;
-  margin-right: auto;
-  padding-left: var(--page-gutter);
-  padding-right: var(--page-gutter);
-}
-
-.page-section {
-  margin-top: var(--page-section-gap);
-}
-
-@media (min-width: 640px) {
-  :root {
-    --page-gutter: 1.5rem;
-    --page-section-gap: 2.5rem;
-  }
-}
-
-@media (min-width: 1024px) {
-  :root {
-    --page-gutter: 2rem;
-    --page-section-gap: 3rem;
-  }
-}
-
-/* ——— Entrance animation ——— */
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(16px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-.fade-in-up {
-  animation: fadeInUp 0.5s ease-out both;
-}
-
-@media (prefers-reduced-motion: reduce) {
   .fade-in-up {
     animation: none;
     opacity: 1;
     transform: none;
   }
-}
 
-/* ——— Focus-visible ring ——— */
-:focus-visible {
-  outline: 2px solid #16B8A6;
-  outline-offset: 2px;
-}
-
-input:focus-visible,
-textarea:focus-visible,
-select:focus-visible {
-  outline: none;
-  box-shadow: 0 0 0 3px rgba(22, 184, 166, 0.14);
-  border-color: #16B8A6;
-}
-
-/* ——— Bottom cart bar clearance ——— */
-.pb-cart-safe {
-  padding-bottom: 5.5rem;
-}
-
-@keyframes restaurantHeaderSurface {
-  from {
-    background-color: transparent;
-    box-shadow: none;
+  .card-hover:hover {
+    transform: none;
   }
-  to {
-    background-color: rgba(247, 248, 250, 0.97);
-    box-shadow: 0 1px 0 rgba(23, 32, 51, 0.06);
-  }
-}
 
-@supports (animation-timeline: scroll()) {
-  .restaurant-detail-header {
-    animation: restaurantHeaderSurface linear both;
-    animation-timeline: scroll(root block);
-    animation-range: 0 7rem;
-  }
-}
-
-@media (min-width: 640px) {
-  .pb-cart-safe {
-    padding-bottom: 6rem;
+  button:active:not(:disabled),
+  a:active:not(:disabled) {
+    transform: none;
   }
 }

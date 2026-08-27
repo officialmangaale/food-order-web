@@ -1,6 +1,6 @@
 'use client';
 
-import { BriefcaseBusiness, CheckCircle2, Home, MapPin, Phone } from 'lucide-react';
+import { BriefcaseBusiness, Check, Home, MapPin, Phone } from 'lucide-react';
 import type { CheckoutAddress } from '@/components/checkout/checkoutTypes';
 
 interface AddressCardProps {
@@ -13,31 +13,40 @@ export function AddressCard({ address, selected, onSelect }: AddressCardProps) {
   return (
     <button
       type="button"
+      role="radio"
+      aria-checked={selected}
       onClick={onSelect}
-      className={`relative min-h-[162px] rounded-xl border p-4 text-left transition ${
+      className={`relative flex min-h-[168px] flex-col rounded-card border-2 p-4 text-left transition-[border-color,background-color] duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 ${
         selected
-          ? 'border-[#B31317] bg-[#FFF0F0] shadow-[0_10px_24px_rgba(179,19,23,0.08)]'
-          : 'border-[#E7B8B3] bg-white hover:border-[#B31317] hover:bg-[#FFF9F8]'
+          ? 'border-brand-700 bg-brand-50'
+          : 'border-line-strong bg-surface hover:border-brand-300'
       }`}
     >
       <div className="flex items-start justify-between gap-3">
-        <div className="flex min-w-0 items-center gap-2">
-          {renderAddressIcon(address.label)}
-          <span className="truncate text-sm font-extrabold tracking-[0.12em] text-[#A80F15]">
-            {(address.label || 'Home').toUpperCase()}
+        <span className="flex min-w-0 items-center gap-1.5">
+          <AddressIcon label={address.label} />
+          <span className="truncate text-eyebrow uppercase text-brand-800">
+            {address.label || 'Home'}
           </span>
-        </div>
-        {selected && <CheckCircle2 className="h-5 w-5 shrink-0 text-[#B31317]" aria-hidden="true" />}
+        </span>
+        <span
+          className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-full border-2 ${
+            selected ? 'border-brand-700 bg-brand-700 text-white' : 'border-line-strong'
+          }`}
+          aria-hidden="true"
+        >
+          {selected && <Check className="h-3 w-3" strokeWidth={3} />}
+        </span>
       </div>
 
-      <div className="mt-3 space-y-2 text-sm leading-6 text-[#2B2020]">
-        <p className="font-medium">{address.address_line1}</p>
-        <p className="text-[#4F3838]">
+      <div className="mt-3 space-y-1.5 text-sm leading-6">
+        <p className="font-semibold text-ink">{address.address_line1}</p>
+        <p className="text-ink-muted">
           {[address.area, address.city, address.state, address.pincode].filter(Boolean).join(', ')}
         </p>
         {address.phone && (
-          <p className="flex items-center gap-2 text-[#4F3838]">
-            <Phone className="h-3.5 w-3.5" aria-hidden="true" />
+          <p className="flex items-center gap-1.5 text-ink-muted">
+            <Phone className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
             {address.phone}
           </p>
         )}
@@ -46,9 +55,10 @@ export function AddressCard({ address, selected, onSelect }: AddressCardProps) {
   );
 }
 
-function renderAddressIcon(label?: string) {
+function AddressIcon({ label }: { label?: string }) {
   const normalized = label?.toLowerCase() ?? '';
-  const className = 'h-4 w-4 shrink-0 text-[#A80F15]';
+  const className = 'h-4 w-4 shrink-0 text-brand-800';
+
   if (normalized.includes('work') || normalized.includes('office')) {
     return <BriefcaseBusiness className={className} aria-hidden="true" />;
   }

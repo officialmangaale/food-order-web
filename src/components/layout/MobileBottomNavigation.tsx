@@ -26,7 +26,7 @@ export function MobileBottomNavigation() {
       <div className="h-24 md:hidden" aria-hidden="true" />
       <nav
         aria-label="Primary navigation"
-        className="fixed inset-x-4 bottom-3 z-50 mx-auto max-w-[600px] rounded-[28px] border border-line bg-surface/95 px-5 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-floating backdrop-blur-xl md:hidden"
+        className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-[600px] rounded-sheet border border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-floating backdrop-blur-xl md:hidden"
       >
         <ul className="grid grid-cols-3 items-end">
           {items.map(({ href, label, icon: Icon }) => {
@@ -38,18 +38,18 @@ export function MobileBottomNavigation() {
                 <Link
                   href={href}
                   aria-current={active ? 'page' : undefined}
-                  className={`mx-auto flex w-fit min-w-[72px] flex-col items-center gap-1 text-xs font-bold transition ${
+                  className={`mx-auto flex min-h-11 w-fit min-w-16 flex-col items-center gap-1 rounded-control text-[11px] font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 ${
                     active ? 'text-brand-900' : 'text-ink-muted hover:text-brand-900'
                   }`}
                 >
                   <span
-                    className={`flex items-center justify-center rounded-full transition ${
+                    className={`flex items-center justify-center rounded-full transition-colors ${
                       isHome
-                        ? '-mt-6 h-14 w-14 border-4 border-white bg-brand-500 text-white shadow-brand'
-                        : 'h-9 w-12'
+                        ? '-mt-4 h-12 w-12 border-4 border-surface bg-brand-700 text-white shadow-brand'
+                        : `h-9 w-11 ${active ? 'bg-brand-50' : ''}`
                     }`}
                   >
-                    <Icon className={isHome ? 'h-6 w-6 fill-current' : 'h-[22px] w-[22px]'} aria-hidden="true" />
+                    <Icon className={isHome ? 'h-[22px] w-[22px] fill-current' : 'h-5 w-5'} aria-hidden="true" />
                   </span>
                   <span>{label}</span>
                 </Link>

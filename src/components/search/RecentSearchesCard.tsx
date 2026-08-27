@@ -20,21 +20,21 @@ export function RecentSearchesCard({ searches, onSelect, compact }: RecentSearch
                 key={term}
                 type="button"
                 onClick={() => onSelect(term)}
-                className="shrink-0 rounded-full border border-[#E9CBCB] bg-white px-4 py-2 text-sm font-medium text-[#4B3A3A] transition hover:border-[#B31317] hover:text-[#A80F15]"
+                className="inline-flex h-10 shrink-0 items-center rounded-full border border-line-strong bg-surface px-4 text-sm font-semibold text-ink-muted transition-colors hover:border-brand-300 hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
               >
                 {term}
               </button>
             ))}
           </div>
         ) : (
-          <p className="text-sm text-[#8B7B7B]">Your recent searches will appear here.</p>
+          <p className="text-sm text-ink-subtle">Your recent searches will appear here.</p>
         )}
       </div>
     );
   }
 
   return (
-    <section className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_12px_32px_rgba(168,15,21,0.06)]">
+    <section className="rounded-card border border-line bg-surface p-5 shadow-card">
       <CardTitle>Recent Searches</CardTitle>
       <div className="mt-4 space-y-1">
         {searches.length > 0 ? (
@@ -43,14 +43,14 @@ export function RecentSearchesCard({ searches, onSelect, compact }: RecentSearch
               key={term}
               type="button"
               onClick={() => onSelect(term)}
-              className="flex w-full items-center gap-3 rounded-xl px-2 py-2.5 text-left text-sm font-medium text-[#4B3A3A] transition hover:bg-[#FFF7F5] hover:text-[#A80F15]"
+              className="flex min-h-11 w-full items-center gap-3 rounded-control px-2 text-left text-sm font-medium text-ink-muted transition-colors hover:bg-brand-50 hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
             >
-              <History className="h-4 w-4 shrink-0 text-[#B9A2A2]" aria-hidden="true" />
+              <History className="h-4 w-4 shrink-0 text-ink-subtle" aria-hidden="true" />
               <span className="truncate">{term}</span>
             </button>
           ))
         ) : (
-          <p className="rounded-xl bg-[#FFF7F5] px-3 py-3 text-sm text-[#8B7B7B]">
+          <p className="rounded-control bg-surface-sunken px-3 py-3 text-sm text-ink-subtle">
             Your recent searches will appear here.
           </p>
         )}
@@ -61,8 +61,6 @@ export function RecentSearchesCard({ searches, onSelect, compact }: RecentSearch
 
 function CardTitle({ children }: { children: string }) {
   return (
-    <h2 className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#A80F15]">
-      {children}
-    </h2>
+    <h2 className="text-eyebrow uppercase text-ink-subtle">{children}</h2>
   );
 }

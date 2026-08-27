@@ -43,42 +43,40 @@ export function ActiveOrderCard() {
 
   return (
     <motion.div
-      initial={{ opacity: 0, y: -10 }}
+      initial={{ opacity: 0, y: -8 }}
       animate={{ opacity: 1, y: 0 }}
-      className="mb-1"
     >
       <Link
         href={`/orders/${activeOrder.order_id}/track`}
-        className="block rounded-card focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
+        className="flex items-center gap-3 rounded-card border border-brand-200 bg-brand-50 p-4 shadow-card transition-colors hover:border-brand-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
       >
-        <div className={`rounded-2xl p-4 flex items-center gap-3 shadow-card border ${
-          isTerminal
-            ? 'border-line bg-surface'
-            : 'border-brand-200 bg-brand-100'
-        }`}>
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0 ${
-            isTerminal ? 'bg-surface-muted' : 'bg-white/80'
-          }`}>
-            <Truck className={`w-5 h-5 ${isTerminal ? 'text-ink-muted' : 'text-brand-900'}`} />
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="truncate text-sm font-semibold text-ink">
-              {activeOrder.restaurant_name}
-            </p>
-            <p className={`text-xs font-medium ${isTerminal ? 'text-ink-muted' : 'text-brand-600'}`}>
-              {label}
-            </p>
-          </div>
-          <div className="flex flex-shrink-0 items-center gap-1 text-ink-subtle">
-            <span className="text-xs font-medium">Track</span>
-            <ChevronRight className="w-4 h-4" />
-          </div>
-        </div>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-surface text-brand-800">
+          <Truck className="h-5 w-5" aria-hidden="true" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-sm font-extrabold text-ink">
+            {activeOrder.restaurant_name}
+          </span>
+          <span className="mt-0.5 flex items-center gap-1.5">
+            {!isTerminal && (
+              <span
+                className="h-1.5 w-1.5 shrink-0 animate-pulse rounded-full bg-brand-600"
+                aria-hidden="true"
+              />
+            )}
+            <span className="text-xs font-semibold text-brand-800">{label}</span>
+          </span>
+        </span>
+        <span className="flex shrink-0 items-center gap-1 text-sm font-bold text-brand-800">
+          Track
+          <ChevronRight className="h-4 w-4" aria-hidden="true" />
+        </span>
       </Link>
       {isTerminal && (
         <button
-          onClick={(e) => { e.stopPropagation(); clearActiveOrder(); }}
-          className="ml-2 mt-1 rounded px-1 text-xs text-ink-subtle transition hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
+          type="button"
+          onClick={clearActiveOrder}
+          className="mt-2 inline-flex min-h-11 items-center rounded-full px-2 text-xs font-semibold text-ink-subtle transition-colors hover:text-ink focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
         >
           Dismiss
         </button>

@@ -1,10 +1,11 @@
 'use client';
 
-import { useCallback, useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useState, type FormEvent } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Clock, LocateFixed, MapPin, X } from 'lucide-react';
+import { Clock, LocateFixed, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Sheet } from '@/components/ui/Sheet';
 import { useLocationStore } from '@/store/locationStore';
 import { useToast } from '@/components/ui/Toast';
 
@@ -34,25 +35,14 @@ export function LocationModal({ open, onClose }: LocationModalProps) {
   const [locating, setLocating] = useState(false);
   const [error, setError] = useState('');
 
-  const hasRecentLocation = Boolean(label || addressText || savedArea || (latitude != null && longitude != null));
+  const hasRecentLocation = Boolean(
+    label || addressText || savedArea || (latitude != null && longitude != null)
+  );
 
   const handleClose = useCallback(() => {
     setError('');
     onClose();
   }, [onClose]);
-
-  useEffect(() => {
-    if (!open) return;
-
-    const onKeyDown = (event: KeyboardEvent) => {
-      if (event.key === 'Escape') handleClose();
-    };
-
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [handleClose, open]);
-
-  if (!open) return null;
 
   const refreshLocationQueries = () => {
     void queryClient.invalidateQueries({ queryKey: ['homeFeed'] });
@@ -94,106 +84,115 @@ export function LocationModal({ open, onClose }: LocationModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[120]" role="dialog" aria-modal="true" aria-labelledby="location-modal-title">
-      <button
-        type="button"
-        className="absolute inset-0 h-full w-full bg-black/35 backdrop-blur-[2px]"
-        aria-label="Close location modal"
-        onClick={handleClose}
-      />
-      <div className="absolute bottom-0 left-0 right-0 max-h-[92vh] overflow-y-auto rounded-t-3xl border border-[#F0DADA] bg-[#FFF7F5] shadow-2xl sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[min(92vw,560px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E8DFDF] bg-[#FFF7F5]/95 px-5 py-4 backdrop-blur">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#A80F15]">
-              Delivery Location
-            </p>
-            <h2 id="location-modal-title" className="mt-1 text-xl font-extrabold text-[#1F1A1A]">
-              Choose where to deliver
-            </h2>
-          </div>
-          <button
-            type="button"
+    <Sheet
+      open={open}
+      onClose={handleClose}
+      title="Choose where to deliver"
+      description="We use this to show restaurants that deliver to you."
+      size="md"
+    >
+      <div className="space-y-4">
+        <LocationOption
+          dataInitialFocus
+          icon={<LocateFixed className="h-5 w-5" aria-hidden="true" />}
+          title={locating ? 'Getting your location...' : 'Use current location'}
+          description="We will ask your browser for permission."
+          disabled={locating}
+          onClick={handleCurrentLocation}
+        />
+
+        {hasRecentLocation && (
+          <LocationOption
+            icon={<Clock className="h-5 w-5" aria-hidden="true" />}
+            title="Recent location"
+            description={addressText || label || 'Current location'}
             onClick={handleClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#4B3A3A] transition hover:bg-white hover:text-[#A80F15]"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
-        </div>
+          />
+        )}
 
-        <div className="space-y-5 p-5">
-          <button
-            type="button"
-            onClick={handleCurrentLocation}
-            disabled={locating}
-            className="flex w-full items-center gap-4 rounded-2xl border border-[#E9CBCB] bg-white p-4 text-left shadow-[0_10px_28px_rgba(168,15,21,0.06)] transition hover:border-[#B31317] disabled:opacity-60"
-          >
-            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0F0] text-[#A80F15]">
-              <LocateFixed className="h-5 w-5" aria-hidden="true" />
+        <form
+          onSubmit={handleManualSubmit}
+          className="rounded-card border border-line bg-surface p-4"
+        >
+          <div className="mb-4 flex items-center gap-3">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-800">
+              <MapPin className="h-5 w-5" aria-hidden="true" />
             </span>
-            <span className="min-w-0 flex-1">
-              <span className="block text-base font-extrabold text-[#1F1A1A]">
-                {locating ? 'Getting your location...' : 'Use current location'}
-              </span>
-              <span className="mt-1 block text-sm text-[#7B6B6B]">
-                We will ask your browser for permission.
-              </span>
-            </span>
-          </button>
+            <div className="min-w-0">
+              <h3 className="text-sm font-extrabold text-ink">Enter address manually</h3>
+              <p className="text-sm text-ink-muted">Area and city are enough to get started.</p>
+            </div>
+          </div>
 
-          {hasRecentLocation && (
-            <button
-              type="button"
-              onClick={handleClose}
-              className="flex w-full items-center gap-4 rounded-2xl border border-[#E9CBCB] bg-white p-4 text-left transition hover:border-[#B31317]"
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Input label="Area" value={area} onChange={(event) => setArea(event.target.value)} required />
+            <Input label="City" value={city} onChange={(event) => setCity(event.target.value)} required />
+            <Input
+              label="Pincode"
+              hint="Optional"
+              value={pincode}
+              maxLength={6}
+              inputMode="numeric"
+              onChange={(event) => setPincode(event.target.value.replace(/\D/g, ''))}
+            />
+            <Input
+              label="Landmark"
+              hint="Optional"
+              value={landmark}
+              onChange={(event) => setLandmark(event.target.value)}
+            />
+          </div>
+
+          {error && (
+            <p
+              role="alert"
+              className="mt-3 rounded-control bg-danger-tint px-3 py-2 text-sm font-semibold text-danger"
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#FFF0F0] text-[#A80F15]">
-                <Clock className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <span className="min-w-0 flex-1">
-                <span className="block text-base font-extrabold text-[#1F1A1A]">Recent location</span>
-                <span className="mt-1 block truncate text-sm text-[#7B6B6B]">
-                  {addressText || label || 'Current location'}
-                </span>
-              </span>
-            </button>
+              {error}
+            </p>
           )}
 
-          <form onSubmit={handleManualSubmit} className="rounded-2xl border border-[#F0DADA] bg-white p-4 shadow-[0_10px_28px_rgba(168,15,21,0.05)]">
-            <div className="mb-4 flex items-center gap-3">
-              <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#FFF0F0] text-[#A80F15]">
-                <MapPin className="h-5 w-5" aria-hidden="true" />
-              </span>
-              <div>
-                <h3 className="text-base font-extrabold text-[#1F1A1A]">Enter address manually</h3>
-                <p className="text-sm text-[#7B6B6B]">Area and city are enough to get started.</p>
-              </div>
-            </div>
-
-            <div className="grid gap-3 sm:grid-cols-2">
-              <Input label="Area" value={area} onChange={(event) => setArea(event.target.value)} />
-              <Input label="City" value={city} onChange={(event) => setCity(event.target.value)} />
-              <Input
-                label="Pincode (optional)"
-                value={pincode}
-                maxLength={6}
-                onChange={(event) => setPincode(event.target.value.replace(/\D/g, ''))}
-              />
-              <Input
-                label="Landmark (optional)"
-                value={landmark}
-                onChange={(event) => setLandmark(event.target.value)}
-              />
-            </div>
-
-            {error && <p className="mt-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-red-700">{error}</p>}
-
-            <Button type="submit" fullWidth className="mt-4">
-              Save location
-            </Button>
-          </form>
-        </div>
+          <Button type="submit" fullWidth className="mt-4">
+            Save location
+          </Button>
+        </form>
       </div>
-    </div>
+    </Sheet>
+  );
+}
+
+interface LocationOptionProps {
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+  onClick: () => void;
+  disabled?: boolean;
+  dataInitialFocus?: boolean;
+}
+
+function LocationOption({
+  icon,
+  title,
+  description,
+  onClick,
+  disabled,
+  dataInitialFocus,
+}: LocationOptionProps) {
+  return (
+    <button
+      type="button"
+      data-dialog-initial-focus={dataInitialFocus ? '' : undefined}
+      onClick={onClick}
+      disabled={disabled}
+      className="flex w-full items-center gap-4 rounded-card border border-line bg-surface p-4 text-left transition-colors hover:border-brand-300 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 disabled:opacity-60"
+    >
+      <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-brand-50 text-brand-800">
+        {icon}
+      </span>
+      <span className="min-w-0 flex-1">
+        <span className="block text-sm font-extrabold text-ink">{title}</span>
+        <span className="mt-0.5 block truncate text-sm text-ink-muted">{description}</span>
+      </span>
+    </button>
   );
 }

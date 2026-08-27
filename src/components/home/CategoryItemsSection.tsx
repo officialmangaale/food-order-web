@@ -1,12 +1,15 @@
 'use client';
 
-import Link from 'next/link';
-import { AlertTriangle, MapPin } from 'lucide-react';
 import { CategoryItemCard } from '@/components/home/CategoryItemCard';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { CardRail } from '@/components/home/HomeSection';
+import { SectionHeader } from '@/components/layout/PageHeader';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { MediaCardSkeleton } from '@/components/ui/Skeleton';
 import type { CategoryFoodItem, CategoryItemsPagination, HomeCategory } from '@/types/category';
 
 const HOME_PREVIEW_COUNT = 4;
+const GRID = 'sm:grid-cols-2 lg:grid-cols-4';
 
 interface CategoryItemsSectionProps {
   selectedCategory?: HomeCategory;
@@ -43,48 +46,54 @@ export function CategoryItemsSection({
   const hasMoreItems = Boolean(
     mode === 'global' &&
       viewAllHref &&
-      (items.length > HOME_PREVIEW_COUNT || pagination?.hasMore || (knownTotalCount ?? 0) > HOME_PREVIEW_COUNT)
+      (items.length > HOME_PREVIEW_COUNT ||
+        pagination?.hasMore ||
+        (knownTotalCount ?? 0) > HOME_PREVIEW_COUNT)
   );
+  const needsLocation = mode === 'global' && !hasLocation;
 
   return (
-    <section className="mt-9" aria-live="polite">
-      <div className="relative mb-4">
-        <div className="pr-16">
-          <h3 className="text-lg font-extrabold tracking-[-0.025em] text-ink sm:text-3xl">{heading}</h3>
-          <p className="mt-1 whitespace-nowrap text-xs font-medium text-ink-muted sm:text-sm">Picked for your next meal</p>
-        </div>
-        {hasMoreItems && viewAllHref && (
-          <Link
-            href={viewAllHref}
-            className="absolute right-0 top-1 shrink-0 rounded-full px-1 text-sm font-bold text-brand-500 transition hover:text-brand-600 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/15"
-          >
-            View All
-          </Link>
-        )}
-      </div>
+    <section aria-live="polite">
+      <SectionHeader
+        title={heading}
+        description="Picked for your next meal"
+        href={hasMoreItems ? viewAllHref : undefined}
+      />
 
       {loading ? (
         <CategoryItemsSkeleton />
       ) : errorMessage ? (
-        <CategoryItemsError message={errorMessage} onRetry={onRetry} />
+        <ErrorState
+          title="Dishes are taking a pause"
+          message={errorMessage}
+          onRetry={onRetry}
+        />
       ) : items.length === 0 ? (
-        <CategoryItemsEmpty
-          categoryName={selectedCategory?.name ?? 'this category'}
-          hasLocation={hasLocation}
-          mode={mode}
-          onSetLocation={onSetLocation}
+        <EmptyState
+          icon={needsLocation ? 'location' : 'dish'}
+          title={
+            needsLocation
+              ? 'Set your location to see nearby dishes'
+              : 'No items available in this category'
+          }
+          description={
+            needsLocation
+              ? 'Choose where to deliver and we will refresh nearby dishes.'
+              : `${selectedCategory?.name ?? 'This category'} may be available again soon.`
+          }
+          actionLabel={needsLocation && onSetLocation ? 'Set location' : undefined}
+          onAction={needsLocation ? onSetLocation : undefined}
         />
       ) : (
-        <div className="-mx-4 flex gap-3 overflow-x-auto px-4 pb-2 hide-scrollbar sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:overflow-visible sm:px-0 lg:grid-cols-4 lg:gap-6">
+        <CardRail itemWidth="w-[168px]" gridClassName={GRID}>
           {visibleItems.map((item) => (
-            <div key={`${item.restaurantId}-${item.itemId}`} className="w-[140px] shrink-0 sm:w-auto">
-              <CategoryItemCard
-                item={item}
-                onAdd={onAddItem}
-              />
-            </div>
+            <CategoryItemCard
+              key={`${item.restaurantId}-${item.itemId}`}
+              item={item}
+              onAdd={onAddItem}
+            />
           ))}
-        </div>
+        </CardRail>
       )}
     </section>
   );
@@ -92,86 +101,11 @@ export function CategoryItemsSection({
 
 export function CategoryItemsSkeleton() {
   return (
-    <div className="-mx-4 flex gap-3 overflow-hidden px-4 pb-2 sm:mx-0 sm:grid sm:grid-cols-2 sm:gap-5 sm:px-0 lg:grid-cols-4 lg:gap-6">
-      {[1, 2, 3, 4].map((item) => (
-        <div key={item} className="w-[140px] shrink-0 overflow-hidden rounded-card border border-line bg-surface sm:w-auto">
-          <Skeleton className="h-[92px] w-full rounded-none sm:h-[172px] lg:h-[180px]" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-4/5" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-10 w-full" />
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-7 w-20" />
-              <Skeleton className="h-11 w-11 rounded-full" rounded />
-            </div>
-          </div>
-        </div>
+    <CardRail itemWidth="w-[168px]" gridClassName={GRID}>
+      {Array.from({ length: HOME_PREVIEW_COUNT }, (_, index) => (
+        <MediaCardSkeleton key={index} />
       ))}
-    </div>
-  );
-}
-
-function CategoryItemsError({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry?: () => void;
-}) {
-  return (
-    <div className="rounded-card border border-line bg-surface px-6 py-10 text-center shadow-card">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-cherry-50 text-danger">
-        <AlertTriangle className="h-6 w-6" aria-hidden="true" />
-      </div>
-      <h4 className="mt-4 text-base font-extrabold text-ink">Dishes are taking a pause</h4>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-muted">{message}</p>
-      {onRetry && (
-        <button
-          type="button"
-          onClick={onRetry}
-          className="mt-5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
-        >
-          Try again
-        </button>
-      )}
-    </div>
-  );
-}
-
-function CategoryItemsEmpty({
-  categoryName,
-  hasLocation,
-  mode,
-  onSetLocation,
-}: {
-  categoryName: string;
-  hasLocation?: boolean;
-  mode: 'global' | 'locked';
-  onSetLocation?: () => void;
-}) {
-  const needsLocation = mode === 'global' && !hasLocation;
-
-  return (
-    <div className="rounded-card border border-line bg-surface px-6 py-8 text-center shadow-card">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-brand-100 text-brand-900">
-        <MapPin className="h-6 w-6" aria-hidden="true" />
-      </div>
-      <h4 className="mt-4 text-base font-extrabold text-ink">
-        {needsLocation ? 'Set your location to see nearby dishes.' : 'No items available in this category.'}
-      </h4>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-ink-muted">
-        {needsLocation ? 'Choose where to deliver and we will refresh nearby dishes.' : `${categoryName} may be available again soon.`}
-      </p>
-      {needsLocation && onSetLocation && (
-        <button
-          type="button"
-          onClick={onSetLocation}
-          className="mt-5 rounded-full bg-brand-500 px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-brand-600 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-500/20 disabled:opacity-50"
-        >
-          Set location
-        </button>
-      )}
-    </div>
+    </CardRail>
   );
 }
 

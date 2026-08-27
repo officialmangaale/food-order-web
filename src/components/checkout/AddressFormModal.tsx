@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, type FormEvent } from 'react';
-import { Navigation, X } from 'lucide-react';
+import { Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
+import { Sheet } from '@/components/ui/Sheet';
 import { useLocationStore } from '@/store/locationStore';
 import type { CheckoutAddressPayload } from '@/components/checkout/checkoutTypes';
 
@@ -14,6 +15,8 @@ interface AddressFormModalProps {
   onClose: () => void;
   onSave: (payload: CheckoutAddressPayload) => Promise<void>;
 }
+
+const LABEL_PRESETS = ['Home', 'Work', 'Other'];
 
 export function AddressFormModal({
   open,
@@ -42,9 +45,10 @@ export function AddressFormModal({
   const [locating, setLocating] = useState(false);
   const [locationCaptured, setLocationCaptured] = useState(false);
 
-  if (!open) return null;
-
-  const setField = (field: keyof CheckoutAddressPayload, value: string | boolean | number | undefined) => {
+  const setField = (
+    field: keyof CheckoutAddressPayload,
+    value: string | boolean | number | undefined
+  ) => {
     setForm((current) => ({ ...current, [field]: value }));
   };
 
@@ -54,19 +58,20 @@ export function AddressFormModal({
     setLocating(false);
     if (!location) return;
 
-    setField('latitude', location.lat);
-    setField('longitude', location.lng);
+    setForm((current) => ({ ...current, latitude: location.lat, longitude: location.lng }));
     setLocationCaptured(true);
   };
 
   const validate = () => {
     const nextErrors: Record<string, string> = {};
     if (!form.name?.trim()) nextErrors.name = 'Name is required';
-    if (!form.phone || form.phone.replace(/\D/g, '').length < 10) nextErrors.phone = 'Valid phone is required';
+    if (!form.phone || form.phone.replace(/\D/g, '').length < 10)
+      nextErrors.phone = 'Valid phone is required';
     if (!form.address_line1.trim()) nextErrors.address_line1 = 'Address line is required';
     if (!form.area?.trim()) nextErrors.area = 'Area is required';
     if (!form.city?.trim()) nextErrors.city = 'City is required';
-    if (!form.pincode || form.pincode.replace(/\D/g, '').length < 5) nextErrors.pincode = 'Valid pincode is required';
+    if (!form.pincode || form.pincode.replace(/\D/g, '').length < 5)
+      nextErrors.pincode = 'Valid pincode is required';
     setErrors(nextErrors);
     return Object.keys(nextErrors).length === 0;
   };
@@ -95,118 +100,151 @@ export function AddressFormModal({
     }
   };
 
+  const hasCoordinates = locationCaptured || (form.latitude != null && form.longitude != null);
+
   return (
-    <div className="fixed inset-0 z-[130]" role="dialog" aria-modal="true" aria-labelledby="checkout-address-modal-title">
-      <button
-        type="button"
-        className="absolute inset-0 h-full w-full bg-black/35 backdrop-blur-[2px]"
-        aria-label="Close address form"
-        onClick={onClose}
-      />
-      <div className="absolute bottom-0 left-0 right-0 max-h-[92vh] overflow-y-auto rounded-t-3xl border border-[#F0DADA] bg-[#FFF7F5] shadow-2xl sm:bottom-auto sm:left-1/2 sm:right-auto sm:top-1/2 sm:w-[min(94vw,720px)] sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-3xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E8DFDF] bg-[#FFF7F5] px-5 py-4">
-          <div>
-            <p className="text-xs font-extrabold uppercase tracking-[0.16em] text-[#A80F15]">Delivery</p>
-            <h2 id="checkout-address-modal-title" className="mt-1 text-xl font-extrabold text-[#1F1A1A]">
-              Add New Address
-            </h2>
+    <Sheet
+      open={open}
+      onClose={onClose}
+      title="Add delivery address"
+      description="We use this to route your order to the right rider."
+      size="lg"
+      footer={
+        <Button type="submit" form="address-form" fullWidth size="lg" loading={saving}>
+          Save address
+        </Button>
+      }
+    >
+      <form id="address-form" onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <span className="mb-1.5 block text-sm font-bold text-ink">Label</span>
+          <div className="flex flex-wrap gap-2">
+            {LABEL_PRESETS.map((preset) => {
+              const active = form.label === preset;
+              return (
+                <button
+                  key={preset}
+                  type="button"
+                  data-dialog-initial-focus={preset === 'Home' ? '' : undefined}
+                  onClick={() => setField('label', preset)}
+                  aria-pressed={active}
+                  className={`inline-flex h-10 items-center rounded-full border px-4 text-sm font-bold transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25 ${
+                    active
+                      ? 'border-brand-700 bg-brand-50 text-brand-900'
+                      : 'border-line-strong bg-surface text-ink-muted hover:border-brand-300'
+                  }`}
+                >
+                  {preset}
+                </button>
+              );
+            })}
           </div>
-          <button
-            type="button"
-            onClick={onClose}
-            className="flex h-10 w-10 items-center justify-center rounded-full text-[#4B3A3A] transition hover:bg-white hover:text-[#A80F15]"
-            aria-label="Close"
-          >
-            <X className="h-5 w-5" aria-hidden="true" />
-          </button>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4 p-5">
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Input label="Label" value={form.label ?? ''} onChange={(event) => setField('label', event.target.value)} />
-            <Input label="Name" value={form.name ?? ''} onChange={(event) => setField('name', event.target.value)} error={errors.name} />
-            <Input
-              label="Phone"
-              type="tel"
-              maxLength={10}
-              value={form.phone ?? ''}
-              onChange={(event) => setField('phone', event.target.value.replace(/\D/g, ''))}
-              error={errors.phone}
-            />
-            <Input
-              label="Pincode"
-              maxLength={6}
-              value={form.pincode ?? ''}
-              onChange={(event) => setField('pincode', event.target.value.replace(/\D/g, ''))}
-              error={errors.pincode}
-            />
-          </div>
-
+        <div className="grid gap-4 sm:grid-cols-2">
           <Input
-            label="Address Line 1"
-            placeholder="House/flat, street"
-            value={form.address_line1}
-            onChange={(event) => setField('address_line1', event.target.value)}
-            error={errors.address_line1}
+            label="Name"
+            required
+            autoComplete="name"
+            value={form.name ?? ''}
+            onChange={(event) => setField('name', event.target.value)}
+            error={errors.name}
           />
-
-          <div className="grid gap-4 sm:grid-cols-3">
-            <Input label="Area / Locality" value={form.area ?? ''} onChange={(event) => setField('area', event.target.value)} error={errors.area} />
-            <Input label="City" value={form.city ?? ''} onChange={(event) => setField('city', event.target.value)} error={errors.city} />
-            <Input label="State" value={form.state ?? ''} onChange={(event) => setField('state', event.target.value)} />
-          </div>
-
           <Input
-            label="Landmark"
-            placeholder="Near gate, tower, or shop"
-            value={form.landmark ?? ''}
-            onChange={(event) => setField('landmark', event.target.value)}
+            label="Phone"
+            type="tel"
+            inputMode="numeric"
+            autoComplete="tel"
+            required
+            maxLength={10}
+            value={form.phone ?? ''}
+            onChange={(event) => setField('phone', event.target.value.replace(/\D/g, ''))}
+            error={errors.phone}
           />
+        </div>
 
-          <div className="grid gap-4 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
-            <Input
-              label="Latitude"
-              value={form.latitude ?? ''}
-              onChange={(event) => setField('latitude', parseOptionalNumber(event.target.value))}
-            />
-            <Input
-              label="Longitude"
-              value={form.longitude ?? ''}
-              onChange={(event) => setField('longitude', parseOptionalNumber(event.target.value))}
-            />
-            <Button
-              type="button"
-              variant="outline"
-              className="border-[#E7B8B3] text-[#A80F15] hover:bg-[#FFF0F0]"
-              onClick={captureLocation}
-              loading={locating}
-            >
-              <Navigation className="h-4 w-4" aria-hidden="true" />
-              Use current location
-            </Button>
+        <Input
+          label="Address line"
+          required
+          autoComplete="address-line1"
+          placeholder="House/flat, street"
+          value={form.address_line1}
+          onChange={(event) => setField('address_line1', event.target.value)}
+          error={errors.address_line1}
+        />
+
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Input
+            label="Area / locality"
+            required
+            value={form.area ?? ''}
+            onChange={(event) => setField('area', event.target.value)}
+            error={errors.area}
+          />
+          <Input
+            label="City"
+            required
+            autoComplete="address-level2"
+            value={form.city ?? ''}
+            onChange={(event) => setField('city', event.target.value)}
+            error={errors.city}
+          />
+          <Input
+            label="State"
+            autoComplete="address-level1"
+            value={form.state ?? ''}
+            onChange={(event) => setField('state', event.target.value)}
+          />
+          <Input
+            label="Pincode"
+            required
+            inputMode="numeric"
+            autoComplete="postal-code"
+            maxLength={6}
+            value={form.pincode ?? ''}
+            onChange={(event) => setField('pincode', event.target.value.replace(/\D/g, ''))}
+            error={errors.pincode}
+          />
+        </div>
+
+        <Input
+          label="Landmark"
+          hint="Optional — helps the rider find you"
+          placeholder="Near gate, tower, or shop"
+          value={form.landmark ?? ''}
+          onChange={(event) => setField('landmark', event.target.value)}
+        />
+
+        {/* GPS pin. Presented as a single action rather than raw lat/lng fields,
+            which customers cannot reasonably fill in by hand. */}
+        <div
+          className={`flex flex-col gap-3 rounded-card border p-4 sm:flex-row sm:items-center sm:justify-between ${
+            hasCoordinates ? 'border-green-200 bg-success-tint' : 'border-line bg-surface-sunken'
+          }`}
+        >
+          <div className="min-w-0">
+            <p className="text-sm font-extrabold text-ink">
+              {hasCoordinates ? 'Location pinned' : 'Pin your exact location'}
+            </p>
+            <p className="mt-0.5 text-sm text-ink-muted">
+              {hasCoordinates
+                ? 'The rider will navigate straight to you.'
+                : 'A GPS pin helps the restaurant deliver faster.'}
+            </p>
           </div>
-
-          {(locationCaptured || (form.latitude != null && form.longitude != null)) ? (
-            <p className="rounded-xl bg-green-50 px-3 py-2 text-sm font-semibold text-green-700">
-              Location captured
-            </p>
-          ) : (
-            <p className="rounded-xl bg-amber-50 px-3 py-2 text-sm font-semibold text-amber-700">
-              GPS location helps the restaurant deliver faster.
-            </p>
-          )}
-
-          <Button type="submit" fullWidth loading={saving} className="bg-[#A80F15] hover:bg-[#8F0D12]">
-            Save Address
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={captureLocation}
+            loading={locating}
+            className="shrink-0"
+          >
+            <Navigation className="h-4 w-4" aria-hidden="true" />
+            {hasCoordinates ? 'Update pin' : 'Use current location'}
           </Button>
-        </form>
-      </div>
-    </div>
+        </div>
+      </form>
+    </Sheet>
   );
-}
-
-function parseOptionalNumber(value: string) {
-  if (!value.trim()) return undefined;
-  const parsed = Number(value);
-  return Number.isFinite(parsed) ? parsed : undefined;
 }

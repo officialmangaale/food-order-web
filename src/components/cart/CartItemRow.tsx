@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
-import { Minus, Plus, Trash2, Utensils } from 'lucide-react';
-import { formatMoney } from '@/utils/money';
+import { Trash2 } from 'lucide-react';
+import { QuantityStepper } from '@/components/ui/QuantityStepper';
+import { Thumbnail } from '@/components/ui/Thumbnail';
+import { Price } from '@/components/ui/FoodMeta';
 import { getCartLineTotal, getVariantAddonSummary } from '@/components/cart/cartUtils';
 import type { CartItem } from '@/types/cart';
 
@@ -14,70 +15,50 @@ interface CartItemRowProps {
 }
 
 export function CartItemRow({ item, onIncrease, onDecrease, onRemove }: CartItemRowProps) {
-  const [imageFailed, setImageFailed] = useState(false);
-  const imageUrl = item.image_url && !imageFailed ? item.image_url : undefined;
   const details = getVariantAddonSummary(item);
 
   return (
-    <article className="grid gap-4 py-5 sm:grid-cols-[104px_minmax(0,1fr)_auto] sm:items-center">
-      <div className="flex gap-4 sm:contents">
-        <div className="flex h-20 w-20 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-[#FCE4E0] sm:h-[104px] sm:w-[104px]">
-          {imageUrl ? (
-            <img
-              src={imageUrl}
-              alt={item.name}
-              loading="lazy"
-              className="h-full w-full object-cover"
-              onError={() => setImageFailed(true)}
-            />
-          ) : (
-            <Utensils className="h-8 w-8 text-[#8D5F5F]" aria-hidden="true" />
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          <h3 className="text-lg font-extrabold leading-snug tracking-normal text-[#1F1717] sm:text-xl">
-            {item.name}
-          </h3>
-          {details && <p className="mt-1 line-clamp-2 text-sm leading-6 text-[#6B4B4B]">{details}</p>}
-          {!details && item.category_name && (
-            <p className="mt-1 text-sm leading-6 text-[#6B4B4B]">{item.category_name}</p>
-          )}
-          <p className="mt-3 text-2xl font-extrabold tracking-normal text-[#1F1717]">
-            {formatMoney(getCartLineTotal(item))}
-          </p>
-        </div>
+    <article className="flex gap-3 py-4 sm:gap-4 sm:py-5">
+      <div className="h-20 w-20 shrink-0 sm:h-24 sm:w-24">
+        <Thumbnail
+          src={item.image_url}
+          alt={item.name}
+          ratio="square"
+          className="h-full rounded-control"
+        />
       </div>
 
-      <div className="flex items-center justify-between gap-3 sm:justify-end">
-        <div className="flex h-11 items-center rounded-full border border-[#E5A8A8] bg-white text-[#A80F15]">
-          <button
-            type="button"
-            onClick={onDecrease}
-            className="flex h-11 w-11 items-center justify-center rounded-l-full transition hover:bg-[#FFF0F0]"
-            aria-label={`Decrease ${item.name}`}
-          >
-            <Minus className="h-4 w-4" aria-hidden="true" />
-          </button>
-          <span className="min-w-9 text-center text-base font-extrabold text-[#1F1717]">{item.quantity}</span>
-          <button
-            type="button"
-            onClick={onIncrease}
-            className="flex h-11 w-11 items-center justify-center rounded-r-full transition hover:bg-[#FFF0F0]"
-            aria-label={`Increase ${item.name}`}
-          >
-            <Plus className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <h3 className="text-sm font-extrabold leading-snug text-ink sm:text-base">{item.name}</h3>
 
-        <button
-          type="button"
-          onClick={onRemove}
-          className="flex h-11 w-11 items-center justify-center rounded-full bg-[#FCEBE9] text-[#7A3B3B] transition hover:bg-[#F7D8D4] hover:text-[#A80F15]"
-          aria-label={`Remove ${item.name}`}
-        >
-          <Trash2 className="h-5 w-5" aria-hidden="true" />
-        </button>
+        {details ? (
+          <p className="mt-1 line-clamp-2 text-xs leading-5 text-ink-muted sm:text-sm">{details}</p>
+        ) : item.category_name ? (
+          <p className="mt-1 text-xs leading-5 text-ink-muted sm:text-sm">{item.category_name}</p>
+        ) : null}
+
+        {/* Price and controls share one row so the card height is constant. */}
+        <div className="mt-auto flex flex-wrap items-center justify-between gap-3 pt-3">
+          <Price amount={getCartLineTotal(item)} size="md" />
+
+          <div className="flex items-center gap-2">
+            <QuantityStepper
+              quantity={item.quantity}
+              onIncrease={onIncrease}
+              onDecrease={onDecrease}
+              itemName={item.name}
+              size="sm"
+            />
+            <button
+              type="button"
+              onClick={onRemove}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-ink-subtle transition-colors hover:bg-danger-tint hover:text-danger focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+              aria-label={`Remove ${item.name} from cart`}
+            >
+              <Trash2 className="h-[18px] w-[18px]" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
       </div>
     </article>
   );

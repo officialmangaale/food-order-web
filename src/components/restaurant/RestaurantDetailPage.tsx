@@ -3,8 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
+import { ButtonLink } from '@/components/ui/Button';
 import { ErrorState } from '@/components/ui/ErrorState';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { MenuItemSkeleton, Skeleton } from '@/components/ui/Skeleton';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CouponBanner } from '@/components/coupon/CouponBanner';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
@@ -268,26 +269,20 @@ export function RestaurantDetailPage({
 
   if (restaurantQuery.error || (!restaurantQuery.isLoading && !restaurant)) {
     return (
-      <main className="min-h-screen bg-[#FFFDFD]">
-        <div className="mx-auto max-w-3xl px-4 py-20">
-          <ErrorState
-            title="Restaurant unavailable"
-            message={
-              locked
-                ? 'This restaurant link is unavailable or has been removed.'
-                : 'We could not find this restaurant.'
-            }
-            onRetry={() => restaurantQuery.refetch()}
-          />
-          <div className="mt-2 text-center">
-            <Link
-              href="/"
-              className="inline-flex rounded-full border border-[#E6B8B8] px-5 py-2 text-sm font-bold text-[#A80F15] hover:bg-[#FFF0F0]"
-            >
-              Back home
-            </Link>
-          </div>
-        </div>
+      <main id="main-content" className="page-main content-container">
+        <ErrorState
+          title="Restaurant unavailable"
+          message={
+            locked
+              ? 'This restaurant link is unavailable or has been removed.'
+              : 'We could not find this restaurant.'
+          }
+          onRetry={() => restaurantQuery.refetch()}
+        >
+          <ButtonLink href="/" variant="outline" size="sm">
+            Back home
+          </ButtonLink>
+        </ErrorState>
       </main>
     );
   }
@@ -298,7 +293,7 @@ export function RestaurantDetailPage({
   const noResults = !menuQuery.isLoading && sections.length === 0;
 
   return (
-    <main className="min-h-screen bg-[#FFFDFD] pb-16">
+    <main id="main-content" className="pb-cart-safe">
       <RestaurantHero
         restaurant={loadedRestaurant}
         loading={restaurantQuery.isLoading}
@@ -312,7 +307,7 @@ export function RestaurantDetailPage({
       )}
 
       {menuQuery.error ? (
-        <div className="mx-auto max-w-3xl px-4 py-14">
+        <div className="content-container py-12">
           <ErrorState
             title="Menu unavailable"
             message="We could not load this menu. Please try again."
@@ -428,30 +423,30 @@ async function trackCampaignOpenOnce(context: {
 
 function RestaurantDetailSkeleton() {
   return (
-    <main className="min-h-screen bg-[#FFFDFD]">
+    <main className="pb-cart-safe">
       <RestaurantHero
         loading
         favorite={false}
         onFavoriteToggle={() => undefined}
         onShare={() => undefined}
       />
-      <div className="mx-auto grid max-w-[1280px] gap-6 px-4 py-8 sm:px-6 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8 lg:px-8">
+      <div className="page-container grid gap-6 py-8 lg:grid-cols-[220px_minmax(0,1fr)] lg:gap-8">
         <aside className="hidden lg:block">
-          <div className="space-y-4 border-r border-[#F0DDDD] pr-5">
-            {[1, 2, 3, 4, 5].map((item) => (
-              <Skeleton key={item} className="h-10 w-full" />
+          <div className="space-y-3 border-r border-line pr-5">
+            {Array.from({ length: 5 }, (_, index) => (
+              <Skeleton key={index} className="h-12 w-full" />
             ))}
           </div>
         </aside>
         <div className="space-y-5">
-          <div className="flex gap-3">
-            <Skeleton className="h-12 w-56 rounded-full" />
-            <Skeleton className="h-10 w-28 rounded-full" />
-            <Skeleton className="h-10 w-28 rounded-full" />
+          <div className="flex flex-wrap gap-2">
+            <Skeleton className="h-10 w-[300px] max-w-full" rounded />
+            <Skeleton className="h-10 w-28" rounded />
+            <Skeleton className="h-10 w-28" rounded />
           </div>
-          <Skeleton className="h-8 w-56" />
-          {[1, 2, 3].map((item) => (
-            <Skeleton key={item} className="h-[150px] w-full rounded-2xl" />
+          <Skeleton className="h-7 w-56" />
+          {Array.from({ length: 3 }, (_, index) => (
+            <MenuItemSkeleton key={index} />
           ))}
         </div>
       </div>
@@ -461,22 +456,24 @@ function RestaurantDetailSkeleton() {
 
 function RestaurantFooter({ locked, lockedHref }: { locked: boolean; lockedHref: string }) {
   return (
-    <footer className="mt-8 border-t border-[#E9CFCF] bg-white">
-      <div className="mx-auto flex max-w-[1280px] flex-col gap-5 px-4 py-9 sm:px-6 lg:px-8 xl:flex-row xl:items-center xl:justify-between">
+    <footer className="mt-10 border-t border-line bg-surface-sunken">
+      <div className="page-container flex flex-col gap-5 py-9 lg:flex-row lg:items-center lg:justify-between">
         <Link
           href={locked ? lockedHref : '/'}
-          className="text-3xl font-extrabold tracking-normal text-[#A80F15]"
+          className="text-section leading-none text-brand-900"
         >
           Mangaale
         </Link>
-        <nav className="flex flex-wrap gap-x-6 gap-y-3 text-sm font-medium text-[#6B4B4B] sm:text-base">
-          {!locked && <Link href="/restaurants">Browse Menus</Link>}
-          <Link href="/profile/orders">Track Order</Link>
+        <nav className="flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-ink-muted [&>a]:inline-flex [&>a]:min-h-11 [&>a]:items-center [&>a:hover]:text-brand-800">
+          {!locked && <Link href="/restaurants">Browse menus</Link>}
+          <Link href="/profile/orders">Track order</Link>
           <Link href="/privacy">Privacy Policy</Link>
           <Link href="/terms">Terms of Service</Link>
           <Link href="/help">Help Center</Link>
         </nav>
-        <p className="text-sm text-[#7A6666]">{'\u00A9'} 2026 Mangaale. Culinary Excellence Delivered.</p>
+        <p className="text-xs text-ink-subtle">
+          {'\u00A9'} {new Date().getFullYear()} Mangaale. All rights reserved.
+        </p>
       </div>
     </footer>
   );

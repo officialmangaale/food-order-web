@@ -1,12 +1,18 @@
 'use client';
 
 import { useEffect, useMemo, useState } from 'react';
-import Link from 'next/link';
-import { AlertTriangle, ArrowLeft, Loader2 } from 'lucide-react';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CategoryItemCard } from '@/components/home/CategoryItemCard';
+import { PageHeader } from '@/components/layout/PageHeader';
+import { LocationModal } from '@/components/location/LocationModal';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { Button } from '@/components/ui/Button';
+import { Chip } from '@/components/ui/Chip';
+import { EmptyState } from '@/components/ui/EmptyState';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { VegIndicator } from '@/components/ui/FoodMeta';
+import { CardGridSkeleton, LoadingAnnouncement } from '@/components/ui/Skeleton';
+import { SortMenu, type SortOption } from '@/components/ui/SortMenu';
 import { useCategoryItems } from '@/hooks/useCategoryItems';
 import { useCartStore } from '@/store/cartStore';
 import { useLocationStore } from '@/store/locationStore';
@@ -24,6 +30,37 @@ interface CategoryListingClientProps {
 const PAGE_LIMIT = 20;
 const DEFAULT_RADIUS_KM = 7;
 
+/** Grid geometry is shared with the skeleton so loading never shifts the page. */
+const GRID_CLASSNAME = 'grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4';
+
+/**
+ * Sorting is applied client-side over the dishes already loaded. The backend
+ * `sort` parameter is left at its original 'recommended' value because no other
+ * value is known to be supported by /customer-web/categories/{key}/items, and
+ * guessing one risks breaking the listing. Ordering therefore covers everything
+ * fetched so far, and stays correct as more pages are appended.
+ */
+const SORT_OPTIONS: SortOption[] = [
+  { value: 'recommended', label: 'Recommended' },
+  { value: 'price_low', label: 'Price: low to high' },
+  { value: 'price_high', label: 'Price: high to low' },
+  { value: 'distance', label: 'Nearest first' },
+];
+
+function sortItems(items: CategoryFoodItem[], sort: string) {
+  if (sort === 'recommended') return items;
+
+  const sorted = [...items];
+  if (sort === 'price_low') return sorted.sort((a, b) => a.price - b.price);
+  if (sort === 'price_high') return sorted.sort((a, b) => b.price - a.price);
+  if (sort === 'distance') {
+    return sorted.sort(
+      (a, b) => (a.distanceKm ?? Number.POSITIVE_INFINITY) - (b.distanceKm ?? Number.POSITIVE_INFINITY)
+    );
+  }
+  return sorted;
+}
+
 export function CategoryListingClient({
   categoryKey: categoryKeyProp,
   initialName,
@@ -33,14 +70,20 @@ export function CategoryListingClient({
 }: CategoryListingClientProps) {
   const categoryKey = normalizeCategoryKey(categoryKeyProp);
   const categoryName = normalizeCategoryName(categoryKey, initialName);
-  const heading = categoryKey === 'all' ? 'Popular Dishes Near You' : `${categoryName} Near You`;
+  const heading = categoryKey === 'all' ? 'Popular dishes near you' : `${categoryName} near you`;
 
   const storeLat = useLocationStore((state) => state.latitude);
   const storeLng = useLocationStore((state) => state.longitude);
   const lat = initialLat ?? storeLat;
   const lng = initialLng ?? storeLng;
   const radiusKm = initialRadiusKm ?? DEFAULT_RADIUS_KM;
-  const requestKey = `${categoryKey}:${lat ?? ''}:${lng ?? ''}:${radiusKm}`;
+
+  const [sort, setSort] = useState('recommended');
+  const [vegOnly, setVegOnly] = useState(false);
+  const [locationOpen, setLocationOpen] = useState(false);
+  // `sort` is deliberately absent: it is applied client-side and must not
+  // discard already-fetched pages.
+  const requestKey = `${categoryKey}:${lat ?? ''}:${lng ?? ''}:${radiusKm}:${vegOnly}`;
 
   const [page, setPage] = useState(1);
   const [items, setItems] = useState<CategoryFoodItem[]>([]);
@@ -60,7 +103,7 @@ export function CategoryListingClient({
     page,
     limit: PAGE_LIMIT,
     sort: 'recommended',
-    vegOnly: false,
+    vegOnly,
     enabled: Boolean(categoryKey),
   });
 
@@ -93,6 +136,7 @@ export function CategoryListingClient({
   const firstPageLoading = page === 1 && items.length === 0 && itemsQuery.isLoading;
   const loadingMore = page > 1 && itemsQuery.isFetching;
   const errorMessage = getErrorMessage(itemsQuery.error);
+  const hasFilters = vegOnly || sort !== 'recommended';
 
   const addItemDirectly = (item: CategoryFoodItem) => {
     setRestaurant(item.restaurantId, item.restaurantName, item.restaurantSlug);
@@ -113,7 +157,12 @@ export function CategoryListingClient({
   };
 
   const hasCustomOptions = (item: CategoryFoodItem) =>
-    Boolean(item.hasVariants || item.hasAddons || (item.variants?.length ?? 0) > 0 || (item.addons?.length ?? 0) > 0);
+    Boolean(
+      item.hasVariants ||
+        item.hasAddons ||
+        (item.variants?.length ?? 0) > 0 ||
+        (item.addons?.length ?? 0) > 0
+    );
 
   const handleAddItem = (item: CategoryFoodItem) => {
     if (isDifferentRestaurant(item.restaurantId)) {
@@ -144,66 +193,116 @@ export function CategoryListingClient({
     addItemDirectly(item);
   };
 
+  const visibleItems = useMemo(() => sortItems(items, sort), [items, sort]);
+
   const resultCountLabel = useMemo(() => {
-    if (items.length === 0) return '';
-    if (totalCount != null && totalCount > items.length) return `${items.length} of ${totalCount} dishes`;
-    return `${items.length} dishes`;
-  }, [items.length, totalCount]);
+    if (firstPageLoading) return undefined;
+    if (items.length === 0) return undefined;
+    if (totalCount != null && totalCount > items.length) {
+      return `${items.length} of ${totalCount} dishes`;
+    }
+    return `${items.length} ${items.length === 1 ? 'dish' : 'dishes'}`;
+  }, [firstPageLoading, items.length, totalCount]);
 
   return (
-    <main className="mx-auto max-w-7xl px-4 pb-28 pt-6 sm:px-6 lg:px-8">
-      <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <Link
-          href="/"
-          className="inline-flex w-fit items-center gap-2 rounded-full border border-[#F0DADA] bg-white px-4 py-2 text-sm font-bold text-[#1F1A1A] transition hover:border-[#A80F15] hover:text-[#A80F15]"
-        >
-          <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-          Home
-        </Link>
-        <p className="text-sm font-semibold text-[#7B6B6B]">
-          {lat != null && lng != null ? `Within ${radiusKm} km of your location` : `Showing ${categoryName.toLowerCase()} from available restaurants`}
-        </p>
-      </div>
+    <main id="main-content" className="page-main page-container">
+      <PageHeader
+        eyebrow="Category"
+        title={heading}
+        count={resultCountLabel}
+        backHref="/"
+        meta={
+          lat != null && lng != null ? (
+            <button
+              type="button"
+              onClick={() => setLocationOpen(true)}
+              className="rounded-full font-semibold underline-offset-4 transition-colors hover:text-brand-800 hover:underline focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+            >
+              Within {radiusKm} km of your location
+            </button>
+          ) : (
+            `Showing ${categoryName.toLowerCase()} from available restaurants`
+          )
+        }
+      >
+        {/* Filters and sort. Horizontally scrollable on mobile so they never wrap
+            into a crowded two-row block. */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar sm:flex-wrap sm:overflow-visible">
+          <Chip active={vegOnly} onClick={() => setVegOnly((current) => !current)}>
+            <VegIndicator vegetarian size="sm" />
+            Veg only
+          </Chip>
 
-      <div className="mb-5 flex items-end justify-between gap-4">
-        <div>
-          <p className="text-xs font-extrabold uppercase tracking-[0.12em] text-[#A80F15]">Category</p>
-          <h1 className="mt-1 text-2xl font-extrabold text-[#1F1A1A] sm:text-3xl">{heading}</h1>
+          <SortMenu options={SORT_OPTIONS} value={sort} onChange={setSort} />
+
+          {hasFilters && (
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                setVegOnly(false);
+                setSort('recommended');
+              }}
+            >
+              Clear
+            </Button>
+          )}
         </div>
-        {resultCountLabel && (
-          <p className="shrink-0 text-sm font-bold text-[#7B6B6B]">{resultCountLabel}</p>
-        )}
-      </div>
+      </PageHeader>
 
       {firstPageLoading ? (
-        <ListingSkeleton />
+        <>
+          <LoadingAnnouncement label="Loading dishes" />
+          <CardGridSkeleton count={8} className={GRID_CLASSNAME} />
+        </>
       ) : errorMessage && items.length === 0 ? (
-        <ListingError message={errorMessage} onRetry={() => itemsQuery.refetch()} />
+        <ErrorState
+          title="Could not load dishes"
+          message={errorMessage}
+          onRetry={() => itemsQuery.refetch()}
+        />
       ) : items.length === 0 ? (
-        <ListingEmpty />
+        <EmptyState
+          icon="dish"
+          title={hasFilters ? 'No dishes match these filters' : 'No dishes in this category yet'}
+          description={
+            hasFilters
+              ? 'Try clearing your filters or picking another category.'
+              : 'Try another category from the home page.'
+          }
+          actionLabel={hasFilters ? 'Clear filters' : undefined}
+          onAction={
+            hasFilters
+              ? () => {
+                  setVegOnly(false);
+                  setSort('recommended');
+                }
+              : undefined
+          }
+        />
       ) : (
         <>
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-            {items.map((item) => (
+          <div className={GRID_CLASSNAME}>
+            {visibleItems.map((item, index) => (
               <CategoryItemCard
                 key={`${item.restaurantId}-${item.itemId}`}
                 item={item}
                 onAdd={handleAddItem}
+                priority={index < 4}
               />
             ))}
           </div>
 
           {hasMoreItems && (
             <div className="mt-8 flex justify-center">
-              <button
-                type="button"
+              <Button
+                variant="outline"
+                size="md"
+                loading={loadingMore}
                 onClick={() => setPage((currentPage) => currentPage + 1)}
-                disabled={loadingMore}
-                className="inline-flex items-center justify-center gap-2 rounded-full bg-[#A80F15] px-6 py-3 text-sm font-extrabold text-white shadow-[0_14px_30px_rgba(168,15,21,0.18)] transition hover:bg-[#8F0D12] disabled:cursor-not-allowed disabled:opacity-70"
               >
-                {loadingMore && <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />}
-                {loadingMore ? 'Loading' : 'Load more'}
-              </button>
+                {loadingMore ? 'Loading' : 'Load more dishes'}
+              </Button>
             </div>
           )}
         </>
@@ -222,56 +321,8 @@ export function CategoryListingClient({
         newRestaurantName={pendingItem?.restaurantName ?? ''}
         onCleared={handleCartCleared}
       />
+      <LocationModal open={locationOpen} onClose={() => setLocationOpen(false)} />
     </main>
-  );
-}
-
-function ListingSkeleton() {
-  return (
-    <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
-      {Array.from({ length: 8 }, (_, index) => (
-        <div key={index} className="overflow-hidden rounded-xl border border-[#F0DADA] bg-white">
-          <Skeleton className="h-[160px] w-full rounded-none sm:h-[172px] lg:h-[180px]" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-4/5" />
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-10 w-full" />
-            <div className="flex items-center justify-between">
-              <Skeleton className="h-7 w-20" />
-              <Skeleton className="h-11 w-11 rounded-full" rounded />
-            </div>
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-function ListingError({ message, onRetry }: { message: string; onRetry: () => void }) {
-  return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-6 py-10 text-center shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
-      <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-[#FFF0F0] text-[#A80F15]">
-        <AlertTriangle className="h-6 w-6" aria-hidden="true" />
-      </div>
-      <h2 className="mt-4 text-base font-extrabold text-[#1F1A1A]">Could not load dishes</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7B6B6B]">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-5 rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
-      >
-        Try again
-      </button>
-    </div>
-  );
-}
-
-function ListingEmpty() {
-  return (
-    <div className="rounded-2xl border border-[#F0DADA] bg-white px-6 py-8 text-center shadow-[0_12px_30px_rgba(168,15,21,0.05)]">
-      <h2 className="text-base font-extrabold text-[#1F1A1A]">No items available in this category.</h2>
-      <p className="mt-2 text-sm leading-6 text-[#7B6B6B]">Try another category from the home page.</p>
-    </div>
   );
 }
 
@@ -310,7 +361,7 @@ function normalizeCategoryName(categoryKey: string, initialName?: string) {
 function getErrorMessage(error: unknown) {
   if (!error) return '';
   if (error instanceof Error) return error.message;
-  if (typeof error === 'object' && 'message' in error) {
+  if (typeof error === 'object' && error !== null && 'message' in error) {
     return String((error as { message?: unknown }).message ?? '');
   }
   return 'Something went wrong. Please try again.';

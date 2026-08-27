@@ -19,7 +19,7 @@ export function CouponValidationMessage({
 }: CouponValidationMessageProps) {
   if (loading) {
     return (
-      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-[#8A5555]">
+      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-ink-muted">
         <Loader2 className="h-4 w-4 animate-spin" aria-hidden="true" />
         Checking coupon...
       </p>
@@ -28,7 +28,7 @@ export function CouponValidationMessage({
 
   if (error) {
     return (
-      <p className="mt-3 inline-flex items-start gap-2 text-sm font-semibold text-red-700">
+      <p className="mt-3 inline-flex items-start gap-2 text-sm font-semibold text-danger">
         <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
         <span>{error}</span>
       </p>
@@ -36,12 +36,12 @@ export function CouponValidationMessage({
   }
 
   if (!validation) {
-    return idleText ? <p className="mt-3 text-sm font-semibold text-[#7A5B5B]">{idleText}</p> : null;
+    return idleText ? <p className="mt-3 text-sm font-semibold text-ink-muted">{idleText}</p> : null;
   }
 
   if (validation.valid) {
     return (
-      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-green-700">
+      <p className="mt-3 inline-flex items-center gap-2 text-sm font-semibold text-success">
         <CheckCircle2 className="h-4 w-4" aria-hidden="true" />
         Coupon applied
         {validation.discountAmount > 0 ? `: you save ${formatMoney(validation.discountAmount)}` : ''}
@@ -50,7 +50,7 @@ export function CouponValidationMessage({
   }
 
   return (
-    <p className="mt-3 inline-flex items-start gap-2 text-sm font-semibold text-red-700">
+    <p className="mt-3 inline-flex items-start gap-2 text-sm font-semibold text-danger">
       <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
       <span>{validation.reason || 'This coupon is not applicable.'}</span>
     </p>

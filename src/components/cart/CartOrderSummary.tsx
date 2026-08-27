@@ -1,7 +1,8 @@
 'use client';
 
-import Link from 'next/link';
-import { ArrowRight, AlertCircle } from 'lucide-react';
+import { AlertCircle, ArrowRight } from 'lucide-react';
+import { ButtonLink } from '@/components/ui/Button';
+import { Card } from '@/components/ui/Card';
 import { formatMoney } from '@/utils/money';
 
 interface CartOrderSummaryProps {
@@ -11,16 +12,23 @@ interface CartOrderSummaryProps {
   blockedReason?: string;
 }
 
-export function CartOrderSummary({ subtotal, totalItems, invalidPrice, blockedReason }: CartOrderSummaryProps) {
+export function CartOrderSummary({
+  subtotal,
+  totalItems,
+  invalidPrice,
+  blockedReason,
+}: CartOrderSummaryProps) {
   const checkoutDisabled = totalItems <= 0 || invalidPrice || Boolean(blockedReason);
 
   return (
-    <aside className="rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_18px_42px_rgba(123,35,35,0.08)] lg:sticky lg:top-32 sm:p-6">
-      <h2 className="text-2xl font-extrabold tracking-normal text-[#1F1717]">Order Summary</h2>
-      <div className="mt-4 h-px bg-[#F1DEDE]" />
+    <Card as="aside" className="lg:sticky lg:top-[calc(var(--header-height)+1.5rem)] lg:self-start">
+      <h2 className="text-section text-ink">Order summary</h2>
 
       {(invalidPrice || blockedReason) && (
-        <div className="mt-5 flex gap-2 rounded-xl bg-amber-50 px-3 py-3 text-sm font-semibold text-amber-800">
+        <div
+          role="alert"
+          className="mt-4 flex gap-2 rounded-control bg-warning-tint px-3 py-3 text-sm font-semibold text-warning"
+        >
           <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
           <p>
             {blockedReason
@@ -30,54 +38,60 @@ export function CartOrderSummary({ subtotal, totalItems, invalidPrice, blockedRe
         </div>
       )}
 
-      <div className="mt-6 space-y-4 text-base text-[#3A2727]">
-        <SummaryRow label="Subtotal" value={formatMoney(subtotal)} />
-        <SummaryRow label="Delivery Fee" value="At checkout" muted />
-        <SummaryRow label="Taxes & Fees" value="At checkout" muted />
+      <dl className="mt-5 space-y-3 text-sm">
+        <SummaryRow
+          label={`Subtotal (${totalItems} ${totalItems === 1 ? 'item' : 'items'})`}
+          value={formatMoney(subtotal)}
+        />
+        <SummaryRow label="Delivery fee" value="Calculated at checkout" muted />
+        <SummaryRow label="Taxes & fees" value="Calculated at checkout" muted />
+      </dl>
+
+      <div className="my-5 h-px bg-line" />
+
+      <div className="flex items-baseline justify-between gap-4">
+        <span className="text-base font-extrabold text-ink">Estimated total</span>
+        <span className="text-title text-ink">{formatMoney(subtotal)}</span>
       </div>
 
-      <div className="my-6 h-px bg-[#F1DEDE]" />
+      <ButtonLink
+        href="/checkout"
+        variant="primary"
+        size="lg"
+        fullWidth
+        disabled={checkoutDisabled}
+        className="mt-6"
+      >
+        Proceed to checkout
+        <ArrowRight className="h-5 w-5" aria-hidden="true" />
+      </ButtonLink>
 
-      <div className="flex items-end justify-between gap-4">
-        <span className="text-xl font-extrabold text-[#1F1717]">Estimated Total</span>
-        <span className="text-4xl font-extrabold tracking-normal text-[#1F1717]">
-          {formatMoney(subtotal)}
-        </span>
-      </div>
-
-      {checkoutDisabled ? (
-        <button
-          type="button"
-          disabled
-          className="mt-8 flex w-full cursor-not-allowed items-center justify-center gap-2 rounded-xl bg-[#C7B5B5] px-6 py-3.5 text-lg font-semibold text-white"
-        >
-          Proceed to Checkout
-          <ArrowRight className="h-5 w-5" aria-hidden="true" />
-        </button>
-      ) : (
-        <Link
-          href="/checkout"
-          className="mt-8 flex w-full items-center justify-center gap-2 rounded-xl bg-[#A80F15] px-6 py-3.5 text-lg font-semibold text-white shadow-[0_12px_22px_rgba(168,15,21,0.2)] transition hover:bg-[#8F0D12]"
-        >
-          Proceed to Checkout
-          <ArrowRight className="h-5 w-5" aria-hidden="true" />
-        </Link>
-      )}
-
-      <p className="mt-5 text-sm leading-6 text-[#6B4B4B]">
-        Taxes and delivery fees are calculated at checkout.
+      <p className="mt-4 text-xs leading-5 text-ink-subtle">
+        Taxes and delivery fees are calculated at checkout. No hidden charges.
       </p>
-    </aside>
+    </Card>
   );
 }
 
-function SummaryRow({ label, value, muted }: { label: string; value: string; muted?: boolean }) {
+function SummaryRow({
+  label,
+  value,
+  muted,
+}: {
+  label: string;
+  value: string;
+  muted?: boolean;
+}) {
   return (
-    <div className="flex justify-between gap-4">
-      <span>{label}</span>
-      <span className={muted ? 'text-sm font-semibold text-[#8A6B6B]' : 'font-bold text-[#1F1717]'}>
+    <div className="flex items-baseline justify-between gap-4">
+      <dt className="text-ink-muted">{label}</dt>
+      <dd
+        className={
+          muted ? 'shrink-0 text-xs font-semibold text-ink-subtle' : 'shrink-0 font-bold text-ink'
+        }
+      >
         {value}
-      </span>
+      </dd>
     </div>
   );
 }

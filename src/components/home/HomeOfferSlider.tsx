@@ -73,7 +73,7 @@ export function HomeOfferSlider() {
 
   return (
     <motion.section
-      className="order-2 mx-auto mt-6 w-full max-w-7xl px-4 sm:mt-9 sm:px-6 lg:px-8"
+      className="page-container page-section"
       aria-label="Featured offers"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -84,7 +84,7 @@ export function HomeOfferSlider() {
       viewport={{ once: true, margin: "-50px" }}
       transition={{ duration: 0.5, ease: 'easeOut' }}
     >
-      <div className="relative h-[178px] overflow-hidden rounded-[24px] bg-brand-900 shadow-elevated sm:h-[260px] lg:h-[340px]">
+      <div className="relative aspect-[16/9] overflow-hidden rounded-card bg-brand-900 shadow-elevated sm:aspect-[21/9] lg:aspect-[24/9]">
         <AnimatePresence mode="wait" initial={false}>
           <motion.div
             key={String(activeOffer.id)}
@@ -108,7 +108,7 @@ export function HomeOfferSlider() {
               <span className="hidden w-fit rounded-full bg-white/14 px-3 py-1 text-[10px] font-extrabold uppercase tracking-[0.12em] text-white shadow-sm sm:inline-flex">
                 {activeOffer.badgeText || 'Exclusive Offer'}
               </span>
-              <h2 className="max-w-[500px] text-base font-extrabold leading-[1.12] tracking-[-0.025em] text-white sm:mt-4 sm:text-[34px] lg:text-[44px]">
+              <h2 className="mt-3 max-w-[520px] text-display text-white">
                 {activeOffer.title}
               </h2>
               {activeOffer.subtitle && (
@@ -174,7 +174,7 @@ function OfferCta({
 }) {
   const href = getOfferHref(offer, isLockedRoute, lockedHomeLink);
   const className =
-    'inline-flex min-h-9 items-center justify-center gap-2 rounded-full bg-white px-4 py-2 text-[11px] font-extrabold text-brand-900 shadow-sm transition hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/35 sm:min-h-12 sm:px-6 sm:text-base';
+    'inline-flex h-10 items-center justify-center gap-2 rounded-full bg-white px-5 text-sm font-extrabold text-brand-900 shadow-card transition-colors hover:bg-brand-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-white/40 sm:h-12 sm:px-6 sm:text-[15px]';
 
   if (/^https?:\/\//i.test(href)) {
     return (
@@ -236,8 +236,8 @@ function getOfferHref(offer: HomeMenuOffer, isLockedRoute: boolean, lockedHomeLi
 
 function HomeOfferSkeleton() {
   return (
-    <section className="order-2 mx-auto mt-7 w-full max-w-7xl px-4 sm:mt-9 sm:px-6 lg:px-8" aria-label="Loading offers">
-      <Skeleton className="h-[178px] rounded-[24px] sm:h-[260px] lg:h-[340px]" />
+    <section className="page-container page-section" aria-label="Loading offers">
+      <Skeleton className="aspect-[16/9] w-full rounded-card sm:aspect-[21/9] lg:aspect-[24/9]" />
     </section>
   );
 }

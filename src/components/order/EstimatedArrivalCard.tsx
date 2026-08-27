@@ -1,6 +1,7 @@
 'use client';
 
 import { Phone, Truck } from 'lucide-react';
+import { Card } from '@/components/ui/Card';
 import type { TrackingOrder } from '@/types/order';
 import { getPhoneLink } from '@/utils/maps';
 import { getEstimatedArrival } from '@/utils/orderStatus';
@@ -12,51 +13,49 @@ interface EstimatedArrivalCardProps {
 export function EstimatedArrivalCard({ order }: EstimatedArrivalCardProps) {
   const eta = getEstimatedArrival(order);
   const contactPhone = order.rider?.phone ?? order.restaurant.phone;
-  const deliveryName = order.rider?.name ?? 'Restaurant Delivery';
+  const deliveryName = order.rider?.name ?? 'Restaurant delivery';
   const deliveryMeta = order.rider?.vehicle ?? order.restaurant.name;
 
   return (
-    <section className="grid gap-5 rounded-2xl border border-[#F0DADA] bg-white p-5 shadow-[0_14px_38px_rgba(123,35,35,0.06)] sm:grid-cols-[minmax(180px,0.7fr)_minmax(0,1fr)] sm:items-center sm:p-6">
+    <Card as="section" className="grid gap-5 sm:grid-cols-[minmax(160px,0.6fr)_minmax(0,1fr)] sm:items-center">
       <div>
-        <p className="text-sm font-extrabold uppercase tracking-[0.14em] text-[#5A3C3C]">
-          Estimated Arrival
-        </p>
-        <p className="mt-3 text-5xl font-extrabold tracking-normal text-[#A80F15] sm:text-6xl">
-          {eta}
-        </p>
+        <p className="text-eyebrow uppercase text-ink-subtle">Estimated arrival</p>
+        <p className="mt-2 text-display text-brand-900">{eta}</p>
       </div>
 
-      <div className="flex items-center gap-4 rounded-2xl bg-[#FFF0F0] p-4">
-        <div className="flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full bg-[#1F1717] text-lg font-extrabold text-white">
+      <div className="flex items-center gap-3 rounded-card bg-surface-sunken p-4">
+        <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-brand-900 text-sm font-extrabold text-white">
           {getInitials(deliveryName)}
-        </div>
+        </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2 text-sm font-bold text-[#A80F15]">
-            <Truck className="h-4 w-4" aria-hidden="true" />
-            <span>Delivery</span>
-          </div>
-          <p className="mt-1 truncate text-lg font-extrabold text-[#1F1717]">{deliveryName}</p>
-          {deliveryMeta && <p className="truncate text-sm font-medium text-[#6B4B4B]">{deliveryMeta}</p>}
+          <span className="flex items-center gap-1.5 text-xs font-bold text-brand-800">
+            <Truck className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
+            Delivery
+          </span>
+          <p className="mt-0.5 truncate text-sm font-extrabold text-ink">{deliveryName}</p>
+          {deliveryMeta && <p className="truncate text-sm text-ink-muted">{deliveryMeta}</p>}
         </div>
         {contactPhone && (
           <a
             href={getPhoneLink(contactPhone)}
-            className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#E8B9B9] bg-white text-[#A80F15] transition hover:bg-[#A80F15] hover:text-white"
+            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-brand-700 bg-surface text-brand-800 transition-colors hover:bg-brand-700 hover:text-white focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
             aria-label={`Call ${deliveryName}`}
           >
             <Phone className="h-5 w-5" aria-hidden="true" />
           </a>
         )}
       </div>
-    </section>
+    </Card>
   );
 }
 
 function getInitials(name: string) {
-  return name
-    .split(/\s+/)
-    .filter(Boolean)
-    .slice(0, 2)
-    .map((part) => part[0]?.toUpperCase())
-    .join('') || 'MD';
+  return (
+    name
+      .split(/\s+/)
+      .filter(Boolean)
+      .slice(0, 2)
+      .map((part) => part[0]?.toUpperCase())
+      .join('') || 'MD'
+  );
 }

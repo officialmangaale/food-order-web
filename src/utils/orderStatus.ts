@@ -196,3 +196,43 @@ function getStepDescription(
   }
   return fallback;
 }
+
+/**
+ * The single mapping from an order status to a UI tone. Orders list, profile
+ * orders, the tracking header and the active-order card all read from here so
+ * a status never appears in two different colours.
+ */
+export type OrderStatusTone = 'success' | 'error' | 'progress' | 'default';
+
+export function getOrderStatusTone(status: string | null | undefined): OrderStatusTone {
+  const value = String(status ?? '').toLowerCase();
+
+  if (['delivered', 'completed'].includes(value)) return 'success';
+  if (['cancelled', 'rejected', 'declined', 'failed'].includes(value)) return 'error';
+  if (
+    [
+      'pending',
+      'placed',
+      'accepted',
+      'confirmed',
+      'preparing',
+      'ready',
+      'ready_for_pickup',
+      'picked_up',
+      'out_for_delivery',
+    ].includes(value)
+  ) {
+    return 'progress';
+  }
+
+  return 'default';
+}
+
+/** Badge variant for an order status. */
+export function getOrderStatusBadgeVariant(status: string | null | undefined) {
+  const tone = getOrderStatusTone(status);
+  if (tone === 'success') return 'success' as const;
+  if (tone === 'error') return 'error' as const;
+  if (tone === 'progress') return 'brand' as const;
+  return 'default' as const;
+}

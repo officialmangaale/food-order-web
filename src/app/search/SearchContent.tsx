@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { AlertTriangle } from 'lucide-react';
+
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { DishResultCard } from '@/components/search/DishResultCard';
@@ -12,7 +12,8 @@ import { SearchFilters } from '@/components/search/SearchFilters';
 import { SearchPageShell } from '@/components/search/SearchPageShell';
 import { SearchSidebar } from '@/components/search/SearchSidebar';
 import { SearchTabs } from '@/components/search/SearchTabs';
-import { Skeleton } from '@/components/ui/Skeleton';
+import { ErrorState } from '@/components/ui/ErrorState';
+import { CardGridSkeleton, Skeleton } from '@/components/ui/Skeleton';
 import { useRecentSearches } from '@/hooks/useRecentSearches';
 import { useSearchFilters } from '@/hooks/useSearchFilters';
 import { useSearchResults } from '@/hooks/useSearchResults';
@@ -177,14 +178,14 @@ export function SearchContent() {
     <SearchPageShell sidebar={<SearchSidebar recentSearches={searches} onSearchSelect={runSearch} />}>
       <div className="space-y-6">
         <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-          <div>
+          <div className="min-w-0">
             {locked && (
-              <p className="mb-2 inline-flex rounded-full border border-[#E9CBCB] bg-white px-3 py-1 text-xs font-extrabold uppercase tracking-[0.12em] text-[#A80F15]">
+              <p className="mb-2 inline-flex rounded-full border border-line-strong bg-surface px-3 py-1 text-eyebrow uppercase text-brand-800">
                 Restaurant menu search
               </p>
             )}
-            <h1 className="text-2xl font-extrabold text-[#1F1A1A] sm:text-3xl">{heading}</h1>
-            <p className="mt-2 text-sm text-[#7B6B6B]">
+            <h1 className="text-title text-ink">{heading}</h1>
+            <p className="mt-2 text-sm text-ink-muted">
               {query
                 ? 'Fine-tune your search with cuisine, price, rating, and delivery filters.'
                 : 'Search dishes, cuisines, and restaurants across Mangaale.'}
@@ -259,17 +260,20 @@ function DishResults({
 
   return (
     <div className="space-y-8">
-      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-        {dishes.map((dish) => (
-          <DishResultCard key={`${dish.restaurant_id}-${dish.id}`} dish={dish} onAdd={onAddDish} />
+      <div className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3">
+        {dishes.map((dish, index) => (
+          <DishResultCard
+            key={`${dish.restaurant_id}-${dish.id}`}
+            dish={dish}
+            onAdd={onAddDish}
+            priority={index < 4}
+          />
         ))}
       </div>
 
       {!locked && restaurants.length > 0 && (
         <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-extrabold text-[#1F1A1A]">Related restaurants</h2>
-          </div>
+          <h2 className="text-section text-ink">Related restaurants</h2>
           <div className="grid gap-4 xl:grid-cols-2">
             {restaurants.slice(0, 4).map((restaurant) => (
               <RestaurantResultCard key={restaurant.id} restaurant={restaurant} />
@@ -306,10 +310,13 @@ function RestaurantResults({
 function SearchLoadingGrid({ activeTab }: { activeTab: SearchTab }) {
   if (activeTab === 'restaurants') {
     return (
-      <div className="grid gap-4 xl:grid-cols-2">
-        {[1, 2, 3, 4].map((item) => (
-          <div key={item} className="flex gap-4 rounded-2xl border border-[#F0DADA] bg-white p-3">
-            <Skeleton className="h-24 w-24 shrink-0 rounded-2xl" />
+      <div className="grid gap-4 xl:grid-cols-2" aria-hidden="true">
+        {Array.from({ length: 4 }, (_, index) => (
+          <div
+            key={index}
+            className="flex gap-4 rounded-card border border-line bg-surface p-3 shadow-card"
+          >
+            <Skeleton className="h-20 w-20 shrink-0 sm:h-24 sm:w-24" />
             <div className="flex-1 space-y-3 py-2">
               <Skeleton className="h-5 w-2/3" />
               <Skeleton className="h-4 w-1/2" />
@@ -321,38 +328,12 @@ function SearchLoadingGrid({ activeTab }: { activeTab: SearchTab }) {
     );
   }
 
-  return (
-    <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
-      {[1, 2, 3, 4, 5, 6].map((item) => (
-        <div key={item} className="overflow-hidden rounded-2xl border border-[#F0DADA] bg-white">
-          <Skeleton className="aspect-[4/3] w-full rounded-none" />
-          <div className="space-y-3 p-4">
-            <Skeleton className="h-5 w-3/4" />
-            <Skeleton className="h-4 w-1/2" />
-            <Skeleton className="h-10 w-full rounded-full" />
-          </div>
-        </div>
-      ))}
-    </div>
-  );
+  return <CardGridSkeleton count={6} className="grid grid-cols-2 gap-3 sm:gap-5 xl:grid-cols-3" />;
 }
 
 function SearchErrorCard({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
-    <div className="rounded-3xl border border-[#F0DADA] bg-white px-6 py-12 text-center shadow-[0_14px_34px_rgba(31,41,55,0.05)]">
-      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full bg-[#FFF0F0]">
-        <AlertTriangle className="h-7 w-7 text-[#A80F15]" aria-hidden="true" />
-      </div>
-      <h2 className="mt-5 text-xl font-extrabold text-[#1F1A1A]">Search is taking a pause</h2>
-      <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#7B6B6B]">{message}</p>
-      <button
-        type="button"
-        onClick={onRetry}
-        className="mt-6 rounded-full bg-[#A80F15] px-5 py-2.5 text-sm font-extrabold text-white transition hover:bg-[#8F0D12]"
-      >
-        Try again
-      </button>
-    </div>
+    <ErrorState title="Search is taking a pause" message={message} onRetry={onRetry} />
   );
 }
 

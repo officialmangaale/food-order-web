@@ -1,6 +1,6 @@
 'use client';
 
-import Link from 'next/link';
+import { ButtonLink } from '@/components/ui/Button';
 import { AlertCircle, CheckCircle2, Tag, X } from 'lucide-react';
 import { formatMoney } from '@/utils/money';
 import type { CouponValidationResult } from '@/types/coupon';
@@ -24,12 +24,12 @@ export function CouponBanner({
   const isValid = validation?.valid === true;
 
   return (
-    <section className="mx-auto max-w-[1280px] px-4 pt-6 sm:px-6 lg:px-8">
-      <div className="relative overflow-hidden rounded-2xl border border-[#E9B6A8] bg-[#FFF4EA] px-5 py-4 shadow-[0_14px_34px_rgba(123,35,35,0.08)] sm:px-6">
-        <div className="absolute inset-y-0 left-0 w-1.5 bg-[#B4080B]" />
+    <section className="page-container pt-6">
+      <div className="relative overflow-hidden rounded-card border border-cherry-200 bg-cherry-50 px-5 py-4 shadow-card sm:px-6">
+        <div className="absolute inset-y-0 left-0 w-1.5 bg-cherry-800" aria-hidden="true" />
         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex min-w-0 gap-3">
-            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#B4080B] text-white">
+            <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-cherry-800 text-white">
               {isValid ? (
                 <CheckCircle2 className="h-5 w-5" aria-hidden="true" />
               ) : isInvalid ? (
@@ -39,25 +39,22 @@ export function CouponBanner({
               )}
             </span>
             <div className="min-w-0">
-              <p className="text-base font-extrabold text-[#1F1717] sm:text-lg">{title}</p>
-              <p className="mt-1 text-sm font-medium text-[#6B4B4B]">{description}</p>
+              <p className="text-base font-extrabold text-ink">{title}</p>
+              <p className="mt-1 text-sm text-ink-muted">{description}</p>
             </div>
           </div>
           <div className="flex shrink-0 items-center gap-3">
-            <span className="rounded-full border border-dashed border-[#B4080B] bg-white px-4 py-2 text-sm font-extrabold tracking-normal text-[#A80F15]">
+            <span className="rounded-full border border-dashed border-cherry-700 bg-surface px-4 py-2 text-sm font-extrabold text-cherry-800">
               {couponCode}
             </span>
-            <Link
-              href={checkoutHref}
-              className="rounded-full bg-[#A80F15] px-4 py-2 text-sm font-extrabold text-white shadow-[0_10px_20px_rgba(168,15,21,0.16)] transition hover:bg-[#8F0D12]"
-            >
+            <ButtonLink href={checkoutHref} variant="offer" size="sm">
               Apply at checkout
-            </Link>
+            </ButtonLink>
             {onDismiss && (
               <button
                 type="button"
                 onClick={onDismiss}
-                className="flex h-9 w-9 items-center justify-center rounded-full text-[#7A5B5B] transition hover:bg-white hover:text-[#A80F15]"
+                className="flex h-10 w-10 items-center justify-center rounded-full text-ink-muted transition-colors hover:bg-surface hover:text-cherry-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
                 aria-label="Dismiss coupon"
                 title="Dismiss coupon"
               >

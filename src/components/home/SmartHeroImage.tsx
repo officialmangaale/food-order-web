@@ -74,6 +74,8 @@ export function SmartHeroImage({
       {canRenderImage && currentSrc && (
         <>
           {showImage && imageFit === 'contain' && (
+            /* Partner-hosted imagery — see the note in ui/Thumbnail.tsx. */
+            // eslint-disable-next-line @next/next/no-img-element
             <img
               src={currentSrc}
               alt=""
@@ -83,6 +85,7 @@ export function SmartHeroImage({
               className="absolute inset-0 h-full w-full scale-110 object-cover object-center opacity-35 blur-xl"
             />
           )}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
             key={currentSrc}
             src={currentSrc}
