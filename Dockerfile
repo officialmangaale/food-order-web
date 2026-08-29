@@ -17,6 +17,8 @@ COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Next.js telemetry is optional but we disable it
 ENV NEXT_TELEMETRY_DISABLED=1
+ARG NEXT_PUBLIC_LOYALTY_UI_ENABLED=false
+ENV NEXT_PUBLIC_LOYALTY_UI_ENABLED=$NEXT_PUBLIC_LOYALTY_UI_ENABLED
 
 # Build Next.js application
 RUN npm run build
