@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { LogOut, MapPinned, Package, Settings, User } from 'lucide-react';
 import { Sheet } from '@/components/ui/Sheet';
 import { useAuthStore } from '@/store/authStore';
+import { features } from '@/config/features';
 import type { ReactNode } from 'react';
 
 interface ProfileMenuProps {

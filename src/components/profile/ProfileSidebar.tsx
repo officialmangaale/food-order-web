@@ -2,12 +2,14 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { LogOut, MapPinned, Package, Settings, User } from 'lucide-react';
+import { Coins, LogOut, MapPinned, Package, Settings, User } from 'lucide-react';
 import { useAuthStore } from '@/store/authStore';
+import { features } from '@/config/features';
 
 const sidebarItems = [
   { href: '/profile', label: 'Profile info', icon: User },
   { href: '/profile/orders', label: 'Orders', icon: Package },
+  ...(features.loyaltyUI ? [{ href: '/rewards', label: 'Rewards', icon: Coins }] : []),
   { href: '/profile/addresses', label: 'Addresses', icon: MapPinned },
   { href: '/profile/settings', label: 'Settings', icon: Settings },
 ];

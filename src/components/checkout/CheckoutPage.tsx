@@ -16,6 +16,8 @@ import { ButtonLink } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PanelSkeleton } from '@/components/ui/Skeleton';
+import { LoyaltyCheckoutPreview } from '@/components/loyalty/LoyaltyCheckoutPreview';
+import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import {
   buildCartValidatePayload,
@@ -190,10 +192,10 @@ export function CheckoutPage() {
       validationResult.couponValidation ??
       (validationResult.totals.discount > 0
         ? {
-            valid: true,
-            coupon: { couponId: 0, code: activeCouponCode },
-            discountAmount: validationResult.totals.discount,
-          }
+          valid: true,
+          coupon: { couponId: 0, code: activeCouponCode },
+          discountAmount: validationResult.totals.discount,
+        }
         : undefined);
 
     if (!backendCouponValidation) return;
@@ -448,56 +450,57 @@ export function CheckoutPage() {
 
       <div className={CHECKOUT_LAYOUT}>
         <div className="space-y-6" ref={addressSectionRef}>
-            {!isAuthenticated && <CheckoutLoginPrompt onLogin={() => setLoginOpen(true)} />}
+          {!isAuthenticated && <CheckoutLoginPrompt onLogin={() => setLoginOpen(true)} />}
 
-            {orderError && (
-              <div role="alert" className="flex gap-3 rounded-card border border-red-200 bg-danger-tint px-4 py-3 text-sm font-semibold text-danger">
-                <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
-                <p>{orderError}</p>
-              </div>
-            )}
+          {orderError && (
+            <div role="alert" className="flex gap-3 rounded-card border border-red-200 bg-danger-tint px-4 py-3 text-sm font-semibold text-danger">
+              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" aria-hidden="true" />
+              <p>{orderError}</p>
+            </div>
+          )}
 
-            <DeliveryAddressSection
-              addresses={addresses}
-              selectedAddress={selectedAddress}
-              loading={addressesLoading}
-              notice={addressNotice}
-              error={addressError}
-              onSelect={(address) => {
-                setSelectedAddressId(String(address.id));
-                setAddressError('');
-              }}
-              onAddNew={() => setAddressModalOpen(true)}
-            />
+          <DeliveryAddressSection
+            addresses={addresses}
+            selectedAddress={selectedAddress}
+            loading={addressesLoading}
+            notice={addressNotice}
+            error={addressError}
+            onSelect={(address) => {
+              setSelectedAddressId(String(address.id));
+              setAddressError('');
+            }}
+            onAddNew={() => setAddressModalOpen(true)}
+          />
 
-            <DeliveryInstructionsSection value={instructions} onChange={setInstructions} />
-            <PaymentMethodSection />
-            <CouponInputCard
-              id="checkout-coupon-code"
-              title="Coupon"
-              description={
-                validCampaignContext?.couponCode
-                  ? `Campaign coupon ${validCampaignContext.couponCode} is ready for backend validation.`
-                  : 'Apply a coupon and we will validate it with the restaurant.'
-              }
-              value={couponInput}
-              onChange={handleCouponChange}
-              onApply={handleCouponApply}
-              onRemove={couponInput ? handleCouponRemove : undefined}
-              validation={displayedCouponValidation}
-              loading={
-                couponChecking ||
-                Boolean(activeCouponCode && (validation.isLoading || validation.isFetching))
-              }
-              error={couponError || invalidCouponNotice}
-              disabled={!restaurantId || items.length === 0}
-              idleText={
-                activeCouponCode
-                  ? `Coupon ${activeCouponCode} will be checked before order placement.`
-                  : 'Discounts are applied only from backend validation.'
-              }
-            />
-          </div>
+          <DeliveryInstructionsSection value={instructions} onChange={setInstructions} />
+          <PaymentMethodSection />
+          <LoyaltyCheckoutPreview />
+          <CouponInputCard
+            id="checkout-coupon-code"
+            title="Coupon"
+            description={
+              validCampaignContext?.couponCode
+                ? `Campaign coupon ${validCampaignContext.couponCode} is ready for backend validation.`
+                : 'Apply a coupon and we will validate it with the restaurant.'
+            }
+            value={couponInput}
+            onChange={handleCouponChange}
+            onApply={handleCouponApply}
+            onRemove={couponInput ? handleCouponRemove : undefined}
+            validation={displayedCouponValidation}
+            loading={
+              couponChecking ||
+              Boolean(activeCouponCode && (validation.isLoading || validation.isFetching))
+            }
+            error={couponError || invalidCouponNotice}
+            disabled={!restaurantId || items.length === 0}
+            idleText={
+              activeCouponCode
+                ? `Coupon ${activeCouponCode} will be checked before order placement.`
+                : 'Discounts are applied only from backend validation.'
+            }
+          />
+        </div>
 
         <OrderSummaryCard
           items={items}

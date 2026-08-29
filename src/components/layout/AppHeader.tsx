@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronDown, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Coins, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCartStore } from '@/store/cartStore';
@@ -13,6 +13,7 @@ import { SearchHeaderInput } from '@/components/search/SearchHeaderInput';
 import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
 import { LocationModal } from '@/components/location/LocationModal';
 import { ProfileMenu } from '@/components/profile/ProfileMenu';
+import { features } from '@/config/features';
 
 export function AppHeader() {
   const {
@@ -317,6 +318,17 @@ interface HeaderActionsProps {
 function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderActionsProps) {
   return (
     <div className={`shrink-0 items-center gap-2 ${className}`}>
+      {features.loyaltyUI && (
+        <Link
+          href="/rewards"
+          className="relative flex h-10 w-10 items-center justify-center rounded-full border border-amber-200 bg-amber-50 text-amber-700 shadow-card transition hover:border-amber-300 hover:bg-amber-100 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-amber-300/20 lg:h-11 lg:w-11"
+          aria-label="Mangaale Rewards"
+          title="Mangaale Rewards"
+        >
+          <Coins className="h-[21px] w-[21px]" aria-hidden="true" />
+          <span className="absolute right-0.5 top-0.5 h-2 w-2 rounded-full bg-brand-500 ring-2 ring-white" aria-hidden="true" />
+        </Link>
+      )}
       <Link
         href="/cart"
         className="relative flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-[0_6px_20px_rgba(23,32,34,0.08)] transition-colors hover:border-line-interactive hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
