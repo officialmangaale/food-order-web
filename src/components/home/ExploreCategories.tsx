@@ -136,17 +136,24 @@ export function ExploreCategories({
   const itemsError = effectiveMode === 'global' ? getErrorMessage(itemsQuery.error) : '';
   const hasLocation = lat != null && lng != null;
   const selectedCategoryName = selectedCategory?.name;
+  /** Link into the Browse Menu screen, carrying the current location context. */
+  const buildBrowseMenuHref = useCallback(
+    (categoryKey: string, categoryName?: string) => {
+      const query = new URLSearchParams();
+      if (typeof lat === 'number' && Number.isFinite(lat)) query.set('lat', String(lat));
+      if (typeof lng === 'number' && Number.isFinite(lng)) query.set('lng', String(lng));
+      query.set('radius_km', String(RADIUS_KM));
+      if (categoryName) query.set('name', categoryName);
+
+      return `/categories/${encodeURIComponent(categoryKey)}?${query.toString()}`;
+    },
+    [lat, lng]
+  );
+
   const viewAllHref = useMemo(() => {
     if (effectiveMode !== 'global' || !selectedCategoryKey) return undefined;
-
-    const query = new URLSearchParams();
-    if (typeof lat === 'number' && Number.isFinite(lat)) query.set('lat', String(lat));
-    if (typeof lng === 'number' && Number.isFinite(lng)) query.set('lng', String(lng));
-    query.set('radius_km', String(RADIUS_KM));
-    if (selectedCategoryName) query.set('name', selectedCategoryName);
-
-    return `/categories/${encodeURIComponent(selectedCategoryKey)}?${query.toString()}`;
-  }, [effectiveMode, lat, lng, selectedCategoryKey, selectedCategoryName]);
+    return buildBrowseMenuHref(selectedCategoryKey, selectedCategoryName);
+  }, [buildBrowseMenuHref, effectiveMode, selectedCategoryKey, selectedCategoryName]);
 
   const updateCategoryInUrl = useCallback(
     (categoryKey: string) => {
@@ -161,6 +168,15 @@ export function ExploreCategories({
   );
 
   const handleCategorySelect = (category: HomeCategory) => {
+    /* On home, All opens the dedicated Browse Menu screen rather than expanding
+       the strip in place. `push` keeps a history entry, so the browser back
+       button and the screen's own back link both return here. A locked
+       restaurant menu has no Browse Menu screen and keeps expanding inline. */
+    if (category.key === 'all' && effectiveMode === 'global') {
+      router.push(buildBrowseMenuHref(category.key, category.name));
+      return;
+    }
+
     setRequestedCategoryKey(category.key);
     updateCategoryInUrl(category.key);
 
@@ -276,7 +292,12 @@ export function ExploreCategories({
                   category={category}
                   active={category.key === selectedCategoryKey}
                   onClick={handleCategorySelect}
-                  expanded={category.key === 'all' ? categoryGridExpanded : undefined}
+                  /* Only a disclosure in locked mode; on home All navigates. */
+                  expanded={
+                    category.key === 'all' && effectiveMode !== 'global'
+                      ? categoryGridExpanded
+                      : undefined
+                  }
                 />
               ))}
             </motion.div>

@@ -368,7 +368,7 @@ export function CategoryListingClient({
           aside has to be as tall as the grid for the rail to have travel. */}
       <div className="flex gap-2.5 sm:gap-4 lg:gap-6">
         {/* ——— Categories ——— */}
-        <aside className="w-24 shrink-0 sm:w-[144px] lg:w-[200px]" style={railStyle}>
+        <aside className="category-rail-width shrink-0" style={railStyle}>
           {categoriesLoading ? (
             <CategoryRailSkeleton />
           ) : categories.length > 0 ? (

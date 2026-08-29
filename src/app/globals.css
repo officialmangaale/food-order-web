@@ -344,13 +344,12 @@ select:focus-visible {
    The rail is a fixed narrow column; the grid takes whatever is left. Column
    count is derived from the remaining width rather than from breakpoints, so
    the rail width and the grid can never disagree and push the page sideways:
-   two cards on a normal phone, three on a tablet, four on desktop, and one
-   only when two genuinely cannot fit (a 320px screen minus the rail).
+   two cards from 320px up, three on a tablet, four on a wide desktop.
    ============================================================================ */
 .category-item-grid {
   display: grid;
-  gap: 0.625rem;
-  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+  gap: 0.5rem;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
 }
 
 @media (min-width: 640px) {
@@ -364,6 +363,37 @@ select:focus-visible {
   .category-item-grid {
     gap: 1.25rem;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+/* Sidebar width follows the viewport on phones (88px at 320 → 112px at 430+),
+   which is the widest the rail can be while still leaving room for two dish
+   cards. Fixed from `sm` up, where the grid has width to spare. */
+.category-rail-width {
+  width: clamp(88px, 27vw, 112px);
+}
+
+/* The icon scales with the rail so the label keeps a usable width even at
+   320px, where the rail is only 88px wide. */
+.category-rail-icon {
+  width: clamp(30px, 9vw, 36px);
+  height: clamp(30px, 9vw, 36px);
+}
+
+@media (min-width: 640px) {
+  .category-rail-width {
+    width: 144px;
+  }
+
+  .category-rail-icon {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .category-rail-width {
+    width: 200px;
   }
 }
 

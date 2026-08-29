@@ -51,7 +51,10 @@ export function CategoryRail({
                 aria-checked={selected}
                 data-selected={selected}
                 onClick={() => onSelect(category)}
-                className={`group relative flex w-full items-center gap-2 rounded-r-control py-2 pl-2.5 pr-1.5 text-left transition-colors duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/25 sm:gap-2.5 sm:pl-3 sm:pr-2 ${
+                /* Geometry is tight: at a 88-112px rail the icon and the label
+                   share the row, so the circle stays small and the padding
+                   minimal to leave the label a readable ~50px. */
+                className={`group relative flex min-h-16 w-full items-center gap-1.5 rounded-r-control py-2 pl-2 pr-1 text-left transition-colors duration-[var(--duration-fast)] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-700/25 sm:min-h-[76px] sm:gap-2.5 sm:pl-3 sm:pr-2 ${
                   selected ? 'bg-brand-50' : 'bg-transparent hover:bg-surface-muted'
                 }`}
               >
@@ -65,7 +68,7 @@ export function CategoryRail({
                 />
 
                 <span
-                  className={`relative flex h-11 w-11 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-colors duration-[var(--duration-fast)] sm:h-12 sm:w-12 ${
+                  className={`category-rail-icon relative flex shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-colors duration-[var(--duration-fast)] ${
                     selected
                       ? 'border-brand-700 bg-brand-100'
                       : 'border-line bg-surface group-hover:border-brand-300'
@@ -79,13 +82,16 @@ export function CategoryRail({
                         selected ? 'text-brand-800' : 'text-ink-muted'
                       }`}
                     >
-                      <CategoryIconGlyph category={category} className="h-5 w-5 sm:h-6 sm:w-6" />
+                      <CategoryIconGlyph category={category} className="h-[18px] w-[18px] sm:h-6 sm:w-6" />
                     </span>
                   )}
                 </span>
 
+                {/* `break-words` matters here: single long names ("Sandwiches")
+                    would otherwise overflow the narrow label box and be clipped
+                    mid-word by the line clamp. */}
                 <span
-                  className={`line-clamp-2 min-w-0 text-[11px] font-bold leading-4 sm:text-[13px] ${
+                  className={`line-clamp-2 min-w-0 flex-1 break-words text-[11px] font-semibold leading-[14px] sm:text-[13px] sm:font-bold sm:leading-4 ${
                     selected ? 'text-brand-800' : 'text-ink'
                   }`}
                 >
@@ -105,8 +111,11 @@ export function CategoryRailSkeleton({ className = '' }: { className?: string })
   return (
     <div className={`space-y-1 ${className}`} aria-hidden="true">
       {Array.from({ length: 8 }, (_, index) => (
-        <div key={index} className="flex items-center gap-2 py-2 pl-2.5 pr-1.5 sm:gap-2.5 sm:pl-3">
-          <Skeleton className="h-11 w-11 shrink-0 sm:h-12 sm:w-12" rounded />
+        <div
+          key={index}
+          className="flex min-h-16 items-center gap-1.5 py-2 pl-2 pr-1 sm:min-h-[76px] sm:gap-2.5 sm:pl-3 sm:pr-2"
+        >
+          <Skeleton className="category-rail-icon shrink-0" rounded />
           <Skeleton className="h-3 w-full" />
         </div>
       ))}
