@@ -68,7 +68,13 @@ export function normalizeRestaurantCard(raw: unknown): RestaurantCardData | null
 
   const tags = readStringArray(obj.tags);
   const distanceKm = readDistanceKm(obj.distance_km ?? obj.distanceKm, obj.distance);
-  const rawDeliveryTime = readString(obj.delivery_time ?? obj.deliveryTime ?? obj.estimated_delivery_time);
+  const rawDeliveryTime = obj.delivery_time ?? obj.deliveryTime ?? obj.estimated_delivery_time;
+  const minDeliveryTime = readNumber(
+    obj.min_delivery_time ?? obj.minDeliveryTime ?? obj.min_delivery_minutes ?? obj.minDeliveryMinutes
+  );
+  const maxDeliveryTime = readNumber(
+    obj.max_delivery_time ?? obj.maxDeliveryTime ?? obj.max_delivery_minutes ?? obj.maxDeliveryMinutes
+  );
   const category = readString(obj.category);
   const cuisine = readString(obj.cuisine ?? obj.cuisine_type ?? obj.cuisineType) ?? category ?? tags?.[0];
   const rating = readNumber(obj.rating ?? obj.average_rating ?? obj.averageRating);
@@ -93,7 +99,7 @@ export function normalizeRestaurantCard(raw: unknown): RestaurantCardData | null
     cuisine,
     rating: rating && rating > 0 ? rating : undefined,
     reviewCount: readNumber(obj.review_count ?? obj.reviewCount ?? obj.total_ratings ?? obj.totalRatings),
-    deliveryTime: sanitizeDeliveryTime(rawDeliveryTime, distanceKm),
+    deliveryTime: sanitizeDeliveryTime(rawDeliveryTime, distanceKm, minDeliveryTime, maxDeliveryTime),
     distance: readString(obj.distance) ?? (distanceKm != null ? formatDistance(distanceKm) : undefined),
     distanceKm,
     imageUrl,
@@ -118,23 +124,48 @@ function normalizeMeta(raw: unknown, radiusKm: number) {
   };
 }
 
-function sanitizeDeliveryTime(value: string | undefined, distanceKm: number | undefined) {
-  if (!value) return estimateDeliveryTime(distanceKm);
+function sanitizeDeliveryTime(
+  value: unknown,
+  distanceKm: number | undefined,
+  minDeliveryTime?: number,
+  maxDeliveryTime?: number
+) {
+  if (minDeliveryTime != null || maxDeliveryTime != null) {
+    const min = minDeliveryTime ?? maxDeliveryTime;
+    const max = maxDeliveryTime ?? minDeliveryTime;
+    if (min != null && max != null && min > 0 && max > 0 && min <= 120 && max <= 120) {
+      return min === max ? `${min} min` : `${Math.min(min, max)}–${Math.max(min, max)} min`;
+    }
+  }
 
-  const numbers = value.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
+  if (typeof value === 'number' && Number.isFinite(value)) {
+    return value > 0 && value <= 120 ? `${value} min` : estimateDeliveryTime(distanceKm);
+  }
+
+  if (typeof value !== 'string' || !value.trim()) return estimateDeliveryTime(distanceKm);
+
+  const normalizedValue = value.trim();
+
+  const numbers = normalizedValue.match(/\d+/g)?.map(Number).filter(Number.isFinite) ?? [];
   const largestNumber = numbers.length > 0 ? Math.max(...numbers) : 0;
-  if (largestNumber > 120 || value.includes('970')) {
+  if (largestNumber > 120 || normalizedValue.includes('970')) {
     return estimateDeliveryTime(distanceKm);
   }
 
-  return value.replace(/\bmins\b/i, 'min');
+  if (numbers.length === 1 && /^\s*\d+\s*$/.test(normalizedValue)) {
+    return `${numbers[0]} min`;
+  }
+
+  return normalizedValue
+    .replace(/\bmins?\b/gi, 'min')
+    .replace(/(\d)\s*(?:-|–|—|to)\s*(\d)/i, '$1–$2');
 }
 
 function estimateDeliveryTime(distanceKm: number | undefined) {
   if (distanceKm == null) return undefined;
-  if (distanceKm <= 2) return '20-30 min';
-  if (distanceKm <= 5) return '30-40 min';
-  return '40-50 min';
+  if (distanceKm <= 2) return '20–30 min';
+  if (distanceKm <= 5) return '30–40 min';
+  return '40–50 min';
 }
 
 function readDistanceKm(primary: unknown, fallbackDistance: unknown) {

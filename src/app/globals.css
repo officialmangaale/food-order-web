@@ -306,6 +306,12 @@ select:focus-visible {
   background: linear-gradient(90deg, rgba(247, 253, 252, 0.14) 0%, transparent 72%);
 }
 
+@media (max-width: 359px) {
+  .home-hero-header::before {
+    background-size: auto 92%;
+  }
+}
+
 @media (min-width: 1024px) {
   .home-hero-header::before {
     background-size: auto 128%;
@@ -315,6 +321,26 @@ select:focus-visible {
 
 .page-section + .page-section {
   margin-top: var(--page-section-gap);
+}
+
+/* The compact category state exposes exactly one complete responsive row.
+   Expanding via All reveals the existing backend collection in the same grid. */
+.category-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(56px, 1fr));
+  column-gap: 0.625rem;
+  row-gap: 1rem;
+  max-height: 100px;
+  overflow: hidden;
+  transition: max-height 220ms var(--ease-standard);
+}
+
+.category-grid[data-expanded='true'] {
+  max-height: 1600px;
+}
+
+#explore-categories + .home-offer-section {
+  margin-top: 1.75rem;
 }
 
 /* ——— Scrollbar ——— */

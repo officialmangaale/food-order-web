@@ -152,7 +152,7 @@ export function AppHeader() {
             <div
               className={
                 isHomePage
-                  ? 'flex min-h-[330px] flex-col py-5 sm:min-h-[350px] lg:min-h-[370px] lg:py-8'
+                  ? 'flex min-h-[272px] flex-col pb-5 pt-4 sm:min-h-[288px] sm:pb-6 sm:pt-5 lg:min-h-[330px] lg:py-8'
                   : 'flex flex-col gap-3 py-3 lg:hidden'
               }
             >
@@ -175,7 +175,7 @@ export function AppHeader() {
               </div>
 
               {isHomePage && (
-                <div className="mt-auto max-w-[68%] pb-1 sm:max-w-[62%] lg:max-w-[520px]">
+                <div className="mt-8 max-w-[68%] sm:mt-10 sm:max-w-[62%] lg:max-w-[520px]">
                   <h1 className="text-[28px] font-bold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[30px] lg:text-[38px]">
                     {hasMounted ? getGreeting() : 'Hello'}
                     {firstName ? `, ${firstName}` : ''}
@@ -200,7 +200,7 @@ export function AppHeader() {
                 {...searchProps}
                 variant={isHomePage ? 'hero' : 'default'}
                 showFilter={isHomePage}
-                className={isHomePage ? 'mt-4 shrink-0 lg:max-w-[760px]' : ''}
+                className={isHomePage ? 'mt-5 shrink-0 lg:max-w-[760px]' : ''}
               />
             </div>
 

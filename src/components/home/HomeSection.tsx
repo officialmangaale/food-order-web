@@ -37,6 +37,7 @@ export function HomeSection({
 
   return (
     <section
+      id={id}
       aria-labelledby={headingId}
       className={`page-section ${embedded ? '' : 'page-container'} ${className}`}
     >

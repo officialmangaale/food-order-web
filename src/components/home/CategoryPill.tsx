@@ -15,19 +15,21 @@ interface CategoryPillProps {
   category: HomeCategory;
   active: boolean;
   onClick: (category: HomeCategory) => void;
+  expanded?: boolean;
 }
 
-export function CategoryPill({ category, active, onClick }: CategoryPillProps) {
+export function CategoryPill({ category, active, onClick, expanded }: CategoryPillProps) {
   return (
     <button
       type="button"
       role="radio"
       aria-checked={active}
+      aria-expanded={category.key === 'all' ? expanded : undefined}
       onClick={() => onClick(category)}
-      className="group flex w-[70px] shrink-0 flex-col items-center gap-2 rounded-control bg-transparent text-center text-xs font-semibold text-ink-muted transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+      className="group flex w-full min-w-0 flex-col items-center gap-2 rounded-control bg-transparent text-center text-xs font-semibold text-ink-muted transition-colors focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
     >
       <span
-        className={`relative flex h-16 w-16 shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-[border-color,box-shadow,background-color] duration-[var(--duration-fast)] ${
+        className={`relative flex h-[60px] w-[60px] shrink-0 items-center justify-center overflow-hidden rounded-full border-2 transition-[border-color,box-shadow,background-color] duration-[var(--duration-fast)] ${
           active
             ? 'border-brand-700 bg-brand-50 shadow-[0_6px_16px_rgba(15,157,138,0.14)]'
             : 'border-line bg-white shadow-card group-hover:border-brand-300'

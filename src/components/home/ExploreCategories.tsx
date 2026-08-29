@@ -1,6 +1,7 @@
 'use client';
 
 import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
+import { motion } from 'framer-motion';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CategoryItemsSection, CategoryItemsSkeleton } from '@/components/home/CategoryItemsSection';
@@ -8,7 +9,6 @@ import { CategoryPill } from '@/components/home/CategoryPill';
 import { HomeSection } from '@/components/home/HomeSection';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { LocationModal } from '@/components/location/LocationModal';
-import { Button } from '@/components/ui/Button';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { Skeleton } from '@/components/ui/Skeleton';
@@ -36,7 +36,6 @@ interface ExploreCategoriesProps {
 
 const RADIUS_KM = 7;
 const HOME_ITEMS_LIMIT = 5;
-const CATEGORY_PREVIEW_COUNT = 6;
 const EMPTY_CATEGORIES: HomeCategory[] = [];
 
 export function ExploreCategories({
@@ -89,8 +88,9 @@ export function ExploreCategories({
   const selectedCategoryKey = useMemo(() => {
     if (!categories.length) return null;
 
-    if (categoryFromUrl && categories.some((category) => category.key === categoryFromUrl)) {
-      return categoryFromUrl;
+    const routeCategory = findRequestedCategory(categories, categoryFromUrl);
+    if (routeCategory) {
+      return routeCategory.key;
     }
 
     if (requestedCategoryKey && categories.some((category) => category.key === requestedCategoryKey)) {
@@ -101,20 +101,7 @@ export function ExploreCategories({
   }, [categories, categoryFromUrl, requestedCategoryKey]);
 
   const selectedCategory = categories.find((category) => category.key === selectedCategoryKey);
-  const hasExtraCategories = categories.length > CATEGORY_PREVIEW_COUNT;
-  const visibleCategories = useMemo(() => {
-    if (categoriesExpanded || !hasExtraCategories) return categories;
-
-    const preview = categories.slice(0, CATEGORY_PREVIEW_COUNT);
-    if (!selectedCategoryKey || preview.some((category) => category.key === selectedCategoryKey)) {
-      return preview;
-    }
-
-    const selected = categories.find((category) => category.key === selectedCategoryKey);
-    if (!selected) return preview;
-
-    return [...preview.slice(0, CATEGORY_PREVIEW_COUNT - 1), selected];
-  }, [categories, categoriesExpanded, hasExtraCategories, selectedCategoryKey]);
+  const categoryGridExpanded = categoriesExpanded || Boolean(categoryFromUrl);
 
   const itemsQuery = useCategoryItems({
     categoryKey: selectedCategoryKey,
@@ -177,6 +164,11 @@ export function ExploreCategories({
     setRequestedCategoryKey(category.key);
     updateCategoryInUrl(category.key);
 
+    if (category.key === 'all') {
+      setCategoriesExpanded(!categoryGridExpanded);
+      return;
+    }
+
     window.setTimeout(() => {
       itemsSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     }, 80);
@@ -232,8 +224,6 @@ export function ExploreCategories({
     addItemDirectly(item);
   };
 
-  const showExpandToggle = !categoriesLoading && !categoriesError && hasExtraCategories;
-
   return (
     <>
       <HomeSection
@@ -272,33 +262,24 @@ export function ExploreCategories({
           />
         ) : (
           <>
-            <div
+            <motion.div
+              layout
               role="radiogroup"
               aria-label="Food categories"
-              className="hide-scrollbar snap-row gutter-bleed flex gap-3 overflow-x-auto pb-2 sm:mx-0 sm:flex-wrap sm:gap-5 sm:overflow-visible sm:px-0"
+              data-expanded={categoryGridExpanded}
+              className="category-grid"
+              transition={{ duration: 0.22, ease: [0.2, 0, 0.2, 1] }}
             >
-              {visibleCategories.map((category) => (
+              {categories.map((category) => (
                 <CategoryPill
                   key={category.key}
                   category={category}
                   active={category.key === selectedCategoryKey}
                   onClick={handleCategorySelect}
+                  expanded={category.key === 'all' ? categoryGridExpanded : undefined}
                 />
               ))}
-            </div>
-
-            {showExpandToggle && (
-              <div className="mt-4 flex justify-center">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => setCategoriesExpanded((expanded) => !expanded)}
-                  aria-expanded={categoriesExpanded}
-                >
-                  {categoriesExpanded ? 'Show fewer categories' : 'Show all categories'}
-                </Button>
-              </div>
-            )}
+            </motion.div>
           </>
         )}
       </HomeSection>
@@ -367,6 +348,24 @@ function CategoryPillsSkeleton() {
 function normalizeCategoryParam(value: string | null) {
   const normalized = value?.trim().toLowerCase();
   return normalized || null;
+}
+
+function findRequestedCategory(categories: HomeCategory[], requestedKey: string | null) {
+  if (!requestedKey) return undefined;
+
+  const exact = categories.find((category) => category.key === requestedKey);
+  if (exact) return exact;
+
+  if (requestedKey === 'offer' || requestedKey === 'offers') {
+    return categories.find((category) => {
+      const key = category.key.toLowerCase();
+      const name = category.name.toLowerCase();
+      const type = category.categoryType?.toLowerCase();
+      return key === 'offer' || key === 'offers' || name === 'offer' || name === 'offers' || type === 'offer';
+    });
+  }
+
+  return undefined;
 }
 
 function getErrorMessage(error: unknown): string {

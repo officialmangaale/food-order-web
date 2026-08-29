@@ -65,8 +65,8 @@ export function RestaurantCard({
           </span>
         )}
         {isHome && deliveryTime && (
-          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-ink shadow-card backdrop-blur-sm sm:text-[11px]">
-            <Clock className="h-3.5 w-3.5 text-ink-muted" aria-hidden="true" />
+          <span className="absolute bottom-2 right-2 inline-flex h-8 items-center gap-1.5 rounded-2xl bg-white/95 px-2.5 text-xs font-semibold text-ink shadow-card backdrop-blur-sm">
+            <Clock className="h-3.5 w-3.5 text-brand-900" aria-hidden="true" />
             {deliveryTime}
           </span>
         )}
