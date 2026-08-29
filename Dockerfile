@@ -15,7 +15,6 @@ FROM base AS builder
 WORKDIR /app
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-
 # Next.js telemetry is optional but we disable it
 ENV NEXT_TELEMETRY_DISABLED=1
 

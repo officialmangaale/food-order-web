@@ -1,4 +1,4 @@
-const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? 'https://restaurant-prod.mangaale.com';
+const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
 const USER_BASE = process.env.NEXT_PUBLIC_USER_SERVICE_BASE_URL ?? '';
 
 const TIMEOUT_MS = 15_000;
@@ -21,14 +21,12 @@ export interface HttpError {
 
 /** Build a fully qualified URL for restaurant-service */
 export function restaurantUrl(path: string): string {
-  assertConfiguredBase(RESTAURANT_BASE, 'Restaurant service URL');
-  return `${RESTAURANT_BASE}${path}`;
+  return `${getConfiguredBase(RESTAURANT_BASE, 'Restaurant service URL')}${path}`;
 }
 
 /** Build a fully qualified URL for user-service */
 export function userServiceUrl(path: string): string {
-  assertConfiguredBase(USER_BASE, 'User service URL');
-  return `${USER_BASE}${path}`;
+  return `${getConfiguredBase(USER_BASE, 'User service URL')}${path}`;
 }
 
 /**
@@ -138,14 +136,26 @@ export function isAuthError(err: unknown): boolean {
   return false;
 }
 
-function assertConfiguredBase(value: string, label: string) {
-  if (value.trim()) return;
+function getConfiguredBase(value: string, label: string): string {
+  const raw = value.trim();
+  if (!raw) {
+    throw {
+      status: 0,
+      message:
+        process.env.NODE_ENV === 'development'
+          ? `${label} is not configured. Set the matching NEXT_PUBLIC_*_BASE_URL environment variable.`
+          : 'Service is temporarily unavailable. Please try again later.',
+    } as HttpError;
+  }
 
-  throw {
-    status: 0,
-    message:
-      process.env.NODE_ENV === 'development'
-        ? `${label} is not configured. Set the matching NEXT_PUBLIC_*_BASE_URL environment variable.`
-        : 'Service is temporarily unavailable. Please try again later.',
-  } as HttpError;
+  let parsed: URL;
+  try {
+    parsed = new URL(raw);
+  } catch {
+    throw { status: 0, message: `${label} is invalid.` } as HttpError;
+  }
+  if (!['http:', 'https:'].includes(parsed.protocol) || parsed.username || parsed.password || parsed.search || parsed.hash) {
+    throw { status: 0, message: `${label} is invalid.` } as HttpError;
+  }
+  return `${parsed.origin}${parsed.pathname.replace(/\/+$/, '')}`;
 }
