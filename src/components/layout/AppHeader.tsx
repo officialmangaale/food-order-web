@@ -3,7 +3,7 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ArrowLeft, ChevronDown, Coins, MapPin, ShoppingCart, UserCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Coins, MapPin, Search, ShoppingCart, UserCircle } from 'lucide-react';
 import { useRestaurantMode } from '@/hooks/useRestaurantMode';
 import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCartStore } from '@/store/cartStore';
@@ -51,6 +51,10 @@ export function AppHeader() {
   const isRestaurantDetailHeader =
     /^\/restaurants\/[^/]+/.test(pathname) || pathname.startsWith('/r/');
   const isHomePage = pathname === '/';
+  /* Browse menu: the category rail owns the screen on phones, so the header
+     collapses to back + title + search instead of the full location/search
+     block. Desktop keeps the standard row. */
+  const isBrowseMenuHeader = pathname.startsWith('/categories/');
   const firstName = currentUser?.name?.trim().split(/\s+/)[0];
   const searchPlaceholder = isRestaurantDetailHeader
     ? isLockedRoute
@@ -116,6 +120,9 @@ export function AppHeader() {
   return (
     <>
       <header
+        /* Read by screens that pin content under the header — its height varies
+           by route (slim on restaurant detail, taller with search on listings). */
+        data-app-header=""
         className={`safe-top z-50 ${
           isRestaurantDetailHeader
             ? 'restaurant-detail-header pointer-events-none sticky top-0 border-b border-transparent'
@@ -149,12 +156,38 @@ export function AppHeader() {
           </div>
         ) : (
           <div className="page-container">
+            {/* Mobile, browse menu: a slim bar so the category rail and the dish
+                grid get the viewport. Search opens the existing search screen. */}
+            {isBrowseMenuHeader && (
+              <div className="flex items-center gap-3 py-2.5 lg:hidden">
+                <Link
+                  href={homeLink}
+                  aria-label="Back"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-card transition-colors hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+                >
+                  <ArrowLeft className="h-5 w-5" aria-hidden="true" />
+                </Link>
+                <h1 className="min-w-0 flex-1 truncate text-[22px] font-extrabold tracking-[-0.03em] text-ink">
+                  Browse Menu
+                </h1>
+                <Link
+                  href="/search"
+                  aria-label="Search dishes and restaurants"
+                  className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-card transition-colors hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+                >
+                  <Search className="h-5 w-5" aria-hidden="true" />
+                </Link>
+              </div>
+            )}
+
             {/* Mobile: brand + actions, then greeting, then search. */}
             <div
               className={
                 isHomePage
                   ? 'flex min-h-[272px] flex-col pb-5 pt-4 sm:min-h-[288px] sm:pb-6 sm:pt-5 lg:min-h-[330px] lg:py-8'
-                  : 'flex flex-col gap-3 py-3 lg:hidden'
+                  : isBrowseMenuHeader
+                    ? 'hidden'
+                    : 'flex flex-col gap-3 py-3 lg:hidden'
               }
             >
               <div className="flex items-center justify-between gap-4">

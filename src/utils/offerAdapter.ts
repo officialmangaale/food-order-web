@@ -50,6 +50,8 @@ export function normalizeMenuOffer(raw: RawMenuOffer): HomeMenuOffer | null {
     deliveryTime: getString(raw.delivery_time),
     isRestaurantOpen: raw.restaurant_is_open,
     isAvailable: raw.is_available,
+    // Passed through only when the backend classifies the dish, never inferred.
+    isVegetarian: typeof raw.is_vegetarian === 'boolean' ? raw.is_vegetarian : undefined,
   };
 }
 

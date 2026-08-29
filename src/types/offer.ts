@@ -59,6 +59,7 @@ export interface HomeMenuOffer {
   deliveryTime?: string;
   isRestaurantOpen?: boolean;
   isAvailable?: boolean;
+  isVegetarian?: boolean;
 }
 
 export interface HomeMenuOffersRequest {

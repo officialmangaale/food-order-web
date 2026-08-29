@@ -339,6 +339,46 @@ select:focus-visible {
   max-height: 1600px;
 }
 
+/* ============================================================================
+   BROWSE MENU: category rail + item grid
+   The rail is a fixed narrow column; the grid takes whatever is left. Column
+   count is derived from the remaining width rather than from breakpoints, so
+   the rail width and the grid can never disagree and push the page sideways:
+   two cards on a normal phone, three on a tablet, four on desktop, and one
+   only when two genuinely cannot fit (a 320px screen minus the rail).
+   ============================================================================ */
+.category-item-grid {
+  display: grid;
+  gap: 0.625rem;
+  grid-template-columns: repeat(auto-fill, minmax(104px, 1fr));
+}
+
+@media (min-width: 640px) {
+  .category-item-grid {
+    gap: 1rem;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .category-item-grid {
+    gap: 1.25rem;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
+/* Sticks under the app header and scrolls on its own, so a long menu never
+   scrolls the categories out of reach. */
+.category-rail {
+  /* --rail-top is set from the measured app header height; the token is the
+     server-render fallback. */
+  position: sticky;
+  top: var(--rail-top, calc(var(--header-height) + 0.75rem));
+  max-height: calc(100dvh - var(--rail-top, var(--header-height)) - 1rem);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
 #explore-categories + .home-offer-section {
   margin-top: 1.75rem;
 }

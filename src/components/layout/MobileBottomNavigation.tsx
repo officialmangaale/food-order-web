@@ -6,7 +6,9 @@ import { Coins, House, Store, UserRound } from 'lucide-react';
 import { features } from '@/config/features';
 
 const items = [
-  { href: '/restaurants', label: 'Explore', icon: Store },
+  /* Browsing the menu by category is part of Explore, so the tab stays lit
+     while the user is on a category screen. */
+  { href: '/restaurants', label: 'Explore', icon: Store, alsoActiveFor: ['/categories'] },
   { href: '/', label: 'Home', icon: House },
   ...(features.loyaltyUI ? [{ href: '/rewards', label: 'Rewards', icon: Coins }] : []),
   { href: '/profile', label: 'Profile', icon: UserRound },
@@ -32,8 +34,12 @@ export function MobileBottomNavigation() {
         className="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-[600px] rounded-sheet border border-line bg-surface/95 px-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] pt-2 shadow-floating backdrop-blur-xl md:hidden"
       >
         <ul className={`grid items-end ${items.length === 4 ? 'grid-cols-4' : 'grid-cols-3'}`}>
-          {items.map(({ href, label, icon: Icon }) => {
-            const active = href === '/' ? pathname === '/' : pathname.startsWith(href);
+          {items.map(({ href, label, icon: Icon, alsoActiveFor }) => {
+            const active =
+              href === '/'
+                ? pathname === '/'
+                : pathname.startsWith(href) ||
+                  (alsoActiveFor?.some((prefix) => pathname.startsWith(prefix)) ?? false);
             const isHome = href === '/';
 
             return (

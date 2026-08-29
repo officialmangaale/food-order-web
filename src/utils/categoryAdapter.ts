@@ -9,6 +9,7 @@ import type {
   HomeCategory,
 } from '@/types/category';
 import type { MenuAddon, MenuCategory, MenuItem, MenuVariant } from '@/types/menu';
+import type { HomeMenuOffer } from '@/types/offer';
 
 export interface LockedRestaurantCategorySource {
   id: number;
@@ -188,6 +189,56 @@ export function categoryItemToMenuItem(item: CategoryFoodItem): MenuItem {
     has_addons: item.hasAddons,
     is_taxable: item.isTaxable,
   };
+}
+
+/**
+ * Maps an offer from /customer-web/home/menu-offers onto the shared dish shape
+ * so the Offers rail entry renders through the same card and add-to-cart path
+ * as every other category. Offers without an item id cannot be ordered, so
+ * they are dropped rather than shown as an un-addable card.
+ */
+export function menuOfferToCategoryFoodItem(offer: HomeMenuOffer): CategoryFoodItem | null {
+  if (offer.offerItemId == null) return null;
+  if (offer.isAvailable === false) return null;
+
+  const price = offer.price ?? 0;
+
+  return {
+    itemId: offer.offerItemId,
+    restaurantId: offer.restaurantId,
+    restaurantName: offer.restaurantName,
+    restaurantSlug: offer.restaurantSlug,
+    distanceKm: offer.distanceKm,
+    deliveryTime: offer.deliveryTime,
+    restaurantIsOpen: offer.isRestaurantOpen,
+    categoryId: offer.categoryId,
+    categoryName: offer.categoryName,
+    name: offer.title,
+    description: offer.description,
+    price,
+    displayPrice: offer.displayPrice ?? formatMoney(price),
+    imageUrl: offer.imageUrl ?? offer.fallbackImageUrl,
+    isAvailable: true,
+    isVegetarian: offer.isVegetarian,
+    variants: [],
+    addons: [],
+  };
+}
+
+export function menuOffersToCategoryFoodItems(offers: HomeMenuOffer[]): CategoryFoodItem[] {
+  const seen = new Set<string>();
+
+  return offers.reduce<CategoryFoodItem[]>((items, offer) => {
+    const item = menuOfferToCategoryFoodItem(offer);
+    if (!item) return items;
+
+    const key = `${item.restaurantId}-${item.itemId}`;
+    if (seen.has(key)) return items;
+
+    seen.add(key);
+    items.push(item);
+    return items;
+  }, []);
 }
 
 export function buildLockedCategories(menu: MenuCategory[] | undefined): HomeCategory[] {

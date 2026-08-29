@@ -37,6 +37,21 @@ export function MediaCardSkeleton() {
   );
 }
 
+/** Matches FoodCard in its compact (square image) variant. */
+export function CompactMediaCardSkeleton() {
+  return (
+    <div className="overflow-hidden rounded-card border border-line bg-surface shadow-card">
+      <Skeleton className="aspect-square w-full rounded-none" />
+      <div className="space-y-2 p-2.5 sm:p-3">
+        <Skeleton className="h-3.5 w-4/5" />
+        <Skeleton className="h-3 w-3/5" />
+        <Skeleton className="h-5 w-14" />
+        <Skeleton className="h-10 w-full sm:w-[88px]" rounded />
+      </div>
+    </div>
+  );
+}
+
 /** Matches RestaurantMenuItemCard (text left, thumbnail right). */
 export function MenuItemSkeleton() {
   return (
@@ -84,15 +99,21 @@ interface CardGridSkeletonProps {
   count?: number;
   /** Must match the real grid's column classes to avoid a reflow on load. */
   className?: string;
-  variant?: 'media' | 'menu';
+  variant?: 'media' | 'menu' | 'compact';
 }
+
+const gridSkeletonItems = {
+  media: MediaCardSkeleton,
+  menu: MenuItemSkeleton,
+  compact: CompactMediaCardSkeleton,
+};
 
 export function CardGridSkeleton({
   count = 8,
   className = 'grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4',
   variant = 'media',
 }: CardGridSkeletonProps) {
-  const Item = variant === 'menu' ? MenuItemSkeleton : MediaCardSkeleton;
+  const Item = gridSkeletonItems[variant];
 
   return (
     <div className={className} aria-hidden="true">

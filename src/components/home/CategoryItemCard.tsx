@@ -10,10 +10,19 @@ interface CategoryItemCardProps {
   item: CategoryFoodItem;
   onAdd: (item: CategoryFoodItem) => void;
   priority?: boolean;
+  /** Offer badge text from the backend. Never derived in the frontend. */
+  badge?: string | null;
+  variant?: 'home' | 'compact';
 }
 
 /** Adapts CategoryFoodItem onto the shared FoodCard. */
-export function CategoryItemCard({ item, onAdd, priority }: CategoryItemCardProps) {
+export function CategoryItemCard({
+  item,
+  onAdd,
+  priority,
+  badge,
+  variant = 'home',
+}: CategoryItemCardProps) {
   const quantity = useCartItemQuantity(item.itemId);
   const updateQuantity = useCartStore((state) => state.updateQuantity);
 
@@ -43,8 +52,10 @@ export function CategoryItemCard({ item, onAdd, priority }: CategoryItemCardProp
       onAdd={() => onAdd(item)}
       onIncrease={() => updateQuantity(item.itemId, quantity + 1)}
       onDecrease={() => updateQuantity(item.itemId, quantity - 1)}
+      badge={badge}
+      badgeTone="offer"
       priority={priority}
-      variant="home"
+      variant={variant}
     />
   );
 }

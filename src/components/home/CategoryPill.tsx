@@ -1,6 +1,7 @@
 'use client';
 
 import {
+  BadgePercent,
   Hamburger,
   IceCreamBowl,
   Leaf,
@@ -59,9 +60,13 @@ export function CategoryPill({ category, active, onClick, expanded }: CategoryPi
   );
 }
 
-function CategoryIconGlyph({ category, className }: { category: HomeCategory; className: string }) {
+/** Icon fallback for a category with no backend image. Shared with the browse rail. */
+export function CategoryIconGlyph({ category, className }: { category: HomeCategory; className: string }) {
   const text = `${category.key} ${category.name}`.toLowerCase();
 
+  if (category.categoryType === 'offer' || text.includes('offer') || text.includes('deal')) {
+    return <BadgePercent className={className} aria-hidden="true" />;
+  }
   if (text.includes('pizza')) return <Pizza className={className} aria-hidden="true" />;
   if (text.includes('burger') || text.includes('hamburger')) {
     return <Hamburger className={className} aria-hidden="true" />;
