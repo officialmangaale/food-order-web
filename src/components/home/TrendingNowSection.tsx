@@ -125,7 +125,6 @@ export function TrendingNowSection() {
     <HomeSection
       id="trending-now"
       title="Trending favourites"
-      description="Popular dishes people are ordering"
       viewAllHref={hasMoreItems ? viewAllHref : undefined}
     >
       {trendingQuery.isLoading ? (

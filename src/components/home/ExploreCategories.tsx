@@ -1,6 +1,6 @@
 'use client';
 
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useRef, useState, type ReactNode } from 'react';
 import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CategoryItemsSection, CategoryItemsSkeleton } from '@/components/home/CategoryItemsSection';
@@ -31,6 +31,7 @@ interface ExploreCategoriesProps {
   lockedRestaurant?: LockedRestaurantCategorySource;
   className?: string;
   embedded?: boolean;
+  betweenCategoriesAndItems?: ReactNode;
 }
 
 const RADIUS_KM = 7;
@@ -44,6 +45,7 @@ export function ExploreCategories({
   lockedRestaurant,
   className = '',
   embedded = false,
+  betweenCategoriesAndItems,
 }: ExploreCategoriesProps) {
   const pathname = usePathname();
   const effectiveMode = pathname.startsWith('/r/') ? 'locked' : mode;
@@ -238,6 +240,7 @@ export function ExploreCategories({
         id="explore-categories"
         title="What are you craving?"
         description="Pick a category to see dishes near you"
+        hideTitle={effectiveMode === 'global'}
         embedded={embedded}
         className={embedded ? className : undefined}
       >
@@ -272,7 +275,7 @@ export function ExploreCategories({
             <div
               role="radiogroup"
               aria-label="Food categories"
-              className="hide-scrollbar snap-row gutter-bleed flex gap-3 overflow-x-auto pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0"
+              className="hide-scrollbar snap-row gutter-bleed flex gap-3 overflow-x-auto pb-2 sm:mx-0 sm:flex-wrap sm:gap-5 sm:overflow-visible sm:px-0"
             >
               {visibleCategories.map((category) => (
                 <CategoryPill
@@ -299,6 +302,8 @@ export function ExploreCategories({
           </>
         )}
       </HomeSection>
+
+      {betweenCategoriesAndItems}
 
       {categoriesLoading ? (
         <section
@@ -350,8 +355,8 @@ function CategoryPillsSkeleton() {
   return (
     <div className="flex gap-3 overflow-hidden pb-1" aria-hidden="true">
       {Array.from({ length: 6 }, (_, index) => (
-        <div key={index} className="w-[68px] shrink-0 sm:w-[84px]">
-          <Skeleton className="h-[68px] w-[68px] sm:h-[84px] sm:w-[84px]" />
+        <div key={index} className="w-[70px] shrink-0">
+          <Skeleton className="mx-auto h-16 w-16 rounded-full" />
           <Skeleton className="mt-2 h-3 w-full" />
         </div>
       ))}

@@ -1,7 +1,6 @@
 'use client';
 
 import { Children, type ReactNode } from 'react';
-import { motion, useReducedMotion } from 'framer-motion';
 import { SectionHeader } from '@/components/layout/PageHeader';
 
 interface HomeSectionProps {
@@ -34,17 +33,12 @@ export function HomeSection({
   className = '',
   embedded,
 }: HomeSectionProps) {
-  const reduceMotion = useReducedMotion();
   const headingId = id ? `${id}-heading` : undefined;
 
   return (
-    <motion.section
+    <section
       aria-labelledby={headingId}
       className={`page-section ${embedded ? '' : 'page-container'} ${className}`}
-      initial={reduceMotion ? false : { opacity: 0, y: 16 }}
-      whileInView={reduceMotion ? undefined : { opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: '-40px' }}
-      transition={{ duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
     >
       {hideTitle ? (
         <h2 id={headingId} className="sr-only">
@@ -59,7 +53,7 @@ export function HomeSection({
         />
       )}
       {children}
-    </motion.section>
+    </section>
   );
 }
 

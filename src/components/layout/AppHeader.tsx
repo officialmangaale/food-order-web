@@ -115,10 +115,12 @@ export function AppHeader() {
   return (
     <>
       <header
-        className={`safe-top sticky top-0 z-50 ${
+        className={`safe-top z-50 ${
           isRestaurantDetailHeader
-            ? 'restaurant-detail-header pointer-events-none border-b border-transparent'
-            : 'border-b border-line bg-canvas/90 backdrop-blur-xl'
+            ? 'restaurant-detail-header pointer-events-none sticky top-0 border-b border-transparent'
+            : isHomePage
+              ? 'home-hero-header relative'
+              : 'sticky top-0 border-b border-line bg-canvas/90 backdrop-blur-xl'
         }`}
       >
         {/* Restaurant detail: a slim, mostly-transparent bar over the hero image. */}
@@ -147,7 +149,13 @@ export function AppHeader() {
         ) : (
           <div className="page-container">
             {/* Mobile: brand + actions, then greeting, then search. */}
-            <div className="flex flex-col gap-3 py-3 lg:hidden">
+            <div
+              className={
+                isHomePage
+                  ? 'flex min-h-[330px] flex-col py-5 sm:min-h-[350px] lg:min-h-[370px] lg:py-8'
+                  : 'flex flex-col gap-3 py-3 lg:hidden'
+              }
+            >
               <div className="flex items-center justify-between gap-4">
                 {isHomePage ? (
                   <LocationButton
@@ -167,13 +175,14 @@ export function AppHeader() {
               </div>
 
               {isHomePage && (
-                <div>
-                  <h1 className="text-lg font-extrabold leading-tight tracking-[-0.03em] text-ink">
+                <div className="mt-auto max-w-[68%] pb-1 sm:max-w-[62%] lg:max-w-[520px]">
+                  <h1 className="text-[28px] font-bold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[30px] lg:text-[38px]">
                     {hasMounted ? getGreeting() : 'Hello'}
                     {firstName ? `, ${firstName}` : ''}
+                    <span aria-hidden="true"> 👋</span>
                   </h1>
-                  <p className="mt-0.5 text-sm font-medium text-ink-muted">
-                    What would you like delivered today?
+                  <p className="mt-2 text-[15px] font-medium leading-6 text-ink-muted sm:text-base">
+                    What are you craving today?
                   </p>
                 </div>
               )}
@@ -187,11 +196,16 @@ export function AppHeader() {
                 />
               )}
 
-              <SearchHeaderInput {...searchProps} />
+              <SearchHeaderInput
+                {...searchProps}
+                variant={isHomePage ? 'hero' : 'default'}
+                showFilter={isHomePage}
+                className={isHomePage ? 'mt-4 shrink-0 lg:max-w-[760px]' : ''}
+              />
             </div>
 
             {/* Desktop: one row — brand, location, search, actions. */}
-            <div className="hidden items-center gap-5 py-4 lg:flex">
+            <div className={`items-center gap-5 py-4 ${isHomePage ? 'hidden' : 'hidden lg:flex'}`}>
               <HeaderLogo href={homeLink} isLockedRoute={isLockedRoute || lockedMode} />
               <LocationButton
                 label={locationLabel}
@@ -258,9 +272,9 @@ function LocationButton({ label, isPlaceholder, onClick, variant }: LocationButt
         className="group min-w-0 rounded-control py-1 text-left focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
         aria-label="Choose delivery location"
       >
-        <span className="block text-eyebrow uppercase text-ink-subtle">Delivering to</span>
-        <span className="mt-1 flex min-w-0 items-center gap-1.5 text-sm font-extrabold text-ink">
-          <MapPin className="h-4 w-4 shrink-0 text-brand-800" aria-hidden="true" />
+        <span className="block text-[13px] font-semibold leading-4 text-ink-muted">Delivering to</span>
+        <span className="mt-1 flex min-w-0 items-center gap-1.5 text-[16px] font-bold leading-5 text-ink sm:text-[17px]">
+          <MapPin className="h-[18px] w-[18px] shrink-0 fill-brand-700 text-brand-700" aria-hidden="true" />
           <span className={`truncate ${isPlaceholder ? 'text-ink-muted' : ''}`}>{label}</span>
           <ChevronDown
             className="h-4 w-4 shrink-0 text-ink-muted transition-colors group-hover:text-brand-800"
@@ -305,12 +319,12 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
     <div className={`shrink-0 items-center gap-2 ${className}`}>
       <Link
         href="/cart"
-        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-surface text-ink transition-colors hover:border-line-interactive hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+        className="relative flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-[0_6px_20px_rgba(23,32,34,0.08)] transition-colors hover:border-line-interactive hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
         aria-label={totalItems > 0 ? `Cart, ${totalItems} items` : 'Cart'}
       >
         <ShoppingCart className="h-5 w-5" aria-hidden="true" />
         {totalItems > 0 && (
-          <span className="absolute -right-0.5 -top-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-cherry-800 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-canvas">
+          <span className="absolute -right-0.5 -top-0.5 flex min-h-5 min-w-5 items-center justify-center rounded-full bg-brand-700 px-1 text-[10px] font-bold leading-none text-white ring-2 ring-white">
             {totalItems > 9 ? '9+' : totalItems}
           </span>
         )}
@@ -319,7 +333,7 @@ function HeaderActions({ totalItems, onAccountClick, className = '' }: HeaderAct
       <button
         type="button"
         onClick={onAccountClick}
-        className="flex h-11 w-11 items-center justify-center rounded-full border border-line-strong bg-surface text-ink transition-colors hover:border-line-interactive hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
+        className="flex h-11 w-11 items-center justify-center rounded-full border border-line bg-surface text-ink shadow-[0_6px_20px_rgba(23,32,34,0.08)] transition-colors hover:border-line-interactive hover:text-brand-800 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
         aria-label="Account"
         title="Account"
       >

@@ -44,12 +44,15 @@ export function MobileBottomNavigation() {
                 >
                   <span
                     className={`flex items-center justify-center rounded-full transition-colors ${
-                      isHome
+                      isHome && active
                         ? '-mt-4 h-12 w-12 border-4 border-surface bg-brand-700 text-white shadow-brand'
                         : `h-9 w-11 ${active ? 'bg-brand-50' : ''}`
                     }`}
                   >
-                    <Icon className={isHome ? 'h-[22px] w-[22px] fill-current' : 'h-5 w-5'} aria-hidden="true" />
+                    <Icon
+                      className={isHome && active ? 'h-[22px] w-[22px] fill-current' : 'h-5 w-5'}
+                      aria-hidden="true"
+                    />
                   </span>
                   <span>{label}</span>
                 </Link>

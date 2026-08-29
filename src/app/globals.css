@@ -16,17 +16,17 @@
 
 @theme {
   /* ——— Brand: teal (action) ——— */
-  --color-brand-50: #f2faf8;
-  --color-brand-100: #e3f4f0;
-  --color-brand-200: #c3e7e1;
-  --color-brand-300: #8ed2c9;
-  --color-brand-400: #45c8ba;
-  --color-brand-500: #16b8a6;
-  --color-brand-600: #109f90;
-  --color-brand-700: #0c7c72; /* primary fill — 5.07:1 with white */
-  --color-brand-800: #0e5f59;
-  --color-brand-900: #0e4b47;
-  --color-brand-950: #08302e;
+  --color-brand-50: #f2fbf9;
+  --color-brand-100: #ddf7f2;
+  --color-brand-200: #b8ece3;
+  --color-brand-300: #83dccf;
+  --color-brand-400: #43c7b5;
+  --color-brand-500: #1daf9c;
+  --color-brand-600: #0f9d8a;
+  --color-brand-700: #0f9d8a;
+  --color-brand-800: #087f73;
+  --color-brand-900: #075e54;
+  --color-brand-950: #043d37;
 
   /* ——— Cherry: offers, discounts, urgency ——— */
   --color-cherry-50: #fef4f3;
@@ -42,30 +42,30 @@
   --color-cherry-950: #430509;
 
   /* ——— Surfaces (warm neutral) ——— */
-  --color-canvas: #fbf8f5;
+  --color-canvas: #f7f9fa;
   --color-surface: #ffffff;
-  --color-surface-muted: #f4efeb;
-  --color-surface-sunken: #f7f2ee;
+  --color-surface-muted: #f2fbf9;
+  --color-surface-sunken: #f1f5f5;
 
   /* ——— Text (warm neutral ramp) ——— */
-  --color-ink: #1c1917; /* 16.53:1 on canvas */
-  --color-ink-muted: #57534e; /*  7.21:1 on canvas */
-  --color-ink-subtle: #78716c; /*  4.53:1 on canvas — AA floor, body-safe */
+  --color-ink: #172022;
+  --color-ink-muted: #667477;
+  --color-ink-subtle: #94a3a6;
   --color-ink-inverse: #ffffff;
 
   /* ——— Lines ——— */
-  --color-line: #eae3dd;
-  --color-line-strong: #d6ccc4;
-  --color-line-interactive: #a8d5ce;
+  --color-line: #e4eceb;
+  --color-line-strong: #d5e1df;
+  --color-line-interactive: #83dccf;
 
   /* ——— Status ——— */
-  --color-success: #15803d;
+  --color-success: #22a06b;
   --color-success-tint: #e9f5ed;
-  --color-warning: #b45309;
+  --color-warning: #f5a524;
   --color-warning-tint: #fdf2dd;
-  --color-danger: #dc2626;
+  --color-danger: #e5484d;
   --color-danger-tint: #fdecec;
-  --color-info: #0e5f59;
+  --color-info: #075e54;
   --color-info-tint: #e3f4f0;
 
   /* Bestseller / rating accents */
@@ -74,19 +74,19 @@
   --color-star: #f5a524;
 
   /* Veg / non-veg indicators */
-  --color-veg: #15803d;
-  --color-nonveg: #c0392b;
+  --color-veg: #22a06b;
+  --color-nonveg: #e5484d;
 
   /* ——— Radius ——— */
   --radius-control: 0.875rem; /* 14px — inputs, small tiles */
-  --radius-card: 1.25rem; /* 20px — cards, panels */
+  --radius-card: 1rem; /* 16px — cards, panels */
   --radius-sheet: 1.75rem; /* 28px — modals, bottom sheets */
 
   /* ——— Shadows (warm-tinted to match the canvas) ——— */
-  --shadow-card: 0 1px 2px rgba(60, 45, 38, 0.04), 0 2px 6px rgba(60, 45, 38, 0.04);
-  --shadow-elevated: 0 4px 10px rgba(60, 45, 38, 0.05), 0 12px 28px rgba(60, 45, 38, 0.07);
-  --shadow-floating: 0 8px 20px rgba(60, 45, 38, 0.1), 0 20px 52px rgba(60, 45, 38, 0.14);
-  --shadow-brand: 0 8px 20px rgba(12, 124, 114, 0.22);
+  --shadow-card: 0 1px 2px rgba(23, 32, 34, 0.035), 0 4px 12px rgba(23, 32, 34, 0.045);
+  --shadow-elevated: 0 5px 14px rgba(23, 32, 34, 0.06), 0 16px 34px rgba(23, 32, 34, 0.07);
+  --shadow-floating: 0 10px 28px rgba(23, 32, 34, 0.1), 0 24px 58px rgba(23, 32, 34, 0.12);
+  --shadow-brand: 0 8px 20px rgba(15, 157, 138, 0.22);
   --shadow-cherry: 0 8px 20px rgba(168, 15, 21, 0.18);
 
   /* ——— Type scale ———
@@ -278,6 +278,41 @@ select:focus-visible {
   padding-block: var(--page-block-start) var(--page-block-end);
 }
 
+/* Home-only food hero. The photography stays in CSS so the existing header
+   controls retain their navigation, location and cart behavior. */
+.home-hero-header {
+  isolation: isolate;
+  overflow: hidden;
+  background: linear-gradient(145deg, #f8fdfc 0%, #effbf8 50%, #dff7f2 100%);
+}
+
+.home-hero-header::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  background-image: url('/images/food-delivery-hero.png');
+  background-repeat: no-repeat;
+  background-position: right top;
+  background-size: auto 100%;
+}
+
+.home-hero-header::after {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  content: '';
+  pointer-events: none;
+  background: linear-gradient(90deg, rgba(247, 253, 252, 0.14) 0%, transparent 72%);
+}
+
+@media (min-width: 1024px) {
+  .home-hero-header::before {
+    background-size: auto 128%;
+    background-position: right 30%;
+  }
+}
+
 .page-section + .page-section {
   margin-top: var(--page-section-gap);
 }
@@ -343,7 +378,7 @@ select:focus-visible {
 }
 
 .skeleton-shimmer {
-  background: linear-gradient(90deg, #efe9e4 25%, #f8f4f1 37%, #efe9e4 63%);
+  background: linear-gradient(90deg, #e6f1ef 25%, #f5faf9 37%, #e6f1ef 63%);
   background-size: 200% 100%;
   animation: shimmer 1.6s ease-in-out infinite;
 }

@@ -53,7 +53,6 @@ export function NearbyRestaurantsSection() {
     <HomeSection
       id="nearby-restaurants"
       title="Popular near you"
-      description="Loved around your neighbourhood"
       viewAllHref={hasLocation && hasMoreRestaurants ? viewAllHref : undefined}
     >
       {!hasLocation ? (
@@ -85,7 +84,7 @@ export function NearbyRestaurantsSection() {
           onAction={() => setLocationOpen(true)}
         />
       ) : (
-        <CardRail itemWidth="w-[208px]">
+        <CardRail itemWidth="w-[176px]">
           {visibleRestaurants.map((restaurant) => (
             <NearbyRestaurantCard key={restaurant.id} restaurant={restaurant} />
           ))}

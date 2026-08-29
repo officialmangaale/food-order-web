@@ -38,7 +38,7 @@ export function TrendingItemCard({ item, onAdd, priority }: TrendingItemCardProp
       distance={item.distanceKm != null ? formatDistance(item.distanceKm) : null}
       restaurantName={item.restaurantName}
       restaurantHref={`/restaurants/${item.restaurantId}`}
-      badge={item.badge}
+      badge={item.badge || 'Popular'}
       badgeTone="inverse"
       closed={item.restaurantIsOpen === false}
       unavailable={!item.isAvailable}
@@ -48,6 +48,7 @@ export function TrendingItemCard({ item, onAdd, priority }: TrendingItemCardProp
       onIncrease={() => updateQuantity(item.itemId, quantity + 1)}
       onDecrease={() => updateQuantity(item.itemId, quantity - 1)}
       priority={priority}
+      variant="home"
     />
   );
 }

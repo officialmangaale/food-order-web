@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { type ReactNode } from 'react';
 
 interface PageHeaderProps {
@@ -86,7 +86,7 @@ export function SectionHeader({
   title,
   description,
   href,
-  linkLabel = 'See all',
+  linkLabel = 'View all',
   className = '',
 }: SectionHeaderProps) {
   return (
@@ -103,6 +103,7 @@ export function SectionHeader({
           className="inline-flex min-h-11 shrink-0 items-center text-sm font-bold text-brand-800 transition-colors hover:text-brand-900 focus-visible:outline-none focus-visible:ring-4 focus-visible:ring-brand-700/25"
         >
           {linkLabel}
+          <ArrowRight className="ml-1.5 h-4 w-4" aria-hidden="true" />
         </Link>
       )}
     </div>

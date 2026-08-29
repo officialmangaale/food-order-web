@@ -33,6 +33,7 @@ export interface FoodCardProps {
   onDecrease?: () => void;
   priority?: boolean;
   className?: string;
+  variant?: 'default' | 'home';
 }
 
 /**
@@ -68,8 +69,10 @@ export function FoodCard({
   onDecrease,
   priority,
   className = '',
+  variant = 'default',
 }: FoodCardProps) {
   const blocked = Boolean(unavailable || closed);
+  const isHome = variant === 'home';
 
   return (
     <article
@@ -77,7 +80,7 @@ export function FoodCard({
     >
       <Thumbnail src={imageUrl} alt={name} ratio="card" priority={priority} zoomOnHover>
         <div className="absolute left-2 top-2 flex items-center gap-1.5 sm:left-3 sm:top-3">
-          <VegIndicator vegetarian={vegetarian} />
+          <VegIndicator vegetarian={vegetarian} showLabel={isHome} />
           {badge && (
             <Badge variant={badgeTone} size="sm">
               {badge}
@@ -125,7 +128,13 @@ export function FoodCard({
 
         {/* Price stacks above a full-width control on phones — a 2-column grid
             at 320-375px cannot fit both on one line. Side by side from `sm`. */}
-        <div className="mt-auto flex flex-col gap-2 pt-3 sm:flex-row sm:items-end sm:justify-between">
+        <div
+          className={`mt-auto gap-2 pt-3 ${
+            isHome
+              ? 'flex items-center justify-between'
+              : 'flex flex-col sm:flex-row sm:items-end sm:justify-between'
+          }`}
+        >
           <Price display={displayPrice} amount={price} strikeThrough={originalPrice} size="md" />
           <AddToCartControl
             quantity={quantity}
@@ -137,7 +146,7 @@ export function FoodCard({
             unavailableLabel={closed ? 'Closed' : 'Sold out'}
             requiresCustomisation={requiresCustomisation}
             size="sm"
-            width="responsive"
+            width={isHome ? 'fixed' : 'responsive'}
           />
         </div>
       </div>

@@ -25,6 +25,7 @@ export function NearbyRestaurantCard({ restaurant, priority }: NearbyRestaurantC
       distance={restaurant.distance}
       offerBadge={restaurant.offerBadge}
       priority={priority}
+      variant="home"
     />
   );
 }

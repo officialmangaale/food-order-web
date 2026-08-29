@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, Clock } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { MetaRow } from '@/components/ui/FoodMeta';
 import { Thumbnail, getInitials } from '@/components/ui/Thumbnail';
@@ -19,6 +19,7 @@ export interface RestaurantCardProps {
   closed?: boolean;
   priority?: boolean;
   className?: string;
+  variant?: 'default' | 'home';
 }
 
 /**
@@ -38,7 +39,10 @@ export function RestaurantCard({
   closed,
   priority,
   className = '',
+  variant = 'default',
 }: RestaurantCardProps) {
+  const isHome = variant === 'home';
+
   return (
     <Link
       href={href}
@@ -55,9 +59,15 @@ export function RestaurantCard({
       >
         {offerBadge && (
           <span className="absolute left-2 top-2 sm:left-3 sm:top-3">
-            <Badge variant="offer" size="sm">
+            <Badge variant={isHome ? 'brand' : 'offer'} size="sm" className={isHome ? 'bg-brand-700 text-white' : ''}>
               {offerBadge}
             </Badge>
+          </span>
+        )}
+        {isHome && deliveryTime && (
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[10px] font-bold text-ink shadow-card backdrop-blur-sm sm:text-[11px]">
+            <Clock className="h-3.5 w-3.5 text-ink-muted" aria-hidden="true" />
+            {deliveryTime}
           </span>
         )}
         {closed && (
@@ -77,8 +87,9 @@ export function RestaurantCard({
         <MetaRow
           rating={rating}
           ratingCount={ratingCount}
-          deliveryTime={deliveryTime}
+          deliveryTime={isHome ? undefined : deliveryTime}
           distance={distance}
+          tone={isHome ? 'brand' : 'default'}
           className="mt-auto pt-3"
         />
       </div>

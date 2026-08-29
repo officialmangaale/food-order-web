@@ -44,6 +44,7 @@ export function CategoryItemCard({ item, onAdd, priority }: CategoryItemCardProp
       onIncrease={() => updateQuantity(item.itemId, quantity + 1)}
       onDecrease={() => updateQuantity(item.itemId, quantity - 1)}
       priority={priority}
+      variant="home"
     />
   );
 }

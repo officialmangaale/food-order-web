@@ -20,13 +20,16 @@ export default function HomePage() {
         <ActiveOrderCard />
       </div>
 
-      <HomeOfferSlider />
-
       <Suspense fallback={<ExploreCategoriesFallback />}>
-        <ExploreCategories />
+        <ExploreCategories
+          betweenCategoriesAndItems={
+            <>
+              <HomeOfferSlider />
+              <NearbyRestaurantsSection />
+            </>
+          }
+        />
       </Suspense>
-
-      <NearbyRestaurantsSection />
       <TrendingNowSection />
     </main>
   );
@@ -38,8 +41,8 @@ function ExploreCategoriesFallback() {
       <Skeleton className="h-6 w-56" />
       <div className="mt-4 flex gap-3 overflow-hidden pb-1">
         {Array.from({ length: 6 }, (_, index) => (
-          <div key={index} className="w-[68px] shrink-0 sm:w-[84px]">
-            <Skeleton className="h-[68px] w-[68px] sm:h-[84px] sm:w-[84px]" />
+          <div key={index} className="w-[70px] shrink-0">
+            <Skeleton className="mx-auto h-16 w-16 rounded-full" />
             <Skeleton className="mt-2 h-3 w-full" />
           </div>
         ))}

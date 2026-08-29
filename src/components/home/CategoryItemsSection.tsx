@@ -56,7 +56,6 @@ export function CategoryItemsSection({
     <section aria-live="polite">
       <SectionHeader
         title={heading}
-        description="Picked for your next meal"
         href={hasMoreItems ? viewAllHref : undefined}
       />
 

@@ -14,6 +14,7 @@ interface VegIndicatorProps {
   vegetarian?: boolean | null;
   size?: 'sm' | 'md';
   className?: string;
+  showLabel?: boolean;
 }
 
 /**
@@ -21,20 +22,38 @@ interface VegIndicatorProps {
  * Green = vegetarian, red = non-vegetarian. Replaces the "Veg"/"Non-veg" text
  * pill and the leaf-icon variant that were previously used side by side.
  */
-export function VegIndicator({ vegetarian, size = 'md', className = '' }: VegIndicatorProps) {
+export function VegIndicator({ vegetarian, size = 'md', className = '', showLabel }: VegIndicatorProps) {
   if (vegetarian == null) return null;
 
   const box = size === 'sm' ? 'h-3.5 w-3.5 rounded-[3px]' : 'h-[18px] w-[18px] rounded';
   const dot = size === 'sm' ? 'h-1.5 w-1.5' : 'h-2 w-2';
   const tone = vegetarian ? 'border-veg text-veg' : 'border-nonveg text-nonveg';
 
-  return (
+  const indicator = (
     <span
-      className={`inline-flex shrink-0 items-center justify-center border-[1.5px] bg-white/95 ${box} ${tone} ${className}`}
-      role="img"
-      aria-label={vegetarian ? 'Vegetarian' : 'Non-vegetarian'}
+      className={`inline-flex shrink-0 items-center justify-center border-[1.5px] bg-white/95 ${box} ${tone}`}
+      aria-hidden={showLabel ? 'true' : undefined}
     >
       <span className={`rounded-full bg-current ${dot}`} />
+    </span>
+  );
+
+  if (!showLabel) {
+    return (
+      <span role="img" aria-label={vegetarian ? 'Vegetarian' : 'Non-vegetarian'} className={className}>
+        {indicator}
+      </span>
+    );
+  }
+
+  return (
+    <span
+      role="img"
+      aria-label={vegetarian ? 'Vegetarian' : 'Non-vegetarian'}
+      className={`inline-flex items-center gap-1 rounded-full bg-white/95 px-2 py-1 text-[9px] font-bold text-ink shadow-card ${className}`}
+    >
+      {indicator}
+      {vegetarian ? 'Veg' : 'Non-Veg'}
     </span>
   );
 }
@@ -44,10 +63,11 @@ interface RatingProps {
   count?: number | null;
   size?: 'sm' | 'md';
   className?: string;
+  tone?: 'default' | 'brand';
 }
 
 /** Star + numeric rating. One implementation, one star colour. */
-export function Rating({ value, count, size = 'sm', className = '' }: RatingProps) {
+export function Rating({ value, count, size = 'sm', className = '', tone = 'default' }: RatingProps) {
   if (value == null) return null;
 
   const text = size === 'sm' ? 'text-xs' : 'text-sm';
@@ -58,7 +78,10 @@ export function Rating({ value, count, size = 'sm', className = '' }: RatingProp
       className={`inline-flex items-center gap-1 font-bold text-ink ${text} ${className}`}
       aria-label={`Rated ${value.toFixed(1)} out of 5${count ? ` from ${count} ratings` : ''}`}
     >
-      <Star className={`${star} shrink-0 fill-star text-star`} aria-hidden="true" />
+      <Star
+        className={`${star} shrink-0 ${tone === 'brand' ? 'fill-brand-700 text-brand-700' : 'fill-star text-star'}`}
+        aria-hidden="true"
+      />
       <span>{value.toFixed(1)}</span>
       {count != null && count > 0 && (
         <span className="font-semibold text-ink-subtle">({count})</span>
@@ -73,6 +96,7 @@ interface MetaRowProps {
   rating?: number | null;
   ratingCount?: number | null;
   className?: string;
+  tone?: 'default' | 'brand';
 }
 
 /**
@@ -85,6 +109,7 @@ export function MetaRow({
   rating,
   ratingCount,
   className = '',
+  tone = 'default',
 }: MetaRowProps) {
   const hasAny = rating != null || deliveryTime || distance;
   if (!hasAny) return null;
@@ -93,7 +118,7 @@ export function MetaRow({
     <div
       className={`flex flex-wrap items-center gap-x-2.5 gap-y-1 text-xs font-semibold text-ink-muted ${className}`}
     >
-      {rating != null && <Rating value={rating} count={ratingCount} />}
+      {rating != null && <Rating value={rating} count={ratingCount} tone={tone} />}
       {deliveryTime && (
         <span className="inline-flex items-center gap-1">
           <Clock className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
