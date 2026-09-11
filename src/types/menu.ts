@@ -55,6 +55,8 @@ export interface MenuAddon {
   price: number;
   is_available?: boolean;
   max_quantity?: number;
+  /** Optional prices supplied by the API for each product variant. */
+  price_by_variant?: { variant_id: number; price: number }[];
   sort_order?: number;
 }
 

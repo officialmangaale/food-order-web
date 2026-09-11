@@ -9,6 +9,7 @@ import type {
   HomeCategory,
 } from '@/types/category';
 import type { MenuAddon, MenuCategory, MenuItem, MenuVariant } from '@/types/menu';
+import { normalizeAddonVariantPrices } from '@/utils/apiAdapters';
 import type { HomeMenuOffer } from '@/types/offer';
 
 export interface LockedRestaurantCategorySource {
@@ -469,6 +470,7 @@ function normalizeAddons(raw: unknown): MenuAddon[] {
       price: readNumber(obj.price) ?? 0,
       is_available: readBoolean(obj.is_available ?? obj.isAvailable) ?? true,
       max_quantity: readNumber(obj.max_quantity ?? obj.maxQuantity),
+      price_by_variant: normalizeAddonVariantPrices(obj.price_by_variant),
       sort_order: readNumber(obj.sort_order ?? obj.sortOrder),
     });
   }

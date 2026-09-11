@@ -168,12 +168,11 @@ export function ExploreCategories({
   );
 
   const handleCategorySelect = (category: HomeCategory) => {
-    /* On home, All opens the dedicated Browse Menu screen rather than expanding
-       the strip in place. `push` keeps a history entry, so the browser back
-       button and the screen's own back link both return here. A locked
-       restaurant menu has no Browse Menu screen and keeps expanding inline. */
-    if (category.key === 'all' && effectiveMode === 'global') {
-      router.push(buildBrowseMenuHref(category.key, category.name));
+    // Keep the home entry and its scroll position for category Back navigation.
+    if (effectiveMode === 'global') {
+      const href = buildBrowseMenuHref(category.key, category.name);
+      try { sessionStorage.setItem('mangaale-category-entry', href); } catch { /* Storage is optional. */ }
+      router.push(href, { scroll: false });
       return;
     }
 

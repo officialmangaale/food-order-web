@@ -1,0 +1,26 @@
+{
+  "checks": [
+    "Existing home category click opens the dedicated route with live API data",
+    "Next and previous previews match destination products; first boundary is disabled",
+    "Required variant validation, actual variant-specific extra charges, and cancel without adding",
+    "Successful addition uses the persisted cart, prevents double submission, and shows subtotal",
+    "Editing replaces the existing selection and updates quantity",
+    "Quantity decrease and adding identical selections follow the existing cart merge rule",
+    "Incompatible extras cannot silently merge into an existing variant",
+    "Multiple variants remain separate and the selection manager edits or removes the chosen line",
+    "Merchant-conflict cancellation preserves the existing cart",
+    "Back restores home scroll; browser Forward restores category route and preserves cart",
+    "One category API request across product navigation, customisation, and Back/Forward",
+    "Pagination loads one subsequent page, exposes the correct next preview, and stops at the final boundary",
+    "Mobile swipe, reduced-motion navigation, and arrow-key exclusion for focused controls",
+    "320px mobile layout keeps cart and quantity controls visible without horizontal overflow",
+    "Omitted option details load through the existing cached merchant-menu service only once",
+    "Explicit merchant replacement, plain-item direct addition, duplicate guard, and removal to zero",
+    "Unavailable merchant disables addition; missing image uses the existing fallback",
+    "Empty category state",
+    "Retryable API failure recovers",
+    "Direct category URL Back safely falls back to home",
+    "No browser runtime errors"
+  ],
+  "errors": []
+}

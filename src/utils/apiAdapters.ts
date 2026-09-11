@@ -204,8 +204,19 @@ export function normalizeAddon(rawInput: unknown): MenuAddon {
     price,
     is_available: readBoolean(raw.is_available ?? raw.isAvailable ?? raw.available) ?? true,
     max_quantity: readNumber(raw.max_quantity ?? raw.maxQuantity),
+    price_by_variant: normalizeAddonVariantPrices(raw.price_by_variant),
     sort_order: readNumber(raw.sort_order ?? raw.sortOrder ?? raw.display_order ?? raw.displayOrder),
   };
+}
+
+export function normalizeAddonVariantPrices(value: unknown): MenuAddon['price_by_variant'] {
+  if (!Array.isArray(value)) return undefined;
+  return value.flatMap((entry) => {
+    const raw = asRecord(entry);
+    const variantId = readNumber(raw?.variant_id);
+    const price = readNumber(raw?.price);
+    return variantId != null && price != null ? [{ variant_id: variantId, price }] : [];
+  });
 }
 
 function normalizeCategoriesWithFlatItems(
