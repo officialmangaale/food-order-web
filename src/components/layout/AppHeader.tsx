@@ -14,6 +14,7 @@ import { OtpLoginModal } from '@/components/auth/OtpLoginModal';
 import { LocationModal } from '@/components/location/LocationModal';
 import { ProfileMenu } from '@/components/profile/ProfileMenu';
 import { features } from '@/config/features';
+import homeStyles from '@/components/home/HomeResponsive.module.css';
 
 export function AppHeader() {
   const {
@@ -127,7 +128,7 @@ export function AppHeader() {
           isRestaurantDetailHeader
             ? 'restaurant-detail-header pointer-events-none sticky top-0 border-b border-transparent'
             : isHomePage
-              ? 'home-hero-header relative'
+              ? `home-hero-header relative ${homeStyles.hero}`
               : 'sticky top-0 border-b border-line bg-canvas/90 backdrop-blur-xl'
         }`}
       >
@@ -184,7 +185,7 @@ export function AppHeader() {
             <div
               className={
                 isHomePage
-                  ? 'flex min-h-[272px] flex-col pb-5 pt-4 sm:min-h-[288px] sm:pb-6 sm:pt-5 lg:min-h-[330px] lg:py-8'
+                  ? homeStyles.heroContent
                   : isBrowseMenuHeader
                     ? 'hidden'
                     : 'flex flex-col gap-3 py-3 lg:hidden'
@@ -209,8 +210,8 @@ export function AppHeader() {
               </div>
 
               {isHomePage && (
-                <div className="mt-8 max-w-[68%] sm:mt-10 sm:max-w-[62%] lg:max-w-[520px]">
-                  <h1 className="text-[28px] font-bold leading-[1.12] tracking-[-0.035em] text-ink sm:text-[30px] lg:text-[38px]">
+                <div className={homeStyles.greeting}>
+                  <h1 className="font-bold leading-[1.12] tracking-[-0.035em] text-ink">
                     {hasMounted ? getGreeting() : 'Hello'}
                     {firstName ? `, ${firstName}` : ''}
                     <span aria-hidden="true"> 👋</span>
@@ -234,7 +235,7 @@ export function AppHeader() {
                 {...searchProps}
                 variant={isHomePage ? 'hero' : 'default'}
                 showFilter={isHomePage}
-                className={isHomePage ? 'mt-5 shrink-0 lg:max-w-[760px]' : ''}
+                className={isHomePage ? homeStyles.search : ''}
               />
             </div>
 

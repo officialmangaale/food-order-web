@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/ui/ErrorState';
 import { MediaCardSkeleton } from '@/components/ui/Skeleton';
 import { useNearbyRestaurants } from '@/hooks/useNearbyRestaurants';
 import { useLocationStore } from '@/store/locationStore';
+import homeStyles from './HomeResponsive.module.css';
 
 const HOME_RESTAURANTS_VISIBLE = 3;
 const RADIUS_KM = 7;
@@ -57,6 +58,7 @@ export function NearbyRestaurantsSection() {
     >
       {!hasLocation ? (
         <EmptyState
+          className={pathname === '/' ? homeStyles.emptyState : undefined}
           icon="location"
           title="Find restaurants near you"
           description={`Set your delivery location to discover restaurants within ${RADIUS_KM} km.`}
@@ -77,6 +79,7 @@ export function NearbyRestaurantsSection() {
         />
       ) : visibleRestaurants.length === 0 ? (
         <EmptyState
+          className={pathname === '/' ? homeStyles.emptyState : undefined}
           icon="restaurant"
           title={`No restaurants found within ${RADIUS_KM} km`}
           description="Try changing your delivery location."

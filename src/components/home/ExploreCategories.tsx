@@ -6,6 +6,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { CartConflictModal } from '@/components/cart/CartConflictModal';
 import { CategoryItemsSection, CategoryItemsSkeleton } from '@/components/home/CategoryItemsSection';
 import { CategoryPill } from '@/components/home/CategoryPill';
+import homeStyles from './HomeResponsive.module.css';
 import { HomeSection } from '@/components/home/HomeSection';
 import { ItemCustomizeModal } from '@/components/modals/ItemCustomizeModal';
 import { LocationModal } from '@/components/location/LocationModal';
@@ -259,6 +260,7 @@ export function ExploreCategories({
           />
         ) : categories.length === 0 ? (
           <EmptyState
+            className={pathname === '/' ? homeStyles.emptyState : undefined}
             icon="location"
             title={
               effectiveMode === 'global' && !hasLocation

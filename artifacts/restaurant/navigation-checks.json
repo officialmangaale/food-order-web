@@ -1,0 +1,10 @@
+{
+  "checks": [
+    "Actual / link restores entry URL, scroll and usable chrome",
+    "Actual /search?q=pizza link restores entry URL, scroll and usable chrome",
+    "Distinct variants remain separate and the selection manager edits the chosen line",
+    "Mobile swipe and reduced-motion keyboard navigation preserve exact destinations",
+    "Merchant conflict keeps the cart on cancel and opens options only after explicit Clear and add",
+    "Failed menu requests display Retry and recover through the existing service"
+  ]
+}

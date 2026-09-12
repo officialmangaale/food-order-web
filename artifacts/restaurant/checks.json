@@ -1,0 +1,13 @@
+{
+  "checks": [
+    "Live restaurant categories, exact diagonal destinations, boundary and rapid/keyboard navigation",
+    "Full menu drawer/sheet, restaurant search, required variants, real extra charges, nested Back/Forward, cancel and double-submit guard",
+    "Shared cart subtotal, editing, quantity changes and incompatible-customisation protection",
+    "Eight mobile/tablet/landscape/desktop widths: previews, price, Full menu and cart stay separate; panels fit",
+    "Direct list addition keeps Full menu open; row selection opens that exact product and category",
+    "One detail request and one menu request across product animations, filters, panels and additions",
+    "Restaurant isolation in products/search, missing-image fallback, unavailable item, empty menu and closed merchant",
+    "A direct restaurant URL has a safe home fallback"
+  ],
+  "runtimeErrors": []
+}
