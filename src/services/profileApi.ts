@@ -44,6 +44,25 @@ export interface CustomerAddressPayload {
   is_default?: boolean;
 }
 
+export interface AddressPlaceSuggestion {
+  place_id: string;
+  primary_text: string;
+  secondary_text?: string;
+  full_text: string;
+}
+
+export interface ResolvedCustomerLocation {
+  address_line1?: string;
+  area?: string;
+  city?: string;
+  district?: string;
+  state?: string;
+  pincode?: string;
+  latitude?: number;
+  longitude?: number;
+  formatted_address?: string;
+}
+
 export interface ProfileDashboard {
   profile: CustomerProfile | null;
   recentOrders: CustomerOrder[];
@@ -143,6 +162,51 @@ export async function deleteAddress(token: string, id: number | string): Promise
   });
 }
 
+export async function searchAddressPlaces(
+  token: string,
+  payload: { query: string; session_token: string; bias?: { latitude: number; longitude: number } },
+  signal?: AbortSignal
+): Promise<AddressPlaceSuggestion[]> {
+  const raw = await httpRequest<unknown>(userServiceUrl('/customers/me/location/autocomplete'), {
+    method: 'POST',
+    token,
+    body: payload,
+    signal,
+  });
+  const data = unwrapApiResponse<unknown>(raw);
+  const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  const list = pickArray(record.suggestions) ?? pickArray(record.items) ?? [];
+  return list.map((item) => normalizeSuggestion(item as Record<string, unknown>));
+}
+
+export async function resolveAddressPlace(
+  token: string,
+  payload: { place_id: string; session_token: string },
+  signal?: AbortSignal
+): Promise<ResolvedCustomerLocation> {
+  const raw = await httpRequest<unknown>(userServiceUrl('/customers/me/location/place-details'), {
+    method: 'POST',
+    token,
+    body: payload,
+    signal,
+  });
+  return normalizeResolvedLocation(unwrapLocation(raw));
+}
+
+export async function reverseGeocodeAddress(
+  token: string,
+  payload: { latitude: number; longitude: number },
+  signal?: AbortSignal
+): Promise<ResolvedCustomerLocation> {
+  const raw = await httpRequest<unknown>(userServiceUrl('/customers/me/location/reverse-geocode'), {
+    method: 'POST',
+    token,
+    body: payload,
+    signal,
+  });
+  return normalizeResolvedLocation(unwrapLocation(raw));
+}
+
 function normalizeProfile(raw: unknown): CustomerProfile {
   const data = raw && typeof raw === 'object' ? (raw as Record<string, unknown>) : {};
   const user =
@@ -199,6 +263,38 @@ function normalizeAddress(raw: Record<string, unknown>): CustomerAddress {
     latitude: toNumber(raw.latitude ?? raw.lat),
     longitude: toNumber(raw.longitude ?? raw.lng ?? raw.lon),
     is_default: Boolean(raw.is_default ?? raw.default),
+  };
+}
+
+function normalizeSuggestion(raw: Record<string, unknown>): AddressPlaceSuggestion {
+  return {
+    place_id: readText(raw.place_id ?? raw.id) ?? '',
+    primary_text: readText(raw.primary_text ?? raw.primary) ?? '',
+    secondary_text: readText(raw.secondary_text ?? raw.secondary),
+    full_text: readText(raw.full_text ?? raw.description) ?? '',
+  };
+}
+
+function unwrapLocation(raw: unknown): Record<string, unknown> {
+  const data = unwrapApiResponse<unknown>(raw);
+  const record = data && typeof data === 'object' ? (data as Record<string, unknown>) : {};
+  const location = record.location;
+  return location && typeof location === 'object'
+    ? (location as Record<string, unknown>)
+    : record;
+}
+
+function normalizeResolvedLocation(raw: Record<string, unknown>): ResolvedCustomerLocation {
+  return {
+    address_line1: readText(raw.address_line1 ?? raw.line1),
+    area: readText(raw.area ?? raw.locality),
+    city: readText(raw.city),
+    district: readText(raw.district),
+    state: readText(raw.state),
+    pincode: readText(raw.pincode ?? raw.postal_code),
+    latitude: toNumber(raw.latitude ?? raw.lat),
+    longitude: toNumber(raw.longitude ?? raw.lng ?? raw.lon),
+    formatted_address: readText(raw.formatted_address ?? raw.formattedAddress),
   };
 }
 

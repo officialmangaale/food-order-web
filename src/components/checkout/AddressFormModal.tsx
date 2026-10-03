@@ -5,11 +5,13 @@ import { Navigation } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
+import { AddressLocationTools } from '@/components/address/AddressLocationTools';
 import { useLocationStore } from '@/store/locationStore';
 import type { CheckoutAddressPayload } from '@/components/checkout/checkoutTypes';
 
 interface AddressFormModalProps {
   open: boolean;
+  token: string | null;
   initialName?: string;
   initialPhone?: string;
   onClose: () => void;
@@ -20,6 +22,7 @@ const LABEL_PRESETS = ['Home', 'Work', 'Other'];
 
 export function AddressFormModal({
   open,
+  token,
   initialName,
   initialPhone,
   onClose,
@@ -50,6 +53,10 @@ export function AddressFormModal({
     value: string | boolean | number | undefined
   ) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+  const patchForm = (patch: Partial<CheckoutAddressPayload>) => {
+    setForm((current) => ({ ...current, ...patch }));
+    if (patch.latitude != null && patch.longitude != null) setLocationCaptured(true);
   };
 
   const captureLocation = async () => {
@@ -116,6 +123,13 @@ export function AddressFormModal({
       }
     >
       <form id="address-form" onSubmit={handleSubmit} className="space-y-4">
+        <AddressLocationTools
+          token={token}
+          form={form}
+          disabled={saving}
+          onChange={patchForm}
+        />
+
         <div>
           <span className="mb-1.5 block text-sm font-bold text-ink">Label</span>
           <div className="flex flex-wrap gap-2">

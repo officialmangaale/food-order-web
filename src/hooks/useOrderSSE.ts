@@ -19,9 +19,10 @@ interface UseOrderSSEOptions {
   enabled?: boolean;
   onEvent?: (event: OrderSSEEvent) => void;
   onStatusChange?: (status: OrderStatus) => void;
+  onConnected?: () => void;
 }
 
-export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }: UseOrderSSEOptions) {
+export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange, onConnected }: UseOrderSSEOptions) {
   const token = useAuthStore((s) => s.token);
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<OrderSSEEvent | null>(null);
@@ -59,7 +60,10 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
     };
 
     const handlers: SSEHandlers = {
-      onConnected: () => setConnected(true),
+      onConnected: () => {
+        setConnected(true);
+        onConnected?.();
+      },
       onStatusUpdate: handleEvent,
       onSnapshot: handleEvent,
       onError: () => setConnected(false),
@@ -72,7 +76,7 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
       cleanupRef.current = null;
       window.setTimeout(() => setConnected(false), 0);
     };
-  }, [enabled, onEvent, onStatusChange, orderId, token]);
+  }, [enabled, onConnected, onEvent, onStatusChange, orderId, token]);
 
   return { connected, lastEvent };
 }
@@ -134,6 +138,9 @@ export function useOrderTracking(orderId: number) {
     orderId,
     enabled: Boolean(token && tracking && !isTerminalStatus(tracking.orderStatus)),
     onEvent: handleLiveEvent,
+    onConnected: () => {
+      void fetchTracking(false);
+    },
   });
 
   const hasTracking = Boolean(tracking);

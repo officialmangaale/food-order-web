@@ -522,6 +522,7 @@ export function CheckoutPage() {
       {addressModalOpen && (
         <AddressFormModal
           open={addressModalOpen}
+          token={token}
           initialName={user?.name}
           initialPhone={user?.phone ?? authPhone ?? undefined}
           onClose={() => setAddressModalOpen(false)}

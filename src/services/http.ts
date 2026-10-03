@@ -11,6 +11,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   token?: string;
   timeout?: number;
+  signal?: AbortSignal;
 }
 
 export interface HttpError {
@@ -38,10 +39,12 @@ export async function httpRequest<T = unknown>(
   url: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = 'GET', body, headers = {}, token, timeout = TIMEOUT_MS } = options;
+  const { method = 'GET', body, headers = {}, token, timeout = TIMEOUT_MS, signal } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort, { once: true });
 
   const reqHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -62,6 +65,7 @@ export async function httpRequest<T = unknown>(
     });
 
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
 
     // Try to parse JSON even on error responses
     let data: unknown;
@@ -90,6 +94,7 @@ export async function httpRequest<T = unknown>(
     return data as T;
   } catch (err) {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
 
     // Already an HttpError from above
     if (err && typeof err === 'object' && 'status' in err && 'message' in err) {

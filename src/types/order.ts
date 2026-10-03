@@ -128,6 +128,8 @@ export interface TrackingOrderRestaurant {
   name: string;
   logoUrl?: string;
   phone?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export interface TrackingOrderCustomer {
@@ -151,6 +153,22 @@ export interface TrackingOrderRider {
   phone?: string;
   vehicle?: string;
   photoUrl?: string;
+  latitude?: number;
+  longitude?: number;
+  locationUpdatedAt?: string;
+  stale?: boolean;
+  mapsUrl?: string;
+}
+
+export interface TrackingOrderRoute {
+  destinationType?: string;
+  encodedPolyline?: string;
+  distanceMeters?: number;
+  durationSeconds?: number;
+  etaMinutes?: number;
+  generatedAt?: string;
+  expiresAt?: string;
+  stale?: boolean;
 }
 
 export interface TrackingOrderAddon {
@@ -199,6 +217,7 @@ export interface TrackingOrder {
   estimatedMinutes?: number;
   deliveryAddress?: TrackingOrderAddress;
   rider?: TrackingOrderRider | null;
+  route?: TrackingOrderRoute | null;
   timeline?: unknown[];
   cancellationReason?: string;
 }
