@@ -12,6 +12,7 @@ import {
   ORDER_POLL_ACTIVATION_DELAY_MS,
   ORDER_POLL_INTERVAL_MS,
   shouldPollOrder,
+  shouldReconcileOrderTracking,
 } from '@/utils/realtimePolicy.mjs';
 
 interface UseOrderSSEOptions {
@@ -89,6 +90,7 @@ export function useOrderTracking(orderId: number) {
   const [error, setError] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [pollingFallback, setPollingFallback] = useState(false);
+  const lastFetchedAtRef = useRef(0);
 
   const fetchTracking = useCallback(async (showLoading = false) => {
     if (!orderId) {
@@ -110,6 +112,7 @@ export function useOrderTracking(orderId: number) {
 
     try {
       const data = await trackOrder(orderId, token);
+      lastFetchedAtRef.current = Date.now();
       setTracking(data);
       setError(null);
       setErrorStatus(null);
@@ -139,6 +142,9 @@ export function useOrderTracking(orderId: number) {
     enabled: Boolean(token && tracking && !isTerminalStatus(tracking.orderStatus)),
     onEvent: handleLiveEvent,
     onConnected: () => {
+      if (!shouldReconcileOrderTracking({ lastFetchedAt: lastFetchedAtRef.current, now: Date.now() })) {
+        return;
+      }
       void fetchTracking(false);
     },
   });

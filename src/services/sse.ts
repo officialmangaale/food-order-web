@@ -1,4 +1,5 @@
 import type { OrderSSEEvent } from '@/types/order';
+import { ORDER_WS_STABLE_CONNECTION_MS } from '@/utils/realtimePolicy.mjs';
 import { buildOrderTrackingWebSocketUrl as buildOrderTrackingWebSocketUrlRaw } from '@/utils/websocketUrl.mjs';
 
 const RESTAURANT_BASE = process.env.NEXT_PUBLIC_RESTAURANT_SERVICE_BASE_URL ?? '';
@@ -31,8 +32,15 @@ export function subscribeToOrder(
 ): () => void {
   let socket: WebSocket | null = null;
   let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  let stableTimer: ReturnType<typeof setTimeout> | null = null;
   let reconnectAttempts = 0;
   let stopped = false;
+
+  const clearStableTimer = () => {
+    if (!stableTimer) return;
+    clearTimeout(stableTimer);
+    stableTimer = null;
+  };
 
   const connect = () => {
     if (stopped) return;
@@ -47,8 +55,12 @@ export function subscribeToOrder(
     }
 
     socket.onopen = () => {
-      reconnectAttempts = 0;
       handlers.onConnected?.();
+      clearStableTimer();
+      stableTimer = setTimeout(() => {
+        reconnectAttempts = 0;
+        stableTimer = null;
+      }, ORDER_WS_STABLE_CONNECTION_MS);
     };
     socket.onmessage = (message) => {
       try {
@@ -65,6 +77,7 @@ export function subscribeToOrder(
     };
     socket.onerror = (event) => handlers.onError?.(event);
     socket.onclose = (event) => {
+      clearStableTimer();
       if (stopped) return;
       handlers.onError?.(event);
       const exponent = Math.min(reconnectAttempts++, 8);
@@ -79,6 +92,7 @@ export function subscribeToOrder(
   return () => {
     stopped = true;
     if (reconnectTimer) clearTimeout(reconnectTimer);
+    clearStableTimer();
     socket?.close();
     socket = null;
   };
