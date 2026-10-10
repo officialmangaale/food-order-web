@@ -59,14 +59,25 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     'extra_charges_amount',
     'extraChargesAmount',
   ]);
+  const packagingFee = readBillingNumber(summary.record, data, ['packaging_fee', 'packagingFee', 'packaging_charge']);
+  const additionalCharges = readBillingNumber(summary.record, data, ['additional_charges', 'additionalCharges']);
+  const dynamicFeesTotal = readBillingNumber(summary.record, data, ['dynamic_fees_total', 'dynamicFeesTotal']);
   const discount = readBillingNumber(summary.record, data, [
-    'discount_amount',
-    'discountAmount',
     'coupon_discount',
     'couponDiscount',
+    'coupon_discount_amount',
+    'couponDiscountAmount',
+    'discount_amount',
+    'discountAmount',
     'discount',
   ]);
-  const offerDiscount = readBillingNumber(summary.record, data, ['offer_discount_amount', 'offerDiscountAmount']);
+  const offerDiscount = readBillingNumber(summary.record, data, [
+    'offer_discount',
+    'offerDiscount',
+    'offer_discount_amount',
+    'offerDiscountAmount',
+    'referral_discount',
+  ]);
   const couponValidation = normalizeCartCouponValidation(data, discount);
   const subtotal = readBillingNumber(summary.record, data, ['subtotal', 'item_subtotal', 'itemSubtotal']) ?? 0;
   const exactTotal = readBillingNumber(summary.record, data, ['exact_total_amount', 'exactTotalAmount', 'exact_total']);
@@ -79,6 +90,8 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
   const explicitTotal = readBillingNumber(summary.record, data, [
     'grand_total',
     'grandTotal',
+    'payable_amount',
+    'payableAmount',
     'total_amount',
     'totalAmount',
     'exact_total_amount',
@@ -125,6 +138,9 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     delivery_charge: deliveryFee,
     delivery_fee: deliveryFee ?? 0,
     extra_charges: extraCharges ?? 0,
+    packaging_fee: packagingFee ?? 0,
+    additional_charges: additionalCharges ?? 0,
+    dynamic_fees_total: dynamicFeesTotal ?? 0,
     discount_amount: discount,
     offer_discount_amount: offerDiscount ?? 0,
     discount: discount ?? 0,
@@ -132,6 +148,7 @@ function normalizeCartValidateResponse(raw: unknown): CartValidateResponse {
     exact_total_amount: exactTotal,
     round_off_amount: roundOff ?? 0,
     grand_total: explicitTotal,
+    payable_amount: explicitTotal,
     total: explicitTotal,
     message:
       readString(data.message ?? data.error) ??
@@ -195,6 +212,8 @@ function normalizePlaceOrderResponse(raw: unknown): PlaceOrderResponse {
   const total = readBillingNumber(summary.record, fallback, [
     'grand_total',
     'grandTotal',
+    'payable_amount',
+    'payableAmount',
     'total_amount',
     'totalAmount',
     'exact_total_amount',
@@ -217,13 +236,21 @@ function normalizePlaceOrderResponse(raw: unknown): PlaceOrderResponse {
   debugBillingSummary('place-order', fallback, summary, {
     subtotal: readBillingNumber(summary.record, fallback, ['subtotal', 'item_subtotal', 'itemSubtotal']),
     discount_amount: readBillingNumber(summary.record, fallback, [
-      'discount_amount',
-      'discountAmount',
       'coupon_discount',
       'couponDiscount',
+      'coupon_discount_amount',
+      'couponDiscountAmount',
+      'discount_amount',
+      'discountAmount',
       'discount',
     ]),
-    offer_discount_amount: readBillingNumber(summary.record, fallback, ['offer_discount_amount', 'offerDiscountAmount']),
+    offer_discount_amount: readBillingNumber(summary.record, fallback, [
+      'offer_discount',
+      'offerDiscount',
+      'offer_discount_amount',
+      'offerDiscountAmount',
+      'referral_discount',
+    ]),
     delivery_fee: deliveryFee,
     extra_charges: readBillingNumber(summary.record, fallback, [
       'extra_charges',
@@ -231,6 +258,9 @@ function normalizePlaceOrderResponse(raw: unknown): PlaceOrderResponse {
       'extra_charges_amount',
       'extraChargesAmount',
     ]),
+    packaging_fee: readBillingNumber(summary.record, fallback, ['packaging_fee', 'packagingFee', 'packaging_charge']),
+    additional_charges: readBillingNumber(summary.record, fallback, ['additional_charges', 'additionalCharges']),
+    dynamic_fees_total: readBillingNumber(summary.record, fallback, ['dynamic_fees_total', 'dynamicFeesTotal']),
     cgst: readBillingNumber(summary.record, fallback, ['cgst', 'cgst_amount', 'cgstAmount']),
     sgst: readBillingNumber(summary.record, fallback, ['sgst', 'sgst_amount', 'sgstAmount']),
     tax_amount: readBillingNumber(summary.record, fallback, ['tax_amount', 'taxAmount', 'taxes']),
@@ -255,13 +285,21 @@ function normalizePlaceOrderResponse(raw: unknown): PlaceOrderResponse {
     sgst: readBillingNumber(summary.record, fallback, ['sgst', 'sgst_amount', 'sgstAmount']),
     tax_amount: readBillingNumber(summary.record, fallback, ['tax_amount', 'taxAmount', 'taxes']),
     discount_amount: readBillingNumber(summary.record, fallback, [
-      'discount_amount',
-      'discountAmount',
       'coupon_discount',
       'couponDiscount',
+      'coupon_discount_amount',
+      'couponDiscountAmount',
+      'discount_amount',
+      'discountAmount',
       'discount',
     ]),
-    offer_discount_amount: readBillingNumber(summary.record, fallback, ['offer_discount_amount', 'offerDiscountAmount']),
+    offer_discount_amount: readBillingNumber(summary.record, fallback, [
+      'offer_discount',
+      'offerDiscount',
+      'offer_discount_amount',
+      'offerDiscountAmount',
+      'referral_discount',
+    ]),
     delivery_fee: deliveryFee,
     platform_fee_amount: readBillingNumber(summary.record, fallback, [
       'platform_fee_amount',
@@ -275,9 +313,13 @@ function normalizePlaceOrderResponse(raw: unknown): PlaceOrderResponse {
       'extra_charges_amount',
       'extraChargesAmount',
     ]),
+    packaging_fee: readBillingNumber(summary.record, fallback, ['packaging_fee', 'packagingFee', 'packaging_charge']),
+    additional_charges: readBillingNumber(summary.record, fallback, ['additional_charges', 'additionalCharges']),
+    dynamic_fees_total: readBillingNumber(summary.record, fallback, ['dynamic_fees_total', 'dynamicFeesTotal']),
     round_off_amount: readBillingNumber(summary.record, fallback, ['round_off_amount', 'roundOffAmount', 'round_off']),
     exact_total_amount: readBillingNumber(summary.record, fallback, ['exact_total_amount', 'exactTotalAmount', 'exact_total']),
     grand_total: total,
+    payable_amount: total,
     total,
     tracking_url: readString(order.tracking_url ?? order.trackingUrl),
     message: readString(order.message),

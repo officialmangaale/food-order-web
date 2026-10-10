@@ -32,13 +32,14 @@ export interface PlaceOrderDeliveryAddress {
   state?: string;
   pincode: string;
   landmark?: string;
-  latitude?: number;
-  longitude?: number;
+  latitude: number;
+  longitude: number;
 }
 
 export interface PlaceOrderRequest {
   restaurant_id: number;
   payment_method: 'cash';
+  expected_payable?: number;
   coupon_code?: string;
   campaign_id?: number;
   utm_source?: string;
@@ -71,9 +72,13 @@ export interface PlaceOrderResponse {
   delivery_fee?: number;
   platform_fee_amount?: number;
   extra_charges?: number;
+  packaging_fee?: number;
+  additional_charges?: number;
+  dynamic_fees_total?: number;
   round_off_amount?: number;
   exact_total_amount?: number;
   grand_total?: number;
+  payable_amount?: number;
   total?: number;
   tracking_url?: string;
   message?: string;

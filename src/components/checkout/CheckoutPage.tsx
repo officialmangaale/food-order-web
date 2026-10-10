@@ -17,10 +17,10 @@ import { EmptyState } from '@/components/ui/EmptyState';
 import { ErrorState } from '@/components/ui/ErrorState';
 import { PanelSkeleton } from '@/components/ui/Skeleton';
 import { LoyaltyCheckoutPreview } from '@/components/loyalty/LoyaltyCheckoutPreview';
-import { Button } from '@/components/ui/Button';
 import { useToast } from '@/components/ui/Toast';
 import {
   buildCartValidatePayload,
+  MISSING_DELIVERY_LOCATION_MESSAGE,
   toValidationResult,
   useCheckoutCartValidation,
 } from '@/hooks/useCheckoutCartValidation';
@@ -39,7 +39,12 @@ import {
 } from '@/store/campaignStore';
 import { useCartStore } from '@/store/cartStore';
 import { useLocationStore } from '@/store/locationStore';
-import { buildCartItemsPayload, type CheckoutAddress, type CheckoutAddressPayload } from '@/components/checkout/checkoutTypes';
+import {
+  buildCartItemsPayload,
+  getAddressLocation,
+  type CheckoutAddress,
+  type CheckoutAddressPayload,
+} from '@/components/checkout/checkoutTypes';
 import { generateIdempotencyKey } from '@/utils/idempotency';
 import { buildCouponCartPayload } from '@/utils/couponCartPayload';
 import type { CampaignContext } from '@/types/marketing';
@@ -60,12 +65,16 @@ const EMPTY_TOTALS: ValidatedTotals = {
   platform_fee_amount: 0,
   delivery_fee: 0,
   extra_charges: 0,
+  packaging_fee: 0,
+  additional_charges: 0,
+  dynamic_fees_total: 0,
   discount: 0,
   discount_amount: 0,
   offer_discount_amount: 0,
   round_off_amount: 0,
   exact_total_amount: 0,
   grand_total: 0,
+  payable_amount: 0,
   total: 0,
 };
 
@@ -77,6 +86,7 @@ export function CheckoutPage() {
   const router = useRouter();
   const { toast } = useToast();
   const addressSectionRef = useRef<HTMLDivElement>(null);
+  const sessionExpiredNotifiedRef = useRef(false);
   const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
   const [addressModalOpen, setAddressModalOpen] = useState(false);
   const [loginOpen, setLoginOpen] = useState(false);
@@ -117,6 +127,8 @@ export function CheckoutPage() {
   const {
     addresses,
     isLoading: addressesLoading,
+    error: addressesError,
+    authExpired: addressesAuthExpired,
     notice: addressNotice,
     saveAddress,
   } = useCustomerAddresses(token, isAuthenticated);
@@ -160,7 +172,12 @@ export function CheckoutPage() {
     checkoutCouponState && checkoutCouponState.couponCode === normalizeCouponCode(couponInput)
       ? checkoutCouponState.validation
       : undefined;
-  const addressProblems = getAddressProblems(selectedAddress, user?.name, user?.phone ?? authPhone);
+  const addressProblems = getAddressProblems(
+    selectedAddress,
+    user?.name,
+    user?.phone ?? authPhone,
+    fallbackLocation
+  );
   const placeDisabledReason = getPlaceDisabledReason({
     isAuthenticated,
     selectedAddress,
@@ -184,6 +201,20 @@ export function CheckoutPage() {
     purgeExpiredCampaigns();
     if (restaurantId) syncCampaignCoupon(restaurantId);
   }, [purgeExpiredCampaigns, restaurantId, syncCampaignCoupon]);
+
+  useEffect(() => {
+    if (!addressesAuthExpired && !isAuthError(addressesError)) return;
+    const timer = window.setTimeout(() => {
+      logout();
+      setLoginOpen(true);
+      setAddressError('Your session has expired. Please login again to continue checkout.');
+      if (!sessionExpiredNotifiedRef.current) {
+        sessionExpiredNotifiedRef.current = true;
+        toast('Your session has expired. Please login again to continue checkout.', 'error');
+      }
+    }, 0);
+    return () => window.clearTimeout(timer);
+  }, [addressesAuthExpired, addressesError, logout, toast]);
 
   useEffect(() => {
     if (!restaurantId || !activeCouponCode || !validationResult || validation.isFetching) return;
@@ -276,7 +307,8 @@ export function CheckoutPage() {
       if (isAuthError(error)) {
         logout();
         setLoginOpen(true);
-        toast('Please log in again to save this address.', 'error');
+        setAddressError('Your session has expired. Please login again to continue checkout.');
+        toast('Your session has expired. Please login again to continue checkout.', 'error');
         return;
       }
       toast(getErrorMessage(error), 'error');
@@ -336,7 +368,12 @@ export function CheckoutPage() {
     }
 
     const normalizedAddress = normalizeCheckoutAddressForSubmit(selectedAddress);
-    const problems = getAddressProblems(normalizedAddress, user?.name, user?.phone ?? authPhone);
+    const problems = getAddressProblems(
+      normalizedAddress,
+      user?.name,
+      user?.phone ?? authPhone,
+      fallbackLocation
+    );
     if (problems.length > 0) {
       debugCheckout('address-validation-failure', {
         failureReason: problems[0],
@@ -403,6 +440,8 @@ export function CheckoutPage() {
           instructions,
           couponCode: couponCodeForOrder,
           campaignContext: campaignContextForOrder,
+          fallbackLocation,
+          expectedPayable: finalValidation.totals.total,
         }),
         token,
         orderKey
@@ -432,7 +471,8 @@ export function CheckoutPage() {
       if (isAuthError(error)) {
         logout();
         setLoginOpen(true);
-        toast('Your session expired. Please log in again.', 'error');
+        setAddressError('Your session has expired. Please login again to continue checkout.');
+        toast('Your session has expired. Please login again to continue checkout.', 'error');
       } else {
         const message = getErrorMessage(error);
         debugCheckout('place-order-failure', { failureReason: message });
@@ -597,7 +637,8 @@ function resolveSelectedAddress(addresses: CheckoutAddress[], selectedId: string
 function getAddressProblems(
   address: CheckoutAddress | null | undefined,
   userName?: string,
-  authPhone?: string | null
+  authPhone?: string | null,
+  fallbackLocation?: { latitude: number | null; longitude: number | null }
 ) {
   const normalizedAddress = normalizeCheckoutAddressForSubmit(address);
   if (!normalizedAddress) return ['Add a delivery address to continue.'];
@@ -611,6 +652,9 @@ function getAddressProblems(
   if (!normalizedAddress.address_line1) problems.push('Address line is required.');
   if (!normalizedAddress.area) problems.push('Area is required.');
   if (!normalizedAddress.city) problems.push('City is required.');
+  if (!getDeliveryLocation(normalizedAddress, fallbackLocation)) {
+    problems.push(MISSING_DELIVERY_LOCATION_MESSAGE);
+  }
   return problems;
 }
 
@@ -634,7 +678,7 @@ function getPlaceDisabledReason({
   if (placing) return '';
   if (!isAuthenticated) return 'Login to place your order.';
   if (!selectedAddress) return 'Add a delivery address.';
-  if (addressProblems.length > 0) return 'Complete your delivery address.';
+  if (addressProblems.length > 0) return addressProblems[0];
   if (validationLoading) return 'Checking order total...';
   if (validationError) return validationError;
   if (totalInvalid) return 'Unable to calculate order total. Please retry.';
@@ -801,6 +845,8 @@ function buildPlaceOrderPayload({
   instructions,
   couponCode,
   campaignContext,
+  fallbackLocation,
+  expectedPayable,
 }: {
   restaurantId: number;
   address: CheckoutAddress;
@@ -810,10 +856,18 @@ function buildPlaceOrderPayload({
   instructions: string;
   couponCode?: string;
   campaignContext?: CampaignContext | null;
+  fallbackLocation?: { latitude: number | null; longitude: number | null };
+  expectedPayable: number;
 }): PlaceOrderRequest {
+  const deliveryLocation = getDeliveryLocation(address, fallbackLocation);
+  if (!deliveryLocation) {
+    throw new Error(MISSING_DELIVERY_LOCATION_MESSAGE);
+  }
+
   return {
     restaurant_id: restaurantId,
     payment_method: 'cash',
+    expected_payable: expectedPayable,
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(campaignContext?.campaignId ? { campaign_id: campaignContext.campaignId } : {}),
     ...(campaignContext?.utmSource ? { utm_source: campaignContext.utmSource } : {}),
@@ -829,10 +883,25 @@ function buildPlaceOrderPayload({
       state: safeText(address.state),
       pincode: safeText(address.pincode) ?? '',
       landmark: safeText(address.landmark),
-      latitude: address.latitude,
-      longitude: address.longitude,
+      latitude: deliveryLocation.latitude,
+      longitude: deliveryLocation.longitude,
     },
     items: buildCartItemsPayload(items),
     special_instructions: instructions.trim() || undefined,
   };
+}
+
+function getDeliveryLocation(
+  address: CheckoutAddress | null | undefined,
+  fallbackLocation?: { latitude: number | null; longitude: number | null }
+) {
+  const addressLocation = getAddressLocation(address);
+  if (addressLocation) return addressLocation;
+  if (fallbackLocation?.latitude != null && fallbackLocation.longitude != null) {
+    return {
+      latitude: fallbackLocation.latitude,
+      longitude: fallbackLocation.longitude,
+    };
+  }
+  return undefined;
 }

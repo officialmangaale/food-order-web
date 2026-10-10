@@ -24,8 +24,10 @@ export function useCustomerAddresses(token: string | null, enabled: boolean) {
   });
 
   const addresses = useMemo(
-    () => mergeAddresses(query.data ?? [], localAddresses),
-    [localAddresses, query.data]
+    () => query.error && isAuthError(query.error)
+      ? []
+      : mergeAddresses(query.data ?? [], localAddresses),
+    [localAddresses, query.data, query.error]
   );
   const refetchAddresses = query.refetch;
 
@@ -54,6 +56,7 @@ export function useCustomerAddresses(token: string | null, enabled: boolean) {
     addresses,
     isLoading: query.isLoading,
     error: query.error,
+    authExpired: Boolean(query.error && isAuthError(query.error)),
     notice: notice || (query.error && !isAuthError(query.error) ? 'Address service is unavailable. You can still add an address locally.' : ''),
     saveAddress,
     refetch: refetchAddresses,

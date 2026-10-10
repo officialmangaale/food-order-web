@@ -78,15 +78,10 @@ export async function httpRequest<T = unknown>(
 
     if (!res.ok) {
       const errData = data as Record<string, unknown> | undefined;
-      const message =
-        (errData?.message as string) ??
-        (errData?.error as string) ??
-        `Request failed with status ${res.status}`;
-
       const httpError: HttpError = {
         status: res.status,
-        message,
-        errors: errData?.errors as Record<string, string[]> | undefined,
+        message: extractHttpErrorMessage(data, res.status),
+        errors: extractHttpErrorDetails(errData),
       };
       throw httpError;
     }
@@ -139,6 +134,41 @@ export function isAuthError(err: unknown): boolean {
     return (err as HttpError).status === 401;
   }
   return false;
+}
+
+function extractHttpErrorMessage(data: unknown, status: number): string {
+  if (typeof data === 'string' && data.trim()) return data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return `Request failed with status ${status}`;
+  }
+
+  const map = data as Record<string, unknown>;
+  const nested = map.error && typeof map.error === 'object' && !Array.isArray(map.error)
+    ? map.error as Record<string, unknown>
+    : undefined;
+  const message = readNonEmptyString(map.message) ??
+    readNonEmptyString(nested?.message) ??
+    readNonEmptyString(map.error) ??
+    readNonEmptyString(nested?.code);
+
+  return message ?? `Request failed with status ${status}`;
+}
+
+function extractHttpErrorDetails(data: Record<string, unknown> | undefined): Record<string, string[]> | undefined {
+  if (data?.errors && typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+    return data.errors as Record<string, string[]>;
+  }
+  const nested = data?.error && typeof data.error === 'object' && !Array.isArray(data.error)
+    ? data.error as Record<string, unknown>
+    : undefined;
+  if (nested?.details && typeof nested.details === 'object' && !Array.isArray(nested.details)) {
+    return nested.details as Record<string, string[]>;
+  }
+  return undefined;
+}
+
+function readNonEmptyString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
 }
 
 function getConfiguredBase(value: string, label: string): string {
