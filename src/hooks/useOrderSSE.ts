@@ -12,6 +12,7 @@ import {
   ORDER_POLL_ACTIVATION_DELAY_MS,
   ORDER_POLL_INTERVAL_MS,
   shouldPollOrder,
+  shouldReconcileOrderTracking,
 } from '@/utils/realtimePolicy.mjs';
 
 interface UseOrderSSEOptions {
@@ -19,9 +20,10 @@ interface UseOrderSSEOptions {
   enabled?: boolean;
   onEvent?: (event: OrderSSEEvent) => void;
   onStatusChange?: (status: OrderStatus) => void;
+  onConnected?: () => void;
 }
 
-export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }: UseOrderSSEOptions) {
+export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange, onConnected }: UseOrderSSEOptions) {
   const token = useAuthStore((s) => s.token);
   const [connected, setConnected] = useState(false);
   const [lastEvent, setLastEvent] = useState<OrderSSEEvent | null>(null);
@@ -59,7 +61,10 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
     };
 
     const handlers: SSEHandlers = {
-      onConnected: () => setConnected(true),
+      onConnected: () => {
+        setConnected(true);
+        onConnected?.();
+      },
       onStatusUpdate: handleEvent,
       onSnapshot: handleEvent,
       onError: () => setConnected(false),
@@ -72,7 +77,7 @@ export function useOrderSSE({ orderId, enabled = true, onEvent, onStatusChange }
       cleanupRef.current = null;
       window.setTimeout(() => setConnected(false), 0);
     };
-  }, [enabled, onEvent, onStatusChange, orderId, token]);
+  }, [enabled, onConnected, onEvent, onStatusChange, orderId, token]);
 
   return { connected, lastEvent };
 }
@@ -85,6 +90,7 @@ export function useOrderTracking(orderId: number) {
   const [error, setError] = useState<string | null>(null);
   const [errorStatus, setErrorStatus] = useState<number | null>(null);
   const [pollingFallback, setPollingFallback] = useState(false);
+  const lastFetchedAtRef = useRef(0);
 
   const fetchTracking = useCallback(async (showLoading = false) => {
     if (!orderId) {
@@ -106,6 +112,7 @@ export function useOrderTracking(orderId: number) {
 
     try {
       const data = await trackOrder(orderId, token);
+      lastFetchedAtRef.current = Date.now();
       setTracking(data);
       setError(null);
       setErrorStatus(null);
@@ -134,6 +141,12 @@ export function useOrderTracking(orderId: number) {
     orderId,
     enabled: Boolean(token && tracking && !isTerminalStatus(tracking.orderStatus)),
     onEvent: handleLiveEvent,
+    onConnected: () => {
+      if (!shouldReconcileOrderTracking({ lastFetchedAt: lastFetchedAtRef.current, now: Date.now() })) {
+        return;
+      }
+      void fetchTracking(false);
+    },
   });
 
   const hasTracking = Boolean(tracking);

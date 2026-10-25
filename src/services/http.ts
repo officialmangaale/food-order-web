@@ -11,6 +11,7 @@ export interface RequestOptions {
   headers?: Record<string, string>;
   token?: string;
   timeout?: number;
+  signal?: AbortSignal;
 }
 
 export interface HttpError {
@@ -38,10 +39,12 @@ export async function httpRequest<T = unknown>(
   url: string,
   options: RequestOptions = {}
 ): Promise<T> {
-  const { method = 'GET', body, headers = {}, token, timeout = TIMEOUT_MS } = options;
+  const { method = 'GET', body, headers = {}, token, timeout = TIMEOUT_MS, signal } = options;
 
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeout);
+  const abort = () => controller.abort();
+  signal?.addEventListener('abort', abort, { once: true });
 
   const reqHeaders: Record<string, string> = {
     'Content-Type': 'application/json',
@@ -62,6 +65,7 @@ export async function httpRequest<T = unknown>(
     });
 
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
 
     // Try to parse JSON even on error responses
     let data: unknown;
@@ -74,15 +78,10 @@ export async function httpRequest<T = unknown>(
 
     if (!res.ok) {
       const errData = data as Record<string, unknown> | undefined;
-      const message =
-        (errData?.message as string) ??
-        (errData?.error as string) ??
-        `Request failed with status ${res.status}`;
-
       const httpError: HttpError = {
         status: res.status,
-        message,
-        errors: errData?.errors as Record<string, string[]> | undefined,
+        message: extractHttpErrorMessage(data, res.status),
+        errors: extractHttpErrorDetails(errData),
       };
       throw httpError;
     }
@@ -90,6 +89,7 @@ export async function httpRequest<T = unknown>(
     return data as T;
   } catch (err) {
     clearTimeout(timer);
+    signal?.removeEventListener('abort', abort);
 
     // Already an HttpError from above
     if (err && typeof err === 'object' && 'status' in err && 'message' in err) {
@@ -134,6 +134,41 @@ export function isAuthError(err: unknown): boolean {
     return (err as HttpError).status === 401;
   }
   return false;
+}
+
+function extractHttpErrorMessage(data: unknown, status: number): string {
+  if (typeof data === 'string' && data.trim()) return data;
+  if (!data || typeof data !== 'object' || Array.isArray(data)) {
+    return `Request failed with status ${status}`;
+  }
+
+  const map = data as Record<string, unknown>;
+  const nested = map.error && typeof map.error === 'object' && !Array.isArray(map.error)
+    ? map.error as Record<string, unknown>
+    : undefined;
+  const message = readNonEmptyString(map.message) ??
+    readNonEmptyString(nested?.message) ??
+    readNonEmptyString(map.error) ??
+    readNonEmptyString(nested?.code);
+
+  return message ?? `Request failed with status ${status}`;
+}
+
+function extractHttpErrorDetails(data: Record<string, unknown> | undefined): Record<string, string[]> | undefined {
+  if (data?.errors && typeof data.errors === 'object' && !Array.isArray(data.errors)) {
+    return data.errors as Record<string, string[]>;
+  }
+  const nested = data?.error && typeof data.error === 'object' && !Array.isArray(data.error)
+    ? data.error as Record<string, unknown>
+    : undefined;
+  if (nested?.details && typeof nested.details === 'object' && !Array.isArray(nested.details)) {
+    return nested.details as Record<string, string[]>;
+  }
+  return undefined;
+}
+
+function readNonEmptyString(value: unknown): string | undefined {
+  return typeof value === 'string' && value.trim() ? value : undefined;
 }
 
 function getConfiguredBase(value: string, label: string): string {

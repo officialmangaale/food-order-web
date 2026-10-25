@@ -6,6 +6,7 @@ import type {
   TrackingOrderAddress,
   TrackingOrderItem,
   TrackingOrderRider,
+  TrackingOrderRoute,
   TrackingOrderRestaurant,
 } from '@/types/order';
 
@@ -152,6 +153,7 @@ export function normalizeTrackingOrder(raw: unknown): TrackingOrder {
     estimatedMinutes,
     deliveryAddress: normalizeAddress(order.delivery_address ?? order.deliveryAddress ?? data.delivery_address),
     rider: normalizeRider(order.rider ?? order.delivery_partner ?? order.deliveryPartner ?? data.rider),
+    route: normalizeRoute(order.route ?? data.route),
     timeline: readArray(order.timeline ?? data.timeline),
     cancellationReason: readString(
       order.cancellation_reason ?? order.cancel_reason ?? order.reason ?? data.cancellation_reason
@@ -189,6 +191,29 @@ export function mergeTrackingOrderEvent(previous: TrackingOrder, event: OrderSSE
     dataRecord.estimated_delivery_time ?? dataRecord.estimatedDeliveryTime ?? dataRecord.eta
   );
   const timeline = readArray(dataRecord.timeline);
+  const eventType = String(eventRecord.type ?? eventRecord.event ?? '').toUpperCase();
+
+  if (eventType === 'RIDER_LOCATION_UPDATED') {
+    const locationUpdatedAt = readString(dataRecord.location_updated_at ?? dataRecord.locationUpdatedAt ?? eventRecord.updated_at);
+    const previousAt = previous.rider?.locationUpdatedAt;
+    if (previousAt && locationUpdatedAt && Date.parse(locationUpdatedAt) <= Date.parse(previousAt)) {
+      return previous;
+    }
+    const latitude = readNumber(dataRecord.latitude);
+    const longitude = readNumber(dataRecord.longitude);
+    if (latitude == null || longitude == null) return previous;
+    return {
+      ...previous,
+      rider: {
+        ...(previous.rider ?? {}),
+        latitude,
+        longitude,
+        locationUpdatedAt,
+        stale: dataRecord.stale === true,
+        mapsUrl: `https://www.google.com/maps/search/?api=1&query=${latitude},${longitude}`,
+      },
+    };
+  }
 
   return {
     ...previous,
@@ -197,6 +222,7 @@ export function mergeTrackingOrderEvent(previous: TrackingOrder, event: OrderSSE
     paymentStatus: paymentStatus ?? previous.paymentStatus,
     estimatedArrivalText: estimatedArrivalText ?? previous.estimatedArrivalText,
     estimatedMinutes: parseMinutes(estimatedArrivalText) ?? previous.estimatedMinutes,
+    route: normalizeRoute(dataRecord.route) ?? previous.route,
     timeline: timeline.length > 0 ? timeline : previous.timeline,
   };
 }
@@ -221,6 +247,8 @@ function normalizeRestaurant(
         data.restaurant_logo_url
     ),
     phone: readString(restaurant.phone ?? restaurant.mobile ?? order.restaurant_phone ?? data.restaurant_phone),
+    latitude: readNumber(restaurant.latitude ?? restaurant.lat),
+    longitude: readNumber(restaurant.longitude ?? restaurant.lng ?? restaurant.lon),
   };
 }
 
@@ -280,8 +308,40 @@ function normalizeRider(raw: unknown): TrackingOrderRider | null {
   const phone = readString(rider.phone ?? rider.mobile ?? rider.rider_phone);
   const vehicle = readString(rider.vehicle ?? rider.vehicle_number ?? rider.vehicleNumber);
   const photoUrl = readString(rider.photo_url ?? rider.photoUrl ?? rider.avatar_url);
-  if (!name && !phone && !vehicle && !photoUrl) return null;
-  return { name, phone, vehicle, photoUrl };
+  const latitude = readNumber(rider.latitude ?? rider.rider_latitude);
+  const longitude = readNumber(rider.longitude ?? rider.rider_longitude);
+  const locationUpdatedAt = readString(rider.location_updated_at ?? rider.locationUpdatedAt);
+  const mapsUrl = readString(rider.maps_url ?? rider.mapsUrl);
+  if (!name && !phone && !vehicle && !photoUrl && latitude == null && longitude == null) return null;
+  return {
+    name,
+    phone,
+    vehicle,
+    photoUrl,
+    latitude,
+    longitude,
+    locationUpdatedAt,
+    stale: rider.stale === true,
+    mapsUrl,
+  };
+}
+
+function normalizeRoute(raw: unknown): TrackingOrderRoute | null {
+  const route = asRecord(raw);
+  if (!route) return null;
+  const encodedPolyline = readString(route.encoded_polyline ?? route.encodedPolyline);
+  const destinationType = readString(route.destination_type ?? route.destinationType);
+  if (!encodedPolyline && !destinationType) return null;
+  return {
+    destinationType,
+    encodedPolyline,
+    distanceMeters: readNumber(route.distance_meters ?? route.distanceMeters),
+    durationSeconds: readNumber(route.duration_seconds ?? route.durationSeconds),
+    etaMinutes: readNumber(route.eta_minutes ?? route.etaMinutes),
+    generatedAt: readString(route.generated_at ?? route.generatedAt),
+    expiresAt: readString(route.expires_at ?? route.expiresAt),
+    stale: route.stale === true,
+  };
 }
 
 function formatDisplayOrderId(orderId: number | string) {

@@ -9,6 +9,7 @@ import { Card } from '@/components/ui/Card';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Input } from '@/components/ui/Input';
 import { Sheet } from '@/components/ui/Sheet';
+import { AddressLocationTools } from '@/components/address/AddressLocationTools';
 import { PanelSkeleton } from '@/components/ui/Skeleton';
 import { ProfilePageLayout } from '@/components/profile/ProfilePageLayout';
 import { ProfileRouteGuard } from '@/components/profile/ProfileRouteGuard';
@@ -162,6 +163,7 @@ export function ProfileAddressesPage() {
           key={modalAddress ? String(modalAddress.id) : 'new'}
           open={modalOpen}
           address={modalAddress}
+          token={token}
           onClose={() => {
             setModalOpen(false);
             setModalAddress(null);
@@ -246,11 +248,12 @@ function AddressCard({
 interface AddressModalProps {
   open: boolean;
   address: CustomerAddress | null;
+  token: string | null;
   onClose: () => void;
   onSave: (payload: CustomerAddressPayload, editingAddress?: CustomerAddress | null) => Promise<void>;
 }
 
-function AddressModal({ open, address, onClose, onSave }: AddressModalProps) {
+function AddressModal({ open, address, token, onClose, onSave }: AddressModalProps) {
   const requestBrowserLocation = useLocationStore((s) => s.requestBrowserLocation);
   const [form, setForm] = useState<CustomerAddressPayload>({
     label: address?.label ?? '',
@@ -274,6 +277,9 @@ function AddressModal({ open, address, onClose, onSave }: AddressModalProps) {
 
   const setField = (field: keyof CustomerAddressPayload, value: string | boolean | number | undefined) => {
     setForm((current) => ({ ...current, [field]: value }));
+  };
+  const patchForm = (patch: Partial<CustomerAddressPayload>) => {
+    setForm((current) => ({ ...current, ...patch }));
   };
 
   const captureLocation = async () => {
@@ -337,6 +343,13 @@ function AddressModal({ open, address, onClose, onSave }: AddressModalProps) {
       }
     >
       <form id="profile-address-form" onSubmit={handleSubmit} className="space-y-4">
+          <AddressLocationTools
+            token={token}
+            form={form}
+            disabled={saving}
+            onChange={patchForm}
+          />
+
           <div className="grid gap-4 sm:grid-cols-2">
             <Input data-dialog-initial-focus label="Label" value={form.label ?? ''} onChange={(event) => setField('label', event.target.value)} />
             <Input label="Name" value={form.name ?? ''} onChange={(event) => setField('name', event.target.value)} />
@@ -462,4 +475,3 @@ function toAddress(payload: CustomerAddressPayload, id: string | number): Custom
     is_default: payload.is_default,
   };
 }
-

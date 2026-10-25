@@ -64,6 +64,9 @@ export interface CartValidateResponse {
   delivery_charge?: number;
   delivery_fee?: number;
   extra_charges?: number;
+  packaging_fee?: number;
+  additional_charges?: number;
+  dynamic_fees_total?: number;
   discount_amount?: number;
   offer_discount_amount?: number;
   discount?: number;
@@ -71,6 +74,7 @@ export interface CartValidateResponse {
   exact_total_amount?: number;
   round_off_amount?: number;
   grand_total?: number;
+  payable_amount?: number;
   total?: number;
   message?: string;
   item_errors?: { item_id: number; message: string }[];
@@ -89,11 +93,15 @@ export interface ValidatedTotals {
   platform_fee_amount: number;
   delivery_fee: number;
   extra_charges: number;
+  packaging_fee: number;
+  additional_charges: number;
+  dynamic_fees_total: number;
   discount: number;
   discount_amount: number;
   offer_discount_amount: number;
   round_off_amount: number;
   exact_total_amount: number;
   grand_total: number;
+  payable_amount: number;
   total: number;
 }

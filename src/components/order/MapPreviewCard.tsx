@@ -3,6 +3,9 @@
 import { Map, MapPin } from 'lucide-react';
 import type { TrackingOrder } from '@/types/order';
 import { getGoogleMapsUrl } from '@/utils/maps';
+import { features } from '@/config/features';
+import { webMapsConfig } from '@/config/maps';
+import { LiveOrderMap } from './LiveOrderMap';
 
 interface MapPreviewCardProps {
   order: TrackingOrder;
@@ -17,9 +20,13 @@ export function MapPreviewCard({ order }: MapPreviewCardProps) {
   const lat = order.deliveryAddress?.latitude;
   const lng = order.deliveryAddress?.longitude;
   const mapUrl = typeof lat === 'number' && typeof lng === 'number' ? getGoogleMapsUrl(lat, lng) : '';
+  const realMapEnabled = features.webCustomerTrackingMap && webMapsConfig.enabled && webMapsConfig.keyConfigured;
 
   return (
     <section className="overflow-hidden rounded-card border border-line shadow-card">
+      {realMapEnabled ? (
+        <LiveOrderMap order={order} />
+      ) : (
       <div className="relative aspect-[4/3] overflow-hidden bg-brand-900 sm:aspect-[16/10]">
         {/* Abstract street grid. */}
         <div
@@ -76,6 +83,7 @@ export function MapPreviewCard({ order }: MapPreviewCardProps) {
           )}
         </div>
       </div>
+      )}
     </section>
   );
 }

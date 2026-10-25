@@ -56,11 +56,15 @@ export function OrderSummaryCard({
   const displayCouponDiscount = hasBackendSummary ? totals.discount_amount : 0;
   const displayOfferDiscount = hasBackendSummary ? totals.offer_discount_amount : 0;
 
-  // 4. Delivery Fee & 5. Extra Charges
   const displayDeliveryFee = hasBackendSummary ? totals.delivery_fee : 0;
-  const displayExtraCharges = hasBackendSummary ? totals.extra_charges : 0;
-
   const displayPlatformFee = hasBackendSummary ? totals.platform_fee_amount : 0;
+  const displayPackagingFee = hasBackendSummary ? totals.packaging_fee : 0;
+  const displayAdditionalCharges = hasBackendSummary
+    ? totals.additional_charges + totals.dynamic_fees_total
+    : 0;
+  const displayLegacyExtraCharges = hasBackendSummary && displayPlatformFee <= 0 && displayPackagingFee <= 0 && displayAdditionalCharges <= 0
+    ? totals.extra_charges
+    : 0;
 
   const displayCgst = hasBackendSummary ? totals.cgst : 0;
   const displaySgst = hasBackendSummary ? totals.sgst : 0;
@@ -82,7 +86,9 @@ export function OrderSummaryCard({
         coupon_discount: displayCouponDiscount,
         offer_discount: displayOfferDiscount,
         delivery_fee: displayDeliveryFee,
-        extra_charges: displayExtraCharges,
+        packaging_fee: displayPackagingFee,
+        additional_charges: displayAdditionalCharges,
+        extra_charges: displayLegacyExtraCharges,
         cgst: displayCgst,
         sgst: displaySgst,
         tax_amount: displayTaxAmount,
@@ -92,7 +98,7 @@ export function OrderSummaryCard({
         grand_total: displayGrandTotal,
       }
     });
-  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayExtraCharges, displayCgst, displaySgst, displayTaxAmount, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, hasBackendSummary]);
+  }, [displaySource, displaySubtotal, displayCouponDiscount, displayOfferDiscount, displayDeliveryFee, displayPackagingFee, displayAdditionalCharges, displayLegacyExtraCharges, displayCgst, displaySgst, displayTaxAmount, displayPlatformFee, displayRoundOff, displayExactTotal, displayGrandTotal, hasBackendSummary]);
 
   const placeOrderLabel = placing
     ? 'Placing order...'
@@ -173,19 +179,23 @@ export function OrderSummaryCard({
           {showBillBreakdown && (
             <>
               <BillRow label="Item subtotal" value={displaySubtotal} />
+              {displayDeliveryFee > 0 && <BillRow label="Delivery fee" value={displayDeliveryFee} />}
+              {displayPlatformFee > 0 && <BillRow label="Platform fee" value={displayPlatformFee} />}
+              {displayPackagingFee > 0 && <BillRow label="Packaging fee" value={displayPackagingFee} />}
+              {displayAdditionalCharges > 0 && <BillRow label="Additional charges" value={displayAdditionalCharges} />}
+              {displayLegacyExtraCharges > 0 && <BillRow label="Extra charges" value={displayLegacyExtraCharges} />}
               {couponCode && displayCouponDiscount > 0 ? (
                 <AppliedCouponRow code={couponCode} discountAmount={displayCouponDiscount} />
-              ) : (
+              ) : displayCouponDiscount > 0 ? (
                 <BillRow label="Coupon discount" value={-displayCouponDiscount} highlight />
+              ) : null}
+              {displayOfferDiscount > 0 && <BillRow label="Offer discount" value={-displayOfferDiscount} highlight />}
+              {displayCgst > 0 && <BillRow label="CGST" value={displayCgst} />}
+              {displaySgst > 0 && <BillRow label="SGST" value={displaySgst} />}
+              {displayTaxAmount > 0 && displayCgst <= 0 && displaySgst <= 0 && (
+                <BillRow label="Taxes" value={displayTaxAmount} />
               )}
-              <BillRow label="Offer discount" value={-displayOfferDiscount} highlight />
-              <BillRow label="Delivery fee" value={displayDeliveryFee} />
-              <BillRow label="Extra charges" value={displayExtraCharges} />
-              <BillRow label="CGST" value={displayCgst} />
-              <BillRow label="SGST" value={displaySgst} />
-              <BillRow label="Platform fee" value={displayPlatformFee} />
-              <BillRow label="Round off" value={displayRoundOff} />
-              <BillRow label="Exact total" value={displayExactTotal} strong />
+              {displayRoundOff !== 0 && <BillRow label="Round off" value={displayRoundOff} />}
             </>
           )}
         </dl>
@@ -193,7 +203,7 @@ export function OrderSummaryCard({
         <div className="my-5 h-px bg-line" />
 
         <div className="flex items-baseline justify-between gap-3">
-          <span className="text-base font-extrabold text-ink">Grand total</span>
+          <span className="text-base font-extrabold text-ink">To pay</span>
           <span className="text-title text-ink">
             {hasBackendSummary ? formatMoneyDecimal(displayGrandTotal) : 'Calculating'}
           </span>

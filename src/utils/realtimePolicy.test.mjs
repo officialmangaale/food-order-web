@@ -2,9 +2,12 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 
 import {
+  ORDER_CONNECTION_RECONCILE_MIN_MS,
   ORDER_POLL_INTERVAL_MS,
+  ORDER_WS_STABLE_CONNECTION_MS,
   realtimeConnectionLabel,
   shouldPollOrder,
+  shouldReconcileOrderTracking,
 } from './realtimePolicy.mjs';
 
 test('order tracking polls every 15 seconds only while live updates are unavailable', () => {
@@ -40,6 +43,14 @@ test('polling pauses for hidden tabs and terminal orders', () => {
     terminal: true,
     visibilityState: 'visible',
   }), false);
+});
+
+test('order tracking throttles full HTTP reconciliation during realtime reconnects', () => {
+  assert.equal(ORDER_WS_STABLE_CONNECTION_MS, 10_000);
+  assert.equal(ORDER_CONNECTION_RECONCILE_MIN_MS, 30_000);
+  assert.equal(shouldReconcileOrderTracking({ lastFetchedAt: 0, now: 100 }), true);
+  assert.equal(shouldReconcileOrderTracking({ lastFetchedAt: 1_000, now: 10_000 }), false);
+  assert.equal(shouldReconcileOrderTracking({ lastFetchedAt: 1_000, now: 31_000 }), true);
 });
 
 test('connection labels distinguish websocket and polling delivery', () => {
