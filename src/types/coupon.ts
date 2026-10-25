@@ -32,6 +32,8 @@ export interface CouponCartPayload {
 export interface CouponValidationRequest {
   restaurant_id: number;
   coupon_code: string;
+  /** Set when the visitor came in through a marketing campaign link. */
+  campaign_id?: number;
   cart: CouponCartPayload;
   customer?: {
     phone?: string;

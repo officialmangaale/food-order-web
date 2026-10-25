@@ -33,6 +33,7 @@ import { placeOrder, validateCart } from '@/services/customerWebApi';
 import { useActiveOrderStore } from '@/store/activeOrderStore';
 import { useAuthStore } from '@/store/authStore';
 import {
+  campaignIdForValidation,
   isCampaignContextExpired,
   normalizeCouponCode,
   useCampaignStore,
@@ -304,6 +305,7 @@ export function CheckoutPage() {
       const validationResult = await validateCoupon({
         restaurant_id: restaurantId,
         coupon_code: code,
+        ...campaignIdForValidation(restaurantId),
         cart: buildCouponCartPayload(items),
         customer: getCustomerPhone(user?.phone ?? authPhone),
       });

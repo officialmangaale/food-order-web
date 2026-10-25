@@ -242,6 +242,16 @@ export function normalizeCouponCode(value: string | null | undefined) {
   return value?.trim().toUpperCase() || undefined;
 }
 
+/**
+ * `campaign_id` field for a coupon validation request, when this visitor
+ * arrived through a (still fresh) marketing campaign link for the restaurant.
+ * Lets the backend count the validation toward that campaign.
+ */
+export function campaignIdForValidation(restaurantId: number): { campaign_id?: number } {
+  const context = useCampaignStore.getState().getCampaignContextForRestaurant(restaurantId);
+  return context?.campaignId ? { campaign_id: context.campaignId } : {};
+}
+
 export function isCampaignContextExpired(context: CampaignContext, now = Date.now()) {
   return now - context.capturedAt > CAMPAIGN_CONTEXT_TTL_MS;
 }

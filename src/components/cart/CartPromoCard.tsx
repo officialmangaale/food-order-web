@@ -5,7 +5,7 @@ import { CouponInputCard } from '@/components/coupon/CouponInputCard';
 import { useToast } from '@/components/ui/Toast';
 import { validateCoupon } from '@/services/couponApi';
 import { getErrorMessage } from '@/services/http';
-import { normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
+import { campaignIdForValidation, normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
 import { useAuthStore } from '@/store/authStore';
 import { useCartStore } from '@/store/cartStore';
 import { buildCouponCartPayload } from '@/utils/couponCartPayload';
@@ -58,6 +58,7 @@ export function CartPromoCard() {
       const validation = await validateCoupon({
         restaurant_id: restaurantId,
         coupon_code: code,
+        ...campaignIdForValidation(restaurantId),
         cart: buildCouponCartPayload(items),
         customer: getCustomerPhone(user?.phone ?? authPhone),
       });
