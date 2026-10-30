@@ -115,7 +115,7 @@ function parseCampaignQuery(query?: Record<string, string | string[] | undefined
   const campaignId =
     readNumericCampaignId(utmCampaign) ??
     readNumericCampaignId(readQueryValue(query?.campaign_id));
-  const hasContext = Boolean(couponCode || campaignId || utmCampaign);
+  const hasContext = Boolean(couponCode || campaignId || utmCampaign || readQueryValue(query?.utm_source));
 
   return {
     couponCode,

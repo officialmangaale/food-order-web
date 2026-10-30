@@ -869,6 +869,7 @@ function buildPlaceOrderPayload({
   return {
     restaurant_id: restaurantId,
     payment_method: 'cash',
+    order_from: campaignContext?.utmSource?.toLowerCase() === 'whatsapp' ? 'whatsapp_link' : 'app_web',
     expected_payable: expectedPayable,
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(campaignContext?.campaignId ? { campaign_id: campaignContext.campaignId } : {}),

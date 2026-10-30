@@ -37,6 +37,7 @@ export interface PlaceOrderDeliveryAddress {
 }
 
 export interface PlaceOrderRequest {
+  order_from?: 'whatsapp_link' | 'app_web';
   restaurant_id: number;
   payment_method: 'cash';
   expected_payable?: number;
