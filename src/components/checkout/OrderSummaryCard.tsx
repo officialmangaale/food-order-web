@@ -205,7 +205,7 @@ export function OrderSummaryCard({
         <div className="flex items-baseline justify-between gap-3">
           <span className="text-base font-extrabold text-ink">To pay</span>
           <span className="text-title text-ink">
-            {hasBackendSummary ? formatMoneyDecimal(displayGrandTotal) : 'Calculating'}
+            {validationError ? 'Unavailable' : hasBackendSummary ? formatMoneyDecimal(displayGrandTotal) : 'Calculating'}
           </span>
         </div>
 

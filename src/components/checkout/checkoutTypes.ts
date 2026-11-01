@@ -1,6 +1,7 @@
 import type { CustomerAddress, CustomerAddressPayload } from '@/services/profileApi';
 import type { CartItem, CartValidateRequest, ValidatedTotals } from '@/types/cart';
 import type { CouponValidationResult } from '@/types/coupon';
+import { resolveCheckoutLocation } from '@/utils/checkoutLocation.mjs';
 
 export type CheckoutAddress = CustomerAddress;
 export type CheckoutAddressPayload = CustomerAddressPayload;
@@ -26,12 +27,5 @@ export function buildCartItemsPayload(items: CartItem[]): CartValidateRequest['i
 }
 
 export function getAddressLocation(address?: CheckoutAddress | null) {
-  if (address?.latitude != null && address.longitude != null) {
-    return {
-      latitude: address.latitude,
-      longitude: address.longitude,
-    };
-  }
-
-  return undefined;
+  return resolveCheckoutLocation(address);
 }

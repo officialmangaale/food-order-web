@@ -28,6 +28,8 @@ import { useHasMounted } from '@/hooks/useHasMounted';
 import { useCheckoutInstructions } from '@/hooks/useCheckoutInstructions';
 import { useCustomerAddresses } from '@/hooks/useCustomerAddresses';
 import { getErrorMessage, isAuthError } from '@/services/http';
+import { checkoutOrderChannel } from '@/utils/checkoutOrderChannel.mjs';
+import { resolveCheckoutLocation } from '@/utils/checkoutLocation.mjs';
 import { validateCoupon } from '@/services/couponApi';
 import { placeOrder, validateCart } from '@/services/customerWebApi';
 import { useActiveOrderStore } from '@/store/activeOrderStore';
@@ -42,7 +44,6 @@ import { useCartStore } from '@/store/cartStore';
 import { useLocationStore } from '@/store/locationStore';
 import {
   buildCartItemsPayload,
-  getAddressLocation,
   type CheckoutAddress,
   type CheckoutAddressPayload,
 } from '@/components/checkout/checkoutTypes';
@@ -157,6 +158,7 @@ export function CheckoutPage() {
     couponCode: activeCouponCode,
     address: selectedAddress,
     fallbackLocation,
+    campaignContext: validCampaignContext,
   });
   const validationResult = validation.data;
   const totals = validationResult?.totals ?? EMPTY_TOTALS;
@@ -394,7 +396,16 @@ export function CheckoutPage() {
 
     setPlacing(true);
     try {
-      let finalValidation = await validation.validateNow();
+      // Freeze the source for the final quote and placement, including coupon retries.
+      const campaignContextForOrder =
+        useCampaignStore.getState().getCampaignContextForRestaurant(restaurantId);
+      const finalPayload = buildCartValidatePayload({
+        restaurantId, items, couponCode: activeCouponCode,
+        address: normalizedAddress, fallbackLocation, campaignContext: campaignContextForOrder,
+      });
+      let finalValidation = toValidationResult(
+        await validateCart(finalPayload as Parameters<typeof validateCart>[0])
+      );
       setValidatedTotals(finalValidation.totals);
       let couponCodeForOrder = getValidatedCouponCode(
         useCampaignStore.getState().getCheckoutCouponForRestaurant(restaurantId)?.couponCode,
@@ -410,6 +421,7 @@ export function CheckoutPage() {
           items,
           address: selectedAddress,
           fallbackLocation,
+          campaignContext: campaignContextForOrder,
         });
         finalValidation = toValidationResult(
           await validateCart(withoutCouponPayload as Parameters<typeof validateCart>[0])
@@ -428,10 +440,6 @@ export function CheckoutPage() {
 
       const orderKey = idempotencyKey || generateIdempotencyKey(restaurantId);
       if (!idempotencyKey) setIdempotencyKey(orderKey);
-      const campaignContextForOrder =
-        useCampaignStore.getState().getCampaignContextForRestaurant(restaurantId) ??
-        validCampaignContext;
-
       const response = await placeOrder(
         buildPlaceOrderPayload({
           restaurantId,
@@ -869,11 +877,10 @@ function buildPlaceOrderPayload({
   return {
     restaurant_id: restaurantId,
     payment_method: 'cash',
-    order_from: campaignContext?.utmSource?.toLowerCase() === 'whatsapp' ? 'whatsapp_link' : 'app_web',
+    ...checkoutOrderChannel(campaignContext?.utmSource),
     expected_payable: expectedPayable,
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(campaignContext?.campaignId ? { campaign_id: campaignContext.campaignId } : {}),
-    ...(campaignContext?.utmSource ? { utm_source: campaignContext.utmSource } : {}),
     ...(campaignContext?.utmCampaign ? { utm_campaign: campaignContext.utmCampaign } : {}),
     customer: {
       name: customerName,
@@ -898,13 +905,5 @@ function getDeliveryLocation(
   address: CheckoutAddress | null | undefined,
   fallbackLocation?: { latitude: number | null; longitude: number | null }
 ) {
-  const addressLocation = getAddressLocation(address);
-  if (addressLocation) return addressLocation;
-  if (fallbackLocation?.latitude != null && fallbackLocation.longitude != null) {
-    return {
-      latitude: fallbackLocation.latitude,
-      longitude: fallbackLocation.longitude,
-    };
-  }
-  return undefined;
+  return resolveCheckoutLocation(address, fallbackLocation);
 }

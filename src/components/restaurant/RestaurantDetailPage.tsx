@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { CouponBanner } from '@/components/coupon/CouponBanner';
 import { fetchRestaurantDetail, fetchRestaurantMenu, resolveRestaurantIdentifier } from '@/services/restaurantApi';
-import { trackCampaignClick } from '@/services/marketingApi';
+import { fetchWhatsAppPricing, trackCampaignClick } from '@/services/marketingApi';
 import { isCampaignContextExpired, normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
 import { useRestaurantModeStore } from '@/store/restaurantModeStore';
 import { slugifyRestaurantName } from '@/utils/slug';
@@ -30,7 +30,7 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   const campaignContexts = useCampaignStore((state) => state.campaignContexts);
   const checkoutCoupons = useCampaignStore((state) => state.checkoutCoupons);
   const captureCampaignContext = useCampaignStore((state) => state.captureCampaignContext);
-  const campaignParams = useMemo(() => parseCampaignQuery(campaignQuery), [campaignQuery]);
+  const campaignParams = useMemo(() => parseCampaignQuery(campaignQuery, locked), [campaignQuery, locked]);
   const restaurantQuery = useQuery({
     queryKey: locked ? ['resolveRestaurant', slug] : ['restaurant', restaurantId],
     queryFn: () => locked ? resolveRestaurantIdentifier(slug ?? '') : fetchRestaurantDetail(restaurantId ?? ''),
@@ -51,6 +51,19 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   const checkoutCoupon = Number.isFinite(currentRestaurantId) ? checkoutCoupons[String(currentRestaurantId)] : undefined;
   const bannerCouponCode = validCampaignContext?.couponCode ?? (locked && campaignParams.couponCode ? campaignParams.couponCode : undefined);
   const bannerValidation = checkoutCoupon?.couponCode === bannerCouponCode ? checkoutCoupon?.validation : undefined;
+  const isWhatsApp = (validCampaignContext?.utmSource ?? (locked ? campaignParams.utmSource : ''))?.trim().toLowerCase() === 'whatsapp';
+  const whatsAppPricing = useQuery({
+    queryKey: ['whatsapp-pricing', currentRestaurantId],
+    queryFn: () => fetchWhatsAppPricing(currentRestaurantId),
+    enabled: isWhatsApp && Number.isFinite(currentRestaurantId) && currentRestaurantId > 0,
+    staleTime: 0,
+    retry: false,
+  });
+  const whatsAppBlocked = isWhatsApp && (!whatsAppPricing.data || whatsAppPricing.isError);
+  const pricingError = whatsAppPricing.error as { message?: string } | null;
+  const whatsAppMessage = whatsAppPricing.error
+    ? pricingError?.message || 'WhatsApp delivery pricing is unavailable. Please try again.'
+    : 'Checking WhatsApp delivery pricing…';
 
   useEffect(() => {
     if (locked && restaurant?.id) {
@@ -99,8 +112,16 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
     {restaurant ? <RestaurantMenuExperience key={restaurant.id} restaurant={restaurant}
       restaurantSlug={currentRestaurantSlug} menu={menuQuery.data}
       loading={menuQuery.isLoading} error={menuQuery.error} onRetry={() => menuQuery.refetch()}
-      orderingDisabled={orderingState.disabled} disabledReason={orderingState.reason}
-      campaignBanner={locked && bannerCouponCode ? <CouponBanner couponCode={bannerCouponCode} validation={bannerValidation} /> : undefined}
+      orderingDisabled={orderingState.disabled || whatsAppBlocked} disabledReason={orderingState.disabled ? orderingState.reason : whatsAppMessage}
+      campaignBanner={<>
+        {isWhatsApp && <div className={styles.availability} role="status">
+          {whatsAppPricing.data && !whatsAppPricing.isError
+            ? `Restaurant delivery: ₹${whatsAppPricing.data.delivery_rate_per_km.toFixed(2)} per km.${whatsAppPricing.data.max_delivery_distance_km != null ? ` Available up to ${whatsAppPricing.data.max_delivery_distance_km} km.` : ''} Delivery charge is calculated from your address at checkout; platform fee is shown separately.`
+            : whatsAppMessage}
+          {whatsAppPricing.error && <button type="button" onClick={() => whatsAppPricing.refetch()}>Retry pricing</button>}
+        </div>}
+        {locked && bannerCouponCode && <CouponBanner couponCode={bannerCouponCode} validation={bannerValidation} />}
+      </>}
     /> : <main id="main-content" className={styles.status}>
       <button className={styles.back} onClick={() => hasRestaurantBackEntry() ? router.back() : router.replace('/')}><ArrowLeft size={20} />Back</button>
       {restaurantQuery.isLoading ? <><div className={styles.skeleton} /><h1>Loading restaurant…</h1></> :
@@ -109,13 +130,15 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   </RestaurantScreen>;
 }
 
-function parseCampaignQuery(query?: Record<string, string | string[] | undefined>) {
+function parseCampaignQuery(query?: Record<string, string | string[] | undefined>, restaurantLink = false) {
   const couponCode = normalizeCouponCode(readQueryValue(query?.coupon));
   const utmCampaign = readQueryValue(query?.utm_campaign);
   const campaignId =
     readNumericCampaignId(utmCampaign) ??
     readNumericCampaignId(readQueryValue(query?.campaign_id));
-  const hasContext = Boolean(couponCode || campaignId || utmCampaign || readQueryValue(query?.utm_source));
+  // Personal restaurant links generated before UTM tags were added still
+  // belong to the restaurant-managed WhatsApp channel.
+  const hasContext = restaurantLink || Boolean(couponCode || campaignId || utmCampaign || readQueryValue(query?.utm_source));
 
   return {
     couponCode,

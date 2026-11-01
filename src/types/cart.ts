@@ -40,6 +40,8 @@ export interface CartValidateRequestItem {
 }
 
 export interface CartValidateRequest {
+  order_from?: 'whatsapp_link' | 'app_web';
+  utm_source?: string;
   restaurant_id: number;
   coupon_code?: string;
   customer_location?: {

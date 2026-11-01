@@ -6,7 +6,10 @@ import { validateCart } from '@/services/customerWebApi';
 import type { HttpError } from '@/services/http';
 import type { CartItem, CartValidateRequest, CartValidateResponse, ValidatedTotals } from '@/types/cart';
 import type { CheckoutAddress, CheckoutValidationResult } from '@/components/checkout/checkoutTypes';
-import { buildCartItemsPayload, getAddressLocation } from '@/components/checkout/checkoutTypes';
+import { buildCartItemsPayload } from '@/components/checkout/checkoutTypes';
+import { resolveCheckoutLocation } from '@/utils/checkoutLocation.mjs';
+import { checkoutOrderChannel } from '@/utils/checkoutOrderChannel.mjs';
+import type { CampaignContext } from '@/types/marketing';
 
 export const MISSING_DELIVERY_LOCATION_MESSAGE = 'Please select a delivery address with location pin.';
 
@@ -16,6 +19,7 @@ interface UseCheckoutCartValidationParams {
   couponCode?: string;
   address?: CheckoutAddress | null;
   fallbackLocation?: { latitude: number | null; longitude: number | null };
+  campaignContext?: Pick<CampaignContext, 'utmSource'> | null;
 }
 
 export function useCheckoutCartValidation({
@@ -24,10 +28,11 @@ export function useCheckoutCartValidation({
   couponCode,
   address,
   fallbackLocation,
+  campaignContext,
 }: UseCheckoutCartValidationParams) {
   const payload = useMemo(
-    () => buildCartValidatePayload({ restaurantId, items, couponCode, address, fallbackLocation }),
-    [address, couponCode, fallbackLocation, items, restaurantId]
+    () => buildCartValidatePayload({ restaurantId, items, couponCode, address, fallbackLocation, campaignContext }),
+    [address, couponCode, fallbackLocation, items, restaurantId, campaignContext]
   );
   const hasDeliveryLocation = Boolean(payload.customer_location);
   const queryKey = useMemo(() => JSON.stringify(payload), [payload]);
@@ -62,16 +67,13 @@ export function buildCartValidatePayload({
   couponCode,
   address,
   fallbackLocation,
+  campaignContext,
 }: UseCheckoutCartValidationParams): Partial<CartValidateRequest> {
-  const addressLocation = getAddressLocation(address);
-  const fallback =
-    fallbackLocation?.latitude != null && fallbackLocation.longitude != null
-      ? { latitude: fallbackLocation.latitude, longitude: fallbackLocation.longitude }
-      : undefined;
-  const customerLocation = addressLocation ?? fallback;
+  const customerLocation = resolveCheckoutLocation(address, fallbackLocation);
 
   return {
     restaurant_id: restaurantId ?? 0,
+    ...checkoutOrderChannel(campaignContext?.utmSource),
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(customerLocation ? { customer_location: customerLocation } : {}),
     items: buildCartItemsPayload(items),
