@@ -13,6 +13,7 @@ export interface HomeCategory {
 }
 
 export interface CategoryFoodItem {
+  orderFrom?: 'whatsapp_link' | 'app_web';
   itemId: number;
   restaurantId: number;
   restaurantName: string;

@@ -14,6 +14,7 @@ import type { CampaignContext } from '@/types/marketing';
 export const MISSING_DELIVERY_LOCATION_MESSAGE = 'Please select a delivery address with location pin.';
 
 interface UseCheckoutCartValidationParams {
+  orderFrom?: 'whatsapp_link' | 'app_web';
   restaurantId: number | null;
   items: CartItem[];
   couponCode?: string;
@@ -29,10 +30,11 @@ export function useCheckoutCartValidation({
   address,
   fallbackLocation,
   campaignContext,
+  orderFrom,
 }: UseCheckoutCartValidationParams) {
   const payload = useMemo(
-    () => buildCartValidatePayload({ restaurantId, items, couponCode, address, fallbackLocation, campaignContext }),
-    [address, couponCode, fallbackLocation, items, restaurantId, campaignContext]
+    () => buildCartValidatePayload({ restaurantId, items, couponCode, address, fallbackLocation, campaignContext, orderFrom }),
+    [address, couponCode, fallbackLocation, items, restaurantId, campaignContext, orderFrom]
   );
   const hasDeliveryLocation = Boolean(payload.customer_location);
   const queryKey = useMemo(() => JSON.stringify(payload), [payload]);
@@ -68,12 +70,13 @@ export function buildCartValidatePayload({
   address,
   fallbackLocation,
   campaignContext,
+  orderFrom,
 }: UseCheckoutCartValidationParams): Partial<CartValidateRequest> {
   const customerLocation = resolveCheckoutLocation(address, fallbackLocation);
 
   return {
     restaurant_id: restaurantId ?? 0,
-    ...checkoutOrderChannel(campaignContext?.utmSource),
+    ...checkoutOrderChannel(campaignContext?.utmSource, orderFrom),
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(customerLocation ? { customer_location: customerLocation } : {}),
     items: buildCartItemsPayload(items),

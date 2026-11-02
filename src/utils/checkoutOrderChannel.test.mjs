@@ -24,3 +24,9 @@ test('changing the delivery channel changes the serialized preview cache key', (
     JSON.stringify({ ...cart, ...checkoutOrderChannel() }),
   );
 });
+
+test('saved cart source takes priority over expired or replaced campaign tags', () => {
+  assert.deepEqual(checkoutOrderChannel(undefined, 'whatsapp_link'), { order_from: 'whatsapp_link', utm_source: 'whatsapp' });
+  assert.deepEqual(checkoutOrderChannel('whatsapp', 'app_web'), { order_from: 'app_web' });
+  assert.deepEqual(checkoutOrderChannel('google', 'whatsapp_link'), { order_from: 'whatsapp_link', utm_source: 'whatsapp' });
+});

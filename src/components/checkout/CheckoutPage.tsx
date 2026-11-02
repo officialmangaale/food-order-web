@@ -106,6 +106,7 @@ export function CheckoutPage() {
   const items = useCartStore((state) => Array.isArray(state.items) ? state.items : []);
   const restaurantId = useCartStore((state) => Number.isFinite(state.restaurantId) ? state.restaurantId : null);
   const restaurantName = useCartStore((state) => state.restaurantName);
+  const orderFrom = useCartStore((state) => state.orderFrom);
   const clearCart = useCartStore((state) => state.clearCart);
   const setValidatedTotals = useCartStore((state) => state.setValidatedTotals);
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
@@ -153,6 +154,7 @@ export function CheckoutPage() {
     return context && !isCampaignContextExpired(context) ? context : undefined;
   }, [campaignContexts, restaurantId]);
   const validation = useCheckoutCartValidation({
+    orderFrom,
     restaurantId,
     items,
     couponCode: activeCouponCode,
@@ -400,6 +402,7 @@ export function CheckoutPage() {
       const campaignContextForOrder =
         useCampaignStore.getState().getCampaignContextForRestaurant(restaurantId);
       const finalPayload = buildCartValidatePayload({
+        orderFrom,
         restaurantId, items, couponCode: activeCouponCode,
         address: normalizedAddress, fallbackLocation, campaignContext: campaignContextForOrder,
       });
@@ -417,6 +420,7 @@ export function CheckoutPage() {
         removeCheckoutCoupon(restaurantId);
         setInvalidCouponNotice(`${activeCouponCode} is not applicable: ${message}`);
         const withoutCouponPayload = buildCartValidatePayload({
+          orderFrom,
           restaurantId,
           items,
           address: selectedAddress,
@@ -442,6 +446,7 @@ export function CheckoutPage() {
       if (!idempotencyKey) setIdempotencyKey(orderKey);
       const response = await placeOrder(
         buildPlaceOrderPayload({
+          orderFrom,
           restaurantId,
           address: normalizedAddress,
           customerName: normalizedAddress.name || safeText(user?.name) || '',
@@ -847,6 +852,7 @@ function summarizeAddressForDebug(address: CheckoutAddress | null) {
 }
 
 function buildPlaceOrderPayload({
+  orderFrom,
   restaurantId,
   address,
   customerName,
@@ -858,6 +864,7 @@ function buildPlaceOrderPayload({
   fallbackLocation,
   expectedPayable,
 }: {
+  orderFrom: 'whatsapp_link' | 'app_web';
   restaurantId: number;
   address: CheckoutAddress;
   customerName: string;
@@ -877,7 +884,7 @@ function buildPlaceOrderPayload({
   return {
     restaurant_id: restaurantId,
     payment_method: 'cash',
-    ...checkoutOrderChannel(campaignContext?.utmSource),
+    ...checkoutOrderChannel(campaignContext?.utmSource, orderFrom),
     expected_payable: expectedPayable,
     ...(couponCode ? { coupon_code: couponCode } : {}),
     ...(campaignContext?.campaignId ? { campaign_id: campaignContext.campaignId } : {}),

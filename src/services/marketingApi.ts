@@ -11,6 +11,8 @@ interface WhatsAppPricing {
   restaurant_id: number;
   delivery_rate_per_km: number;
   max_delivery_distance_km?: number;
+  free_delivery_distance_km: number;
+  outside_free_zone_mode: 'full_distance' | 'excess_distance';
 }
 
 export async function fetchWhatsAppPricing(restaurantId: number): Promise<WhatsAppPricing> {

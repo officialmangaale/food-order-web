@@ -25,6 +25,7 @@ import type { RestaurantMenuFilters } from './restaurantMenuTypes';
 import styles from './RestaurantExperience.module.css';
 
 interface Props {
+  orderFrom?: 'whatsapp_link' | 'app_web';
   restaurant: Restaurant; restaurantSlug: string; menu?: MenuCategory[];
   loading: boolean; error: Error | null; onRetry: () => void;
   orderingDisabled: boolean; disabledReason: string; campaignBanner?: ReactNode;
@@ -75,6 +76,7 @@ export function RestaurantMenuExperience(props: Props) {
   const editing = top?.kind === 'customize' && top.edit ? panelLines.find((line) => line.variant_id === top.variantId) : undefined;
   const stalePanel = Boolean(top && top.kind !== 'menu' && (!panelItem || (top.kind === 'customize' && top.edit && !editing)));
   const toCategoryItem = (item: MenuItem): CategoryFoodItem => ({
+    orderFrom: props.orderFrom ?? 'app_web',
     itemId: item.id, restaurantId: restaurant.id, restaurantName: restaurant.name, restaurantSlug: props.restaurantSlug,
     name: item.name, description: item.description, imageUrl: item.image_url, price: item.price,
     categoryId: item.category_id, categoryName: item.category_name, isAvailable: item.is_available !== false,
@@ -113,7 +115,7 @@ export function RestaurantMenuExperience(props: Props) {
   };
   const add = (item: MenuItem) => {
     if (orderingDisabled || item.is_available === false) return;
-    if (useCartStore.getState().isDifferentRestaurant(restaurant.id)) {
+    if (useCartStore.getState().isDifferentRestaurant(restaurant.id, props.orderFrom)) {
       navigation.open({ kind: 'conflict', itemId: item.id }); return;
     }
     if (hasCustomOptions(item)) navigation.open({ kind: 'customize', itemId: item.id });

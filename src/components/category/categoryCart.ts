@@ -15,7 +15,7 @@ const extrasKey = (item: CartItem) => JSON.stringify(item.addons.map((a) =>
 /** Respect the existing product/variant cart key. Never let it merge different extras. */
 export function saveCategorySelection(selection: CartItem, editing?: CartItem) {
   const cart = useCartStore.getState();
-  if (!selection.restaurant_id || cart.isDifferentRestaurant(selection.restaurant_id) ||
+  if (!selection.restaurant_id || cart.isDifferentRestaurant(selection.restaurant_id, selection.order_from) ||
     cart.items.some((line) => line.restaurant_id != null && line.restaurant_id !== selection.restaurant_id)) {
     throw new Error('Your cart contains items from another restaurant. Close this panel and add again to review the cart choice.');
   }
@@ -27,13 +27,14 @@ export function saveCategorySelection(selection: CartItem, editing?: CartItem) {
     (collision.variant_price ?? collision.base_price) !== (selection.variant_price ?? selection.base_price))) {
     throw new Error('This variant is already in your cart with different selections. Edit that selection, or choose another variant.');
   }
-  cart.setRestaurant(selection.restaurant_id, selection.restaurant_name ?? '', selection.restaurant_slug);
+  cart.setRestaurant(selection.restaurant_id, selection.restaurant_name ?? '', selection.restaurant_slug, selection.order_from);
   if (editing) cart.removeItem(editing.item_id, editing.variant_id);
   cart.addItem(selection);
 }
 
 export function plainSelection(item: CategoryFoodItem): CartItem {
   return {
+    order_from: item.orderFrom ?? 'app_web',
     restaurant_id: item.restaurantId, restaurant_name: item.restaurantName,
     restaurant_slug: item.restaurantSlug, item_id: item.itemId, name: item.name,
     image_url: item.imageUrl, quantity: 1, base_price: item.price,

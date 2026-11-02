@@ -5,6 +5,8 @@ import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { ArrowLeft } from 'lucide-react';
 import { CouponBanner } from '@/components/coupon/CouponBanner';
+import { CartConflictModal } from '@/components/cart/CartConflictModal';
+import { useCartStore } from '@/store/cartStore';
 import { fetchRestaurantDetail, fetchRestaurantMenu, resolveRestaurantIdentifier } from '@/services/restaurantApi';
 import { fetchWhatsAppPricing, trackCampaignClick } from '@/services/marketingApi';
 import { isCampaignContextExpired, normalizeCouponCode, useCampaignStore } from '@/store/campaignStore';
@@ -38,11 +40,6 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   });
   const restaurant = restaurantQuery.data ?? undefined;
   const menuRestaurantId = locked ? restaurant?.id : restaurant?.id || restaurantId;
-  const menuQuery = useQuery({
-    queryKey: ['menu', String(menuRestaurantId ?? '')],
-    queryFn: () => fetchRestaurantMenu(menuRestaurantId ?? ''),
-    enabled: Boolean(menuRestaurantId) && (!locked || Boolean(restaurant?.id)),
-  });
   const currentRestaurantId = Number(restaurant?.id ?? restaurantId);
   const currentRestaurantSlug = restaurant?.slug ?? slug ?? slugifyRestaurantName(restaurant?.name ?? '');
   const orderingState = useMemo(() => getOrderingState(restaurant), [restaurant]);
@@ -51,7 +48,16 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   const checkoutCoupon = Number.isFinite(currentRestaurantId) ? checkoutCoupons[String(currentRestaurantId)] : undefined;
   const bannerCouponCode = validCampaignContext?.couponCode ?? (locked && campaignParams.couponCode ? campaignParams.couponCode : undefined);
   const bannerValidation = checkoutCoupon?.couponCode === bannerCouponCode ? checkoutCoupon?.validation : undefined;
-  const isWhatsApp = (validCampaignContext?.utmSource ?? (locked ? campaignParams.utmSource : ''))?.trim().toLowerCase() === 'whatsapp';
+  const isWhatsApp = locked && campaignParams.utmSource?.trim().toLowerCase() === 'whatsapp';
+  const menuChannel = isWhatsApp ? 'whatsapp_link' : 'app_web';
+  const cartChannel = useCartStore((state) => state.orderFrom);
+  const cartCount = useCartStore((state) => state.items.length);
+  const channelSwitchPending = cartCount > 0 && cartChannel !== menuChannel;
+  const menuQuery = useQuery({
+    queryKey: ['menu', String(menuRestaurantId ?? ''), menuChannel],
+    queryFn: () => fetchRestaurantMenu(menuRestaurantId ?? '', menuChannel),
+    enabled: Boolean(menuRestaurantId) && (!locked || Boolean(restaurant?.id)),
+  });
   const whatsAppPricing = useQuery({
     queryKey: ['whatsapp-pricing', currentRestaurantId],
     queryFn: () => fetchWhatsAppPricing(currentRestaurantId),
@@ -108,15 +114,15 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
   ]);
 
 
-  return <RestaurantScreen>
-    {restaurant ? <RestaurantMenuExperience key={restaurant.id} restaurant={restaurant}
+  return <><RestaurantScreen>
+    {restaurant ? <RestaurantMenuExperience key={`${restaurant.id}:${menuChannel}`} restaurant={restaurant} orderFrom={menuChannel}
       restaurantSlug={currentRestaurantSlug} menu={menuQuery.data}
       loading={menuQuery.isLoading} error={menuQuery.error} onRetry={() => menuQuery.refetch()}
-      orderingDisabled={orderingState.disabled || whatsAppBlocked} disabledReason={orderingState.disabled ? orderingState.reason : whatsAppMessage}
+      orderingDisabled={orderingState.disabled || whatsAppBlocked || channelSwitchPending} disabledReason={channelSwitchPending ? 'Choose whether to switch menus or keep your current cart.' : orderingState.disabled ? orderingState.reason : whatsAppMessage}
       campaignBanner={<>
         {isWhatsApp && <div className={styles.availability} role="status">
           {whatsAppPricing.data && !whatsAppPricing.isError
-            ? `Restaurant delivery: ₹${whatsAppPricing.data.delivery_rate_per_km.toFixed(2)} per km.${whatsAppPricing.data.max_delivery_distance_km != null ? ` Available up to ${whatsAppPricing.data.max_delivery_distance_km} km.` : ''} Delivery charge is calculated from your address at checkout; platform fee is shown separately.`
+            ? `Restaurant delivery: ₹${whatsAppPricing.data.delivery_rate_per_km.toFixed(2)} per km.${whatsAppPricing.data.free_delivery_distance_km > 0 ? ` Free within ${whatsAppPricing.data.free_delivery_distance_km} km; beyond this, ${whatsAppPricing.data.outside_free_zone_mode === 'excess_distance' ? 'only the extra' : 'the full'} distance is charged.` : ''}${whatsAppPricing.data.max_delivery_distance_km != null ? ` Available up to ${whatsAppPricing.data.max_delivery_distance_km} km.` : ''} Your address determines the delivery charge at checkout; platform fee is shown separately.`
             : whatsAppMessage}
           {whatsAppPricing.error && <button type="button" onClick={() => whatsAppPricing.refetch()}>Retry pricing</button>}
         </div>}
@@ -127,7 +133,8 @@ export function RestaurantDetailPage({ restaurantId, slug, locked = false, campa
       {restaurantQuery.isLoading ? <><div className={styles.skeleton} /><h1>Loading restaurant…</h1></> :
         <><h1>Restaurant unavailable</h1><p>We could not load this restaurant. Please try again.</p><button className={styles.primary} onClick={() => restaurantQuery.refetch()}>Try again</button></>}
     </main>}
-  </RestaurantScreen>;
+  </RestaurantScreen><CartConflictModal open={channelSwitchPending && Boolean(restaurant)} newRestaurantName={restaurant?.name ?? ''}
+    onClose={() => { if (useCartStore.getState().items.length > 0) router.replace('/cart'); }} /></>;
 }
 
 function parseCampaignQuery(query?: Record<string, string | string[] | undefined>, restaurantLink = false) {

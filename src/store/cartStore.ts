@@ -5,6 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import type { CartItem, CartAddon, ValidatedTotals } from '@/types/cart';
 
 interface CartState {
+  orderFrom: 'whatsapp_link' | 'app_web';
   restaurantId: number | null;
   restaurantName: string;
   restaurantSlug: string | null;
@@ -12,7 +13,7 @@ interface CartState {
   validatedTotals: ValidatedTotals | null;
 
   // Actions
-  setRestaurant: (id: number, name: string, slug?: string) => void;
+  setRestaurant: (id: number, name: string, slug?: string, channel?: 'whatsapp_link' | 'app_web') => void;
   addItem: (item: CartItem) => void;
   removeItem: (itemId: number, variantId?: number) => void;
   updateQuantity: (itemId: number, quantity: number, variantId?: number) => void;
@@ -23,7 +24,7 @@ interface CartState {
   // Computed
   totalItems: () => number;
   estimatedSubtotal: () => number;
-  isDifferentRestaurant: (restaurantId: number) => boolean;
+  isDifferentRestaurant: (restaurantId: number, channel?: 'whatsapp_link' | 'app_web') => boolean;
 }
 
 function cartItemKey(itemId: number, variantId?: number): string {
@@ -34,13 +35,16 @@ export const useCartStore = create<CartState>()(
   persist(
     (set, get) => ({
       restaurantId: null,
+      orderFrom: 'app_web',
       restaurantName: '',
       restaurantSlug: null,
       items: [],
       validatedTotals: null,
 
-      setRestaurant: (id, name, slug) =>
-        set({ restaurantId: id, restaurantName: name, restaurantSlug: slug ?? null }),
+      setRestaurant: (id, name, slug, channel = 'app_web') => {
+        if (get().isDifferentRestaurant(id, channel)) throw new Error('Please confirm clearing your current cart before switching menus.');
+        set({ restaurantId: id, restaurantName: name, restaurantSlug: slug ?? null, orderFrom: channel });
+      },
 
       addItem: (item) => {
         const { items } = get();
@@ -90,6 +94,7 @@ export const useCartStore = create<CartState>()(
       clearCart: () =>
         set({
           restaurantId: null,
+          orderFrom: 'app_web',
           restaurantName: '',
           restaurantSlug: null,
           items: [],
@@ -111,9 +116,9 @@ export const useCartStore = create<CartState>()(
           return sum + (itemPrice + addonTotal) * item.quantity;
         }, 0),
 
-      isDifferentRestaurant: (restaurantId) => {
-        const { restaurantId: current, items } = get();
-        return current !== null && items.length > 0 && current !== restaurantId;
+      isDifferentRestaurant: (restaurantId, channel = 'app_web') => {
+        const { restaurantId: current, items, orderFrom } = get();
+        return items.length > 0 && (current !== restaurantId || orderFrom !== channel);
       },
     }),
     {
@@ -121,6 +126,7 @@ export const useCartStore = create<CartState>()(
       storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({
         restaurantId: state.restaurantId,
+        orderFrom: state.orderFrom,
         restaurantName: state.restaurantName,
         restaurantSlug: state.restaurantSlug,
         items: state.items,
@@ -143,6 +149,7 @@ function mergePersistedCartState(persistedState: unknown, currentState: CartStat
   return {
     ...currentState,
     restaurantId,
+    orderFrom: persisted.orderFrom === 'whatsapp_link' ? 'whatsapp_link' : 'app_web',
     restaurantName: typeof persisted.restaurantName === 'string' ? persisted.restaurantName : '',
     restaurantSlug: typeof persisted.restaurantSlug === 'string' ? persisted.restaurantSlug : null,
     items,

@@ -63,7 +63,13 @@ export async function fetchRestaurantDetail(restaurantId: number | string): Prom
 }
 
 /** GET /api/restaurants/:id/menu/online (preferred) with fallback to /menu */
-export async function fetchRestaurantMenu(restaurantId: number | string): Promise<MenuCategory[]> {
+export async function fetchRestaurantMenu(restaurantId: number | string, channel: 'app_web' | 'whatsapp_link' = 'app_web'): Promise<MenuCategory[]> {
+  if (channel === 'whatsapp_link') {
+    // QRunch catalog prices are restaurant-owned. Never fall back to the
+    // platform delivery catalog when this request fails.
+    const raw = await restaurantGet<unknown>(`/api/restaurants/${restaurantId}/menu/qrunch`);
+    return normalizeRestaurantMenu(unwrapApiResponse<unknown>(raw));
+  }
   try {
     const raw = await restaurantGet<unknown>(`/api/restaurants/${restaurantId}/menu/online`);
     const data = unwrapApiResponse<unknown>(raw);

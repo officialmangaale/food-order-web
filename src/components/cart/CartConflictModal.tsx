@@ -18,9 +18,9 @@ export function CartConflictModal({ open, onClose, newRestaurantName, onCleared 
   return (
     <ConfirmDialog open={open} onClose={onClose} title="Start a new cart?">
       <p className="text-sm leading-6 text-ink-muted">
-        Your cart has items from <span className="font-bold text-ink">{oldName}</span>. Mangaale
-        delivers one restaurant per order, so adding from{' '}
-        <span className="font-bold text-ink">{newRestaurantName}</span> will clear the current cart.
+        Your cart has items from <span className="font-bold text-ink">{oldName}</span>.
+        Switching to this menu for <span className="font-bold text-ink">{newRestaurantName}</span> will clear the current cart.
+        WhatsApp and app/web menus have separate items and delivery prices.
       </p>
       <div className="mt-6 flex flex-col gap-3 sm:flex-row">
         <Button variant="outline" fullWidth onClick={onClose}>

@@ -8,6 +8,7 @@ export interface CartAddon {
 }
 
 export interface CartItem {
+  order_from?: 'whatsapp_link' | 'app_web';
   restaurant_id?: number;
   restaurant_name?: string;
   restaurant_slug?: string;
